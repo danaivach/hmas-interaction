@@ -15,6 +15,7 @@ public enum INTERACTION {
   ACTION_SPECIFICATION(PREFIX + "ActionSpecification"),
   EXPECTED_INPUT(PREFIX + "Input"),
   INPUT_SCHEMA(PREFIX + "InputSchema"),
+  AGENT_BODY(PREFIX + "AgentBody"),
 
   /* Object Properties */
   SIGNIFIES(PREFIX + "signifier"),
@@ -22,7 +23,8 @@ public enum INTERACTION {
   EXPECTS(PREFIX + "expects"),
   HAS_INPUT_SCHEMA(PREFIX + "hasInputSchema"),
   HAS_FORM(PREFIX + "hasForm"),
-  HAS_ACTION(PREFIX + "hasAction");
+  HAS_ACTION(PREFIX + "hasAction"),
+  HAS_AGENT_BODY(PREFIX + "hasAgentBody");
 
   private final String type;
 
