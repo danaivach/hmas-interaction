@@ -20,6 +20,7 @@ public enum INTERACTION {
   /* Object Properties */
   SIGNIFIES(PREFIX + "signifier"),
   RECOMMENDS_ABILITY(PREFIX + "recommendsAbility"),
+  HAS_ABILITY(PREFIX + "hasAbility"),
   EXPECTS(PREFIX + "expects"),
   HAS_INPUT_SCHEMA(PREFIX + "hasInputSchema"),
   HAS_FORM(PREFIX + "hasForm"),
