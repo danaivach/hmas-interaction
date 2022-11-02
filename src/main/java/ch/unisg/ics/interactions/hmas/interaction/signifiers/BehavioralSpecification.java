@@ -12,10 +12,12 @@ public class BehavioralSpecification extends AbstractHostable {
 
   protected BehavioralSpecification(AbstractBuilder builder) {
     super(builder);
-    this.evaluabilitySignifiers =  ImmutableSet.copyOf(builder.evaluabilitySignifiers);
+    this.evaluabilitySignifiers = ImmutableSet.copyOf(builder.evaluabilitySignifiers);
   }
 
-  public Set<Signifier> getEvaluabilitySignifiers() { return this.evaluabilitySignifiers; }
+  public Set<Signifier> getEvaluabilitySignifiers() {
+    return this.evaluabilitySignifiers;
+  }
 
   public static class Builder extends AbstractBuilder<Builder, BehavioralSpecification> {
 
@@ -25,7 +27,7 @@ public class BehavioralSpecification extends AbstractHostable {
   }
 
   public abstract static class AbstractBuilder<S extends AbstractBuilder, T extends BehavioralSpecification>
-          extends AbstractHostable.AbstractBuilder<S, T>{
+          extends AbstractHostable.AbstractBuilder<S, T> {
 
     private final Set<Signifier> evaluabilitySignifiers;
 

@@ -8,7 +8,7 @@ import java.util.Set;
 public class Signifier extends BaseSignifier {
 
   private final BehavioralSpecification behavioralSpecification;
-  private Set<Ability> recommendedAbilities;
+  private final Set<Ability> recommendedAbilities;
 
   protected Signifier(AbstractBuilder builder) {
     super(builder);
@@ -26,7 +26,9 @@ public class Signifier extends BaseSignifier {
 
   public static class Builder extends AbstractBuilder<Builder, Signifier> {
 
-    public Builder(BehavioralSpecification behavioralSpecification) { super(behavioralSpecification); }
+    public Builder(BehavioralSpecification behavioralSpecification) {
+      super(behavioralSpecification);
+    }
 
     public Signifier build() {
       return new Signifier(this);
@@ -40,7 +42,7 @@ public class Signifier extends BaseSignifier {
     protected Set<Ability> recommendedAbilities;
 
     public AbstractBuilder(BehavioralSpecification behavioralSpecification) {
-      this.behavioralSpecification =behavioralSpecification;
+      this.behavioralSpecification = behavioralSpecification;
       this.recommendedAbilities = new HashSet<>();
     }
 
