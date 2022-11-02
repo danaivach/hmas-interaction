@@ -1,6 +1,5 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.AbstractHostable;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.HashSet;
@@ -10,7 +9,7 @@ public class Ability {
 
   private final Set<String> semanticTypes;
 
-  protected Ability(AbstractBuilder builder){
+  protected Ability(AbstractBuilder builder) {
     this.semanticTypes = ImmutableSet.copyOf(builder.semanticTypes);
   }
 
@@ -30,7 +29,7 @@ public class Ability {
     protected final Set<String> semanticTypes;
 
     public AbstractBuilder() {
-      this.semanticTypes= new HashSet<>();
+      this.semanticTypes = new HashSet<>();
     }
 
     public S addSemanticType(final String type) {
@@ -38,7 +37,7 @@ public class Ability {
       return (S) this;
     }
 
-    public S addHostedResources(final Set<String> types) {
+    public S addSemanticTypes(final Set<String> types) {
       this.semanticTypes.addAll(types);
       return (S) this;
     }
