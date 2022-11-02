@@ -1,9 +1,10 @@
-package ch.unisg.ics.interactions.hmas.interaction.signifiers.vocabularies;
+package ch.unisg.ics.interactions.hmas.interaction.vocabularies;
 
+import ch.unisg.ics.interactions.hmas.core.vocabularies.HMAS;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
-public enum INTERACTION {
+public enum INTERACTION implements HMAS {
   PREFIX("https://purl.org/hmas/interaction#"),
 
   /* Classes */
@@ -18,7 +19,7 @@ public enum INTERACTION {
   AGENT_BODY(PREFIX + "AgentBody"),
 
   /* Object Properties */
-  SIGNIFIES(PREFIX + "signifier"),
+  SIGNIFIES(PREFIX + "signifies"),
   RECOMMENDS_ABILITY(PREFIX + "recommendsAbility"),
   HAS_ABILITY(PREFIX + "hasAbility"),
   EXPECTS(PREFIX + "expects"),
@@ -29,7 +30,7 @@ public enum INTERACTION {
 
   private final String type;
 
-  private INTERACTION(String type) {
+  INTERACTION(String type) {
     this.type = type;
   }
 

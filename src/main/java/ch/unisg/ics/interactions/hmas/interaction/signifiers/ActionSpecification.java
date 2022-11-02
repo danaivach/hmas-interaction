@@ -14,11 +14,13 @@ public class ActionSpecification extends BehavioralSpecification {
     this.forms = ImmutableSet.copyOf(builder.forms);
   }
 
-  public Set<Form> getForms() { return this.forms; }
+  public Set<Form> getForms() {
+    return this.forms;
+  }
 
   public static class Builder extends AbstractBuilder<Builder, ActionSpecification> {
 
-    protected Builder(Form form) {
+    public Builder(Form form) {
       super(form);
     }
 
@@ -37,7 +39,9 @@ public class ActionSpecification extends BehavioralSpecification {
     private final Set<Form> forms;
 
     protected AbstractBuilder(Form form) {
-      this(new HashSet<>() {{ add(form);}});
+      this(new HashSet<>() {{
+        add(form);
+      }});
     }
 
     protected AbstractBuilder(Set<Form> forms) {
