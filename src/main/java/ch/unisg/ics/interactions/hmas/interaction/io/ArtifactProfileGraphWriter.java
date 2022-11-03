@@ -11,17 +11,18 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 
 import java.util.Set;
 
-import static ch.unisg.ics.interactions.hmas.core.vocabularies.HMAS.EXPOSES_SIGNIFIER;
-import static ch.unisg.ics.interactions.hmas.core.vocabularies.HMAS.SIGNIFIER;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.EXPOSES_SIGNIFIER;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.SIGNIFIER;
 
-public class InteractiveProfileGraphWriter extends ResourceProfileGraphWriter {
-  public InteractiveProfileGraphWriter(ResourceProfile profile) {
+public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter {
+  public ArtifactProfileGraphWriter(ResourceProfile profile) {
     super(profile);
   }
 
+  /*
   @Override
   protected ResourceProfileGraphWriter addSignifiers() {
-    Set<BaseSignifier> signifiers = profile.getExposedSignifiers();
+    Set<BaseSignifier> signifiers = profile.
     if (!signifiers.isEmpty()) {
       for (BaseSignifier signifier : signifiers) {
 
@@ -43,4 +44,6 @@ public class InteractiveProfileGraphWriter extends ResourceProfileGraphWriter {
     }
     return this;
   }
+
+   */
 }
