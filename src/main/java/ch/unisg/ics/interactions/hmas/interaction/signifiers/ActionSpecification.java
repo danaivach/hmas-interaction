@@ -39,7 +39,7 @@ public class ActionSpecification extends BehavioralSpecification {
     private final Set<Form> forms;
 
     protected AbstractBuilder(Form form) {
-      this(new HashSet<>() {{
+      this(new HashSet<Form>() {{
         add(form);
       }});
     }
