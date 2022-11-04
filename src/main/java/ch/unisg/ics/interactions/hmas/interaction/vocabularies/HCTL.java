@@ -28,10 +28,10 @@ public class HCTL {
   static {
     SimpleValueFactory rdf = SimpleValueFactory.getInstance();
 
-    FORM = rdf.createIRI(NAMESPACE + "Salience");
-    HAS_TARGET = rdf.createIRI(NAMESPACE + "Ability");
-    HAS_OPERATION_TYPE = rdf.createIRI(NAMESPACE + "Behavior");
-    FOR_CONTENT_TYPE = rdf.createIRI(NAMESPACE + "BehavioralSpecification");
-    FOR_SUB_PROTOCOL = rdf.createIRI(NAMESPACE + "ActionExecution");
+    FORM = rdf.createIRI(NAMESPACE + "Form");
+    HAS_TARGET = rdf.createIRI(NAMESPACE + "hasTarget");
+    HAS_OPERATION_TYPE = rdf.createIRI(NAMESPACE + "hasOperationType");
+    FOR_CONTENT_TYPE = rdf.createIRI(NAMESPACE + "forContentType");
+    FOR_SUB_PROTOCOL = rdf.createIRI(NAMESPACE + "forSubProtocol");
   }
 }
