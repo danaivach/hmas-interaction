@@ -24,7 +24,7 @@ public class ActionSpecification extends BehavioralSpecification {
       super(form);
     }
 
-    protected Builder(Set<Form> forms) {
+    public Builder(Set<Form> forms) {
       super(forms);
     }
 

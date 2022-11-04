@@ -1,8 +1,6 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.Agent;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
-import ch.unisg.ics.interactions.hmas.interaction.io.AgentProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import org.junit.jupiter.api.Test;
@@ -18,9 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class AgentProfileGraphReaderTest {
 
   private static final String PREFIXES =
-          "@prefix hmas: <" + CORE.PREFIX + "> .\n" +
-                  "@prefix hmas-int: <" + INTERACTION.PREFIX + "> .\n" +
-                  "@prefix prs: <http://example.org/prs#> \n" ;
+          "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +
+                  "@prefix hmas-int: <" + INTERACTION.NAMESPACE + "> .\n" +
+                  "@prefix prs: <http://example.org/prs#> \n";
 
 
   @Test
@@ -36,7 +34,7 @@ public class AgentProfileGraphReaderTest {
             AgentProfileGraphReader.readFromString(expectedProfile);
 
     CapableAgent agent = profile.getAgent();
-    assertEquals(AGENT, agent.getType());
+    assertEquals(AGENT, agent.getTypeAsIRI());
     assertFalse(agent.getIRI().isPresent());
 
     Set<Ability> abilities = agent.getAbilities();
@@ -56,13 +54,13 @@ public class AgentProfileGraphReaderTest {
             "  hmas-int:hasAgentBody <urn:body>\n" +
             " ]. \n" +
             "\n" +
-            "<urn:body> a hmas-int:AgentBody ." ;
+            "<urn:body> a hmas-int:AgentBody .";
 
     AgentProfile profile =
             AgentProfileGraphReader.readFromString(expectedProfile);
 
     SituatedAgent agent = profile.getAgent();
-    assertEquals(AGENT, agent.getType());
+    assertEquals(AGENT, agent.getTypeAsIRI());
     assertFalse(agent.getIRI().isPresent());
 
     Set<AgentBody> bodies = agent.getBodies();

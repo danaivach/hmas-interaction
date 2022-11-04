@@ -45,11 +45,11 @@ public class AgentProfileGraphReader extends ResourceProfileGraphReader {
   }
 
   protected final SituatedAgent readOwnerAgent() {
-    Optional<Resource> node = Models.objectResource(model.filter(profileIRI, IS_PROFILE_OF.toIRI(), null));
+    Optional<Resource> node = Models.objectResource(model.filter(profileIRI, IS_PROFILE_OF, null));
     if (node.isPresent()) {
       AbstractProfiledResource resource = (AbstractProfiledResource) readResource(node.get());
 
-      if (CORE.AGENT.equals(resource.getType())) {
+      if (CORE.AGENT.equals(resource.getTypeAsIRI())) {
         return (SituatedAgent) resource;
       } else {
         throw new InvalidResourceProfileException("An agent profile must describe an agent.");
@@ -76,7 +76,7 @@ public class AgentProfileGraphReader extends ResourceProfileGraphReader {
 
   protected Set<Ability> readAgentAbilities(Resource agentNode) {
     Set<Ability> abilities = new HashSet<>();
-    Set<Resource> abilityNodes = Models.objectResources(model.filter(agentNode, HAS_ABILITY.toIRI(),
+    Set<Resource> abilityNodes = Models.objectResources(model.filter(agentNode, HAS_ABILITY,
             null));
 
     for (Resource abilityNode : abilityNodes) {
@@ -94,7 +94,7 @@ public class AgentProfileGraphReader extends ResourceProfileGraphReader {
 
   protected Set<AgentBody> readAgentBodies(Resource agentNode) {
     Set<AgentBody> bodies = new HashSet<>();
-    Set<Resource> bodyNodes = Models.objectResources(model.filter(agentNode, HAS_AGENT_BODY.toIRI(),
+    Set<Resource> bodyNodes = Models.objectResources(model.filter(agentNode, HAS_AGENT_BODY,
             null));
 
     for (Resource bodyNode : bodyNodes) {

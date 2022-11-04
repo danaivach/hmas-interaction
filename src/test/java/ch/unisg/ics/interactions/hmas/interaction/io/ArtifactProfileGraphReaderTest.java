@@ -2,7 +2,6 @@ package ch.unisg.ics.interactions.hmas.interaction.io;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
-import ch.unisg.ics.interactions.hmas.interaction.io.ArtifactProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.Ability;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.ArtifactProfile;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.Signifier;
@@ -14,14 +13,15 @@ import java.util.List;
 import java.util.Set;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.ARTIFACT;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class ArtifactProfileGraphReaderTest {
 
   private static final String PREFIXES =
-          "@prefix hmas: <" + CORE.PREFIX + "> .\n" +
-          "@prefix hmas-int: <" + INTERACTION.PREFIX + "> .\n" +
-          "@prefix prs: <http://example.org/prs#> \n" ;
+          "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +
+                  "@prefix hmas-int: <" + INTERACTION.NAMESPACE + "> .\n" +
+                  "@prefix prs: <http://example.org/prs#> \n";
 
 
   @Test
@@ -39,7 +39,7 @@ public class ArtifactProfileGraphReaderTest {
             ArtifactProfileGraphReader.readFromString(expectedProfile);
 
     Artifact artifact = profile.getArtifact();
-    assertEquals(ARTIFACT, artifact.getType());
+    assertEquals(ARTIFACT, artifact.getTypeAsIRI());
     assertFalse(artifact.getIRI().isPresent());
 
     assertEquals(1, profile.getExposedSignifiers().size());

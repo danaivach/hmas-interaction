@@ -43,16 +43,17 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
 
   protected Set<Signifier> readSignifiers() {
     Set<Signifier> signifiers = new HashSet<>();
-    Set<Resource> signifierNodes = Models.objectResources(model.filter(profileIRI, EXPOSES_SIGNIFIER.toIRI(),
+    Set<Resource> signifierNodes = Models.objectResources(model.filter(profileIRI, EXPOSES_SIGNIFIER,
             null));
     for (Resource signifierNode : signifierNodes) {
-      Set<Resource> bSpecNodes = Models.objectResources(model.filter(signifierNode, SIGNIFIES.toIRI(), null));
+      Set<Resource> bSpecNodes = Models.objectResources(model.filter(signifierNode, SIGNIFIES, null));
 
       if (!bSpecNodes.isEmpty()) {
-        ActionSpecification acSpec = new ActionSpecification.Builder(new Form()).build();
+        Set<Form> forms = readForms(bSpecNodes);
+        ActionSpecification acSpec = new ActionSpecification.Builder(forms).build();
         Signifier.Builder builder = new Signifier.Builder(acSpec);
 
-        Set<Resource> abilities = Models.objectResources(model.filter(signifierNode, RECOMMENDS_ABILITY.toIRI(),
+        Set<Resource> abilities = Models.objectResources(model.filter(signifierNode, RECOMMENDS_ABILITY,
                 null));
 
         for (Resource ability : abilities) {
@@ -63,7 +64,6 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
           for (IRI abilityType : abilityTypes) {
             abilityBuilder.addSemanticType(abilityType.stringValue());
           }
-
           builder.addRecommendedAbility(abilityBuilder.build());
         }
 
@@ -76,5 +76,22 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
       }
     }
     return signifiers;
+  }
+
+  protected Set<Form> readForms(Set<Resource> formNodes) {
+    Set<Form> forms = new HashSet<>();
+    /*for (Resource formNode : formNodes) {
+      Optional<IRI> target = Models.objectIRI(model.filter(formNode, HCTL.hasTarget),
+              null));
+
+      if (!targetOpt.isPresent()) {
+        continue;
+      Form.Builder builder = new Form.Builder():
+    }
+
+
+     */
+
+    return forms;
   }
 }
