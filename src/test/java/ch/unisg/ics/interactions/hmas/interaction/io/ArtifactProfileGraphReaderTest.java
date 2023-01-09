@@ -2,9 +2,7 @@ package ch.unisg.ics.interactions.hmas.interaction.io;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
-import ch.unisg.ics.interactions.hmas.interaction.signifiers.Ability;
-import ch.unisg.ics.interactions.hmas.interaction.signifiers.ArtifactProfile;
-import ch.unisg.ics.interactions.hmas.interaction.signifiers.Signifier;
+import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import org.junit.jupiter.api.Test;
@@ -73,8 +71,7 @@ public class ArtifactProfileGraphReaderTest {
             "     hmas-int:hasForm [ a hctl:Form ;\n" +
             "       hctl:hasTarget <https://example.org/resource> \n" +
             "     ]\n" +
-            "   ] ;\n" +
-            "   hmas-int:recommendsAbility [ a hmas-int:Ability, prs:PRSAbility ] \n" +
+            "   ] \n" +
             "].";
 
     ArtifactProfile profile =
@@ -89,13 +86,12 @@ public class ArtifactProfileGraphReaderTest {
 
     List<Signifier> signifiersList = new ArrayList<>(signifiers);
     Signifier signifier = signifiersList.get(0);
-    assertEquals(1, signifier.getRecommendedAbilities().size());
-    Set<Ability> abilities = signifier.getRecommendedAbilities();
+    assertEquals(0, signifier.getRecommendedAbilities().size());
 
-    List<Ability> abilitiesList = new ArrayList<>(abilities);
-    Ability ability = abilitiesList.get(0);
-    assertEquals(2, ability.getSemanticTypes().size());
-
+    ActionSpecification actionSpec = (ActionSpecification) signifier.getBehavioralSpecification();
+    Set<Form> forms = actionSpec.getForms();
+    assertEquals(1, forms.size());
+    Form form = new ArrayList<>(forms).get(0);
+    assertEquals("https://example.org/resource", form.getTarget());
   }
-
 }
