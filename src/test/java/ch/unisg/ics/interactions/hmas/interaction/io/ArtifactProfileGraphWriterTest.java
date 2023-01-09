@@ -3,6 +3,7 @@ package ch.unisg.ics.interactions.hmas.interaction.io;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
@@ -27,10 +28,12 @@ public class ArtifactProfileGraphWriterTest {
 
   private static final String PREFIXES =
           CORE_PREFIX + ".\n" + INTERACTION_PREFIX + ".\n" +
-                  "@prefix prs: <http://example.org/prs#> \n";
+                  "@prefix prs: <http://example.org/prs#> .\n" +
+                  "@prefix hctl: <" + HCTL.NAMESPACE + "> \n";
+
 
   private static final String BASE_URI = "http://example.org/";
-  private static final String TARGET = "http://robot.example.org/gripper";
+  private static final String TARGET = "https://example.org/resource";
   private static final Form BASIC_FORM = new Form.Builder(TARGET).build();
 
   private static Model readModelFromString(String profile, String baseURI)
@@ -53,8 +56,12 @@ public class ArtifactProfileGraphWriterTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "  hmas-int:signifies [ a hmas-int:ActionSpecification ]\n" +
-            "].";
+            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
+            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "       hctl:hasTarget <https://example.org/resource> \n" +
+            "     ]\n" +
+            "   ]\n" +
+            " ]. ";
 
     ActionSpecification actionSpec = new ActionSpecification.Builder(BASIC_FORM).build();
 
@@ -75,9 +82,17 @@ public class ArtifactProfileGraphWriterTest {
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier <urn:signifier-1>, <urn:signifier-2>.\n" +
             "<urn:signifier-1> a hmas:Signifier ;\n" +
-            "  hmas-int:signifies [ a hmas-int:ActionSpecification ].\n" +
+            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
+            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "       hctl:hasTarget <https://example.org/resource> \n" +
+            "     ]\n" +
+            "   ]. \n" +
             "<urn:signifier-2> a hmas:Signifier ;\n" +
-            "  hmas-int:signifies [ a hmas-int:ActionSpecification ].";
+            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
+            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "       hctl:hasTarget <https://example.org/resource> \n" +
+            "     ]\n" +
+            "   ]. ";
 
     ActionSpecification actionSpec = new ActionSpecification.Builder(BASIC_FORM).build();
 
@@ -108,7 +123,11 @@ public class ArtifactProfileGraphWriterTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "  hmas-int:signifies [ a hmas-int:ActionSpecification ]\n" +
+            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
+            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "       hctl:hasTarget <https://example.org/resource> \n" +
+            "     ]\n" +
+            "   ] \n" +
             "].";
 
     ActionSpecification actionSpec = new ActionSpecification.Builder(BASIC_FORM).build();
@@ -130,8 +149,12 @@ public class ArtifactProfileGraphWriterTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "  hmas-int:signifies [ a hmas-int:ActionSpecification ];\n" +
-            "  hmas-int:recommendsAbility [ a hmas-int:Ability, prs:PRSAbility ]\n" +
+            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
+            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "       hctl:hasTarget <https://example.org/resource> \n" +
+            "     ]\n" +
+            "   ];\n" +
+            "   hmas-int:recommendsAbility [ a hmas-int:Ability, prs:PRSAbility ]\n" +
             "].";
 
     ActionSpecification actionSpec = new ActionSpecification.Builder(BASIC_FORM).build();
