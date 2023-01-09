@@ -4,7 +4,10 @@ import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HTV;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.Models;
@@ -16,8 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.EXPOSES_SIGNIFIER;
-import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.RECOMMENDS_ABILITY;
-import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.SIGNIFIES;
+import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.*;
 
 public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
 
@@ -46,11 +48,11 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     Set<Resource> signifierNodes = Models.objectResources(model.filter(profileIRI, EXPOSES_SIGNIFIER,
             null));
     for (Resource signifierNode : signifierNodes) {
-      Set<Resource> bSpecNodes = Models.objectResources(model.filter(signifierNode, SIGNIFIES, null));
+      Optional<Resource> bSpecNode = Models.objectResource(model.filter(signifierNode, SIGNIFIES, null));
 
-      if (!bSpecNodes.isEmpty()) {
-        Set<Form> forms = readForms(bSpecNodes);
-        ActionSpecification acSpec = new ActionSpecification.Builder(forms).build();
+      // TODO Read also behavior specs
+      if (bSpecNode.isPresent()) {
+        ActionSpecification acSpec = readActionSpecification(bSpecNode.get());
         Signifier.Builder builder = new Signifier.Builder(acSpec);
 
         Set<Resource> abilities = Models.objectResources(model.filter(signifierNode, RECOMMENDS_ABILITY,
@@ -78,19 +80,39 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     return signifiers;
   }
 
+  protected  ActionSpecification readActionSpecification(Resource specNode) {
+    Set<Resource> formNodes = Models.objectResources(model.filter(specNode, HAS_FORM, null));
+    if (!formNodes.isEmpty()) {
+      Set<Form> forms = readForms(formNodes);
+      ActionSpecification.Builder builder = new ActionSpecification.Builder(forms);
+      return builder.build();
+    } else {
+      throw new InvalidResourceProfileException("An action specification was found with no forms. " +
+              "An action specification should have at least one form. ");
+    }
+  }
+
   protected Set<Form> readForms(Set<Resource> formNodes) {
     Set<Form> forms = new HashSet<>();
-    /*for (Resource formNode : formNodes) {
-      Optional<IRI> target = Models.objectIRI(model.filter(formNode, HCTL.hasTarget),
+    for (Resource formNode : formNodes) {
+      Optional<IRI> target = Models.objectIRI(model.filter(formNode, HCTL.HAS_TARGET,
               null));
 
-      if (!targetOpt.isPresent()) {
-        continue;
-      Form.Builder builder = new Form.Builder():
+      if (target.isPresent()) {
+        Form.Builder builder = new Form.Builder(target.get().stringValue());
+
+        Optional<Literal> methodName = Models.objectLiteral(model.filter(formNode, HTV.METHOD_NAME,
+                null));
+        if (methodName.isPresent()) {
+          builder.setMethodName(methodName.get().stringValue());
+        }
+
+        forms.add(builder.build());
+
+      } else {
+        throw new InvalidResourceProfileException("A form was found but its submission target is missing. ");
+      }
     }
-
-
-     */
 
     return forms;
   }
