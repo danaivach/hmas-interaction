@@ -183,11 +183,16 @@ public class ArtifactProfileGraphWriterTest {
             .setNamespace("prs", "http://example.org/prs#")
             .write();
 
+    String actualProfileSt = ArtifactProfileGraphWriter.write(profile);
+
     LOGGER.info("Expected:\n" + expectedProfile);
     LOGGER.info("Actual:\n" + actualProfile);
+    LOGGER.info("Actual st:\n" + actualProfileSt);
 
     Model actualModel = readModelFromString(actualProfile, BASE_URI);
+    Model actualModelSt = readModelFromString(actualProfileSt, BASE_URI);
 
     assertTrue(Models.isomorphic(expectedModel, actualModel));
+    assertTrue(Models.isomorphic(expectedModel, actualModelSt));
   }
 }

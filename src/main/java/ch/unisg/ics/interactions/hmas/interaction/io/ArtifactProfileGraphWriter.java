@@ -19,6 +19,10 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     super(profile);
   }
 
+  public static String write(ArtifactProfile resource) {
+    return new ArtifactProfileGraphWriter(resource).write();
+  }
+
   @Override
   public String write() {
 
@@ -29,7 +33,6 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
 
   protected ResourceProfileGraphWriter addSignifiers() {
 
-    ArtifactProfile profile = (ArtifactProfile) this.profile;
     Set<Signifier> signifiers = profile.getExposedSignifiers();
 
     for (Signifier signifier : signifiers) {
