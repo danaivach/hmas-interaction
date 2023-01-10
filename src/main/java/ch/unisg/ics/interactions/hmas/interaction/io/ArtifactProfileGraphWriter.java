@@ -13,7 +13,7 @@ import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.EXPOSES_SIGN
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.SIGNIFIER;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.*;
 
-public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter {
+public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<ArtifactProfile> {
 
   public ArtifactProfileGraphWriter(ArtifactProfile profile) {
     super(profile);
