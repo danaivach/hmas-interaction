@@ -4,6 +4,7 @@ import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphWriter;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HTV;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 
@@ -19,19 +20,24 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     super(profile);
   }
 
-  public static String write(ArtifactProfile resource) {
-    return new ArtifactProfileGraphWriter(resource).write();
-  }
-
   @Override
   public String write() {
 
-    this.addSignifiers();
+    this.setNamespace(INTERACTION.PREFIX, INTERACTION.NAMESPACE)
+            .setNamespace(HCTL.PREFIX, HCTL.NAMESPACE)
+            .setNamespace(HTV.PREFIX, HTV.NAMESPACE)
+            .addSignifiers();
 
     return super.write();
   }
 
-  protected ResourceProfileGraphWriter addSignifiers() {
+  @Override
+  public ArtifactProfileGraphWriter setNamespace(String prefix, String namespace) {
+    this.graphBuilder.setNamespace(prefix, namespace);
+    return this;
+  }
+
+  private ArtifactProfileGraphWriter addSignifiers() {
 
     Set<Signifier> signifiers = profile.getExposedSignifiers();
 
@@ -50,7 +56,7 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     return this;
   }
 
-  protected void addRecommendedAbilities(Resource signifier, Set<Ability> abilities) {
+  private void addRecommendedAbilities(Resource signifier, Set<Ability> abilities) {
 
     for (Ability ability : abilities) {
       Resource abilityId = rdf.createBNode();
@@ -64,7 +70,7 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     }
   }
 
-  protected void addBehavioralSpecification(Resource signifier, BehavioralSpecification specification) {
+  private void addBehavioralSpecification(Resource signifier, BehavioralSpecification specification) {
 
     Resource specId = rdf.createBNode();
     graphBuilder.add(signifier, SIGNIFIES, specId);
