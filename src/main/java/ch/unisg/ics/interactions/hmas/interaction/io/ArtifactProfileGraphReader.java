@@ -1,6 +1,8 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractProfiledResource;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
+import ch.unisg.ics.interactions.hmas.core.hostables.Workspace;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
@@ -18,7 +20,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.EXPOSES_SIGNIFIER;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.*;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.HMAS_PLATFORM;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.*;
 
 public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
@@ -31,7 +34,7 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     ArtifactProfileGraphReader reader = new ArtifactProfileGraphReader(RDFFormat.TURTLE, representation);
 
     ArtifactProfile.Builder artifactBuilder =
-            new ArtifactProfile.Builder((Artifact) reader.readOwnerResource())
+            new ArtifactProfile.Builder(reader.readOwnerResource())
                     .addHMASPlatforms(reader.readHomeHMASPlatforms())
                     .exposeSignifiers(reader.readSignifiers());
 
@@ -41,6 +44,25 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     }
 
     return artifactBuilder.build();
+  }
+
+  protected final Artifact readOwnerResource() {
+    Optional<Resource> node = Models.objectResource(model.filter(profileIRI, IS_PROFILE_OF, null));
+    if (node.isPresent()) {
+      return readResource(node.get());
+    }
+    throw new InvalidResourceProfileException("An artifact profile must describe an artifact.");
+  }
+
+  protected final Artifact readResource(Resource node) {
+
+    Set<IRI> types = Models.objectIRIs(model.filter(node, RDF.TYPE, null));
+
+    if (types.contains(ARTIFACT) || types.contains(AGENT_BODY)) {
+      return readArtifact(node);
+    }
+    throw new InvalidResourceProfileException("Unknown type of profiled resource. " +
+            "Supported resource types: Artifact, AgentBody.");
   }
 
   protected Set<Signifier> readSignifiers() {
@@ -116,4 +138,5 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
 
     return forms;
   }
+
 }

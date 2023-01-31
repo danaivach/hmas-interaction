@@ -1,17 +1,26 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractHostable;
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractProfiledResource;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
+import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.util.Models;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.ARTIFACT;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.*;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.HMAS_PLATFORM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -22,7 +31,6 @@ public class ArtifactProfileGraphReaderTest {
                   "@prefix hmas-int: <" + INTERACTION.NAMESPACE + "> .\n" +
                   "@prefix hctl: <" + HCTL.NAMESPACE + "> .\n" +
                   "@prefix prs: <http://example.org/prs#> \n";
-
 
   @Test
   public void testReadSignifierWithAbilities() {

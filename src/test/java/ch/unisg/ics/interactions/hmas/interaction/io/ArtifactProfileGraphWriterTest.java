@@ -1,5 +1,6 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
+import ch.unisg.ics.interactions.hmas.core.hostables.Agent;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
@@ -167,6 +168,24 @@ public class ArtifactProfileGraphWriterTest {
                                     .addSemanticType("http://example.org/prs#PRSAbility")
                                     .build())
                             .build())
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteAgentBodyProfile() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<http://example.org/profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf <http://example.org/profile#agent-body>.\n" +
+            "<http://example.org/profile#agent-body> a hmas-int:AgentBody.";
+
+    AgentBody body = new AgentBody.Builder().setIRIAsString("http://example.org/profile#agent-body").build();
+
+    ArtifactProfile profile =
+            new ArtifactProfile.Builder(body)
+                    .setIRIAsString("http://example.org/profile")
                     .build();
 
     assertIsomorphicGraphs(expectedProfile, profile);
