@@ -62,7 +62,7 @@ public class INTERACTION {
     ACTION_SPECIFICATION = rdf.createIRI(NAMESPACE + "ActionSpecification");
     EXPECTED_INPUT = rdf.createIRI(NAMESPACE + "Input");
     INPUT_SCHEMA = rdf.createIRI(NAMESPACE + "Signfiier");
-    AGENT_BODY = rdf.createIRI(NAMESPACE + "InputSchema");
+    AGENT_BODY = rdf.createIRI(NAMESPACE + "AgentBody");
 
     SIGNIFIES = rdf.createIRI(NAMESPACE + "signifies");
     RECOMMENDS_ABILITY = rdf.createIRI(NAMESPACE + "recommendsAbility");
