@@ -1,8 +1,6 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.AbstractProfiledResource;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
-import ch.unisg.ics.interactions.hmas.core.hostables.Workspace;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
@@ -21,7 +19,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.*;
-import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.HMAS_PLATFORM;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.*;
 
 public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
@@ -36,6 +33,7 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     ArtifactProfile.Builder artifactBuilder =
             new ArtifactProfile.Builder(reader.readOwnerResource())
                     .addHMASPlatforms(reader.readHomeHMASPlatforms())
+                    .addSemanticTypes(reader.readSemanticTypes())
                     .exposeSignifiers(reader.readSignifiers());
 
     Optional<IRI> profileIRI = reader.readProfileIRI();
@@ -102,12 +100,12 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     return signifiers;
   }
 
-  protected  ActionSpecification readActionSpecification(Resource specNode) {
+  protected ActionSpecification readActionSpecification(Resource specNode) {
     Set<Resource> formNodes = Models.objectResources(model.filter(specNode, HAS_FORM, null));
     if (!formNodes.isEmpty()) {
       Set<Form> forms = readForms(formNodes);
       ActionSpecification.Builder builder = new ActionSpecification.Builder(forms);
-      return builder.build();
+      return (ActionSpecification) readHostable(builder, specNode);
     } else {
       throw new InvalidResourceProfileException("An action specification was found with no forms. " +
               "An action specification should have at least one form. ");

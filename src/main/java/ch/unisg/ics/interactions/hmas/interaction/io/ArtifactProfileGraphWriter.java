@@ -91,5 +91,6 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
         graphBuilder.add(formId, HTV.METHOD_NAME, form.getMethodName().get());
       }
     }
+    addHostable(specification, specId);
   }
 }

@@ -1,5 +1,6 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.HashSet;
@@ -10,7 +11,7 @@ public class ActionSpecification extends BehavioralSpecification {
   private final Set<Form> forms;
 
   protected ActionSpecification(AbstractBuilder builder) {
-    super(builder);
+    super(INTERACTION.TERM.ACTION_SPECIFICATION, builder);
     this.forms = ImmutableSet.copyOf(builder.forms);
   }
 

@@ -1,6 +1,8 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.AbstractHostable;
+import ch.unisg.ics.interactions.hmas.core.vocabularies.HMAS;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.HashSet;
@@ -11,7 +13,11 @@ public class BehavioralSpecification extends AbstractHostable {
   private final Set<Signifier> evaluabilitySignifiers;
 
   protected BehavioralSpecification(AbstractBuilder builder) {
-    super(builder);
+    this(INTERACTION.TERM.BEHAVIORAL_SPECIFICATION, builder);
+  }
+
+  protected BehavioralSpecification(HMAS type, AbstractBuilder builder) {
+    super(type, builder);
     this.evaluabilitySignifiers = ImmutableSet.copyOf(builder.evaluabilitySignifiers);
   }
 
