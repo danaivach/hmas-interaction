@@ -1,6 +1,5 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.Agent;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
@@ -24,11 +23,10 @@ public class ArtifactProfileGraphWriterTest {
 
   private final static Logger LOGGER = Logger.getLogger(ArtifactProfileGraphWriterTest.class.getCanonicalName());
 
-  private static final String CORE_PREFIX = "@prefix hmas: <" + CORE.NAMESPACE + ">";
-  private static final String INTERACTION_PREFIX = "@prefix hmas-int: <" + INTERACTION.NAMESPACE + ">";
+  private static final String HMAS_PREFIX = "@prefix hmas: <" + CORE.NAMESPACE + ">";
 
   private static final String PREFIXES =
-          CORE_PREFIX + ".\n" + INTERACTION_PREFIX + ".\n" +
+          HMAS_PREFIX + ".\n" +
                   "@prefix prs: <http://example.org/prs#> .\n" +
                   "@prefix hctl: <" + HCTL.NAMESPACE + "> \n";
 
@@ -57,8 +55,8 @@ public class ArtifactProfileGraphWriterTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
-            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "   hmas:signifies [ a hmas:ActionSpecification ;\n" +
+            "     hmas:hasForm [ a hctl:Form ;\n" +
             "       hctl:hasTarget <https://example.org/resource> \n" +
             "     ]\n" +
             "   ]\n" +
@@ -83,14 +81,14 @@ public class ArtifactProfileGraphWriterTest {
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier <urn:signifier-1>, <urn:signifier-2>.\n" +
             "<urn:signifier-1> a hmas:Signifier ;\n" +
-            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
-            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "   hmas:signifies [ a hmas:ActionSpecification ;\n" +
+            "     hmas:hasForm [ a hctl:Form ;\n" +
             "       hctl:hasTarget <https://example.org/resource> \n" +
             "     ]\n" +
             "   ]. \n" +
             "<urn:signifier-2> a hmas:Signifier ;\n" +
-            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
-            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "   hmas:signifies [ a hmas:ActionSpecification ;\n" +
+            "     hmas:hasForm [ a hctl:Form ;\n" +
             "       hctl:hasTarget <https://example.org/resource> \n" +
             "     ]\n" +
             "   ]. ";
@@ -124,8 +122,8 @@ public class ArtifactProfileGraphWriterTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
-            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "   hmas:signifies [ a hmas:ActionSpecification ;\n" +
+            "     hmas:hasForm [ a hctl:Form ;\n" +
             "       hctl:hasTarget <https://example.org/resource> \n" +
             "     ]\n" +
             "   ] \n" +
@@ -150,12 +148,12 @@ public class ArtifactProfileGraphWriterTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
-            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "   hmas:signifies [ a hmas:ActionSpecification ;\n" +
+            "     hmas:hasForm [ a hctl:Form ;\n" +
             "       hctl:hasTarget <https://example.org/resource> \n" +
             "     ]\n" +
             "   ];\n" +
-            "   hmas-int:recommendsAbility [ a hmas-int:Ability, prs:PRSAbility ]\n" +
+            "   hmas:recommendsAbility [ a hmas:Ability, prs:PRSAbility ]\n" +
             "].";
 
     ActionSpecification actionSpec = new ActionSpecification.Builder(BASIC_FORM).build();
@@ -179,7 +177,7 @@ public class ArtifactProfileGraphWriterTest {
             ".\n" +
             "<http://example.org/profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf <http://example.org/profile#agent-body>.\n" +
-            "<http://example.org/profile#agent-body> a hmas-int:AgentBody.";
+            "<http://example.org/profile#agent-body> a hmas:AgentBody.";
 
     AgentBody body = new AgentBody.Builder().setIRIAsString("http://example.org/profile#agent-body").build();
 

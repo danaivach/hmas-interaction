@@ -17,7 +17,6 @@ public class AgentProfileGraphReaderTest {
 
   private static final String PREFIXES =
           "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +
-                  "@prefix hmas-int: <" + INTERACTION.NAMESPACE + "> .\n" +
                   "@prefix prs: <http://example.org/prs#> \n";
 
 
@@ -27,7 +26,7 @@ public class AgentProfileGraphReaderTest {
             ".\n" +
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Agent ;" +
-            "  hmas-int:hasAbility [ a hmas-int:Ability, prs:PRSAbility ]\n" +
+            "  hmas:hasAbility [ a hmas:Ability, prs:PRSAbility ]\n" +
             " ].";
 
     AgentProfile profile =
@@ -51,10 +50,10 @@ public class AgentProfileGraphReaderTest {
             ".\n" +
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Agent ;" +
-            "  hmas-int:hasAgentBody <urn:body>\n" +
+            "  hmas:hasAgentBody <urn:body>\n" +
             " ]. \n" +
             "\n" +
-            "<urn:body> a hmas-int:AgentBody .";
+            "<urn:body> a hmas:AgentBody .";
 
     AgentProfile profile =
             AgentProfileGraphReader.readFromString(expectedProfile);

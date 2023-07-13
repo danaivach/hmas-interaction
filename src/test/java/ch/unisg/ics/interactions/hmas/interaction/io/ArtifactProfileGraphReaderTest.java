@@ -28,7 +28,6 @@ public class ArtifactProfileGraphReaderTest {
 
   private static final String PREFIXES =
           "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +
-                  "@prefix hmas-int: <" + INTERACTION.NAMESPACE + "> .\n" +
                   "@prefix hctl: <" + HCTL.NAMESPACE + "> .\n" +
                   "@prefix prs: <http://example.org/prs#> \n";
 
@@ -39,12 +38,12 @@ public class ArtifactProfileGraphReaderTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
-            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "   hmas:signifies [ a hmas:ActionSpecification ;\n" +
+            "     hmas:hasForm [ a hctl:Form ;\n" +
             "       hctl:hasTarget <https://example.org/resource> \n" +
             "     ]\n" +
             "   ] ;\n" +
-            "   hmas-int:recommendsAbility [ a hmas-int:Ability, prs:PRSAbility ] \n" +
+            "   hmas:recommendsAbility [ a hmas:Ability, prs:PRSAbility ] \n" +
             " ].";
 
     ArtifactProfile profile =
@@ -75,8 +74,8 @@ public class ArtifactProfileGraphReaderTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "   hmas-int:signifies [ a hmas-int:ActionSpecification ;\n" +
-            "     hmas-int:hasForm [ a hctl:Form ;\n" +
+            "   hmas:signifies [ a hmas:ActionSpecification ;\n" +
+            "     hmas:hasForm [ a hctl:Form ;\n" +
             "       hctl:hasTarget <https://example.org/resource> \n" +
             "     ]\n" +
             "   ] \n" +
