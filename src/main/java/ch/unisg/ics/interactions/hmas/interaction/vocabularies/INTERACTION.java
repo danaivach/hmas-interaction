@@ -9,9 +9,9 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class INTERACTION {
 
-  public static final String NAMESPACE = "https://purl.org/hmas/interaction#";
+  public static final String NAMESPACE = "https://purl.org/hmas/";
 
-  public static final String PREFIX = "hmas-int";
+  public static final String PREFIX = "hmas";
 
   public static final Namespace NS = Vocabulary.createNamespace(PREFIX, NAMESPACE);
 
