@@ -1,7 +1,7 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.AbstractHostable;
-import ch.unisg.ics.interactions.hmas.core.hostables.AbstractProfiledResource;
+import ch.unisg.ics.interactions.hmas.core.hostables.ProfiledResource;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
