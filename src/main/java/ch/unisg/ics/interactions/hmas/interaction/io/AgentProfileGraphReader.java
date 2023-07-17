@@ -1,6 +1,7 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.AbstractProfiledResource;
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
+import ch.unisg.ics.interactions.hmas.core.hostables.ProfiledResource;
 import ch.unisg.ics.interactions.hmas.core.hostables.Agent;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphReader;
@@ -47,7 +48,7 @@ public class AgentProfileGraphReader extends ResourceProfileGraphReader {
   protected final SituatedAgent readOwnerAgent() {
     Optional<Resource> node = Models.objectResource(model.filter(profileIRI, IS_PROFILE_OF, null));
     if (node.isPresent()) {
-      AbstractProfiledResource resource = (AbstractProfiledResource) readResource(node.get());
+      AbstractResource resource =  readResource(node.get());
 
       if (CORE.AGENT.equals(resource.getTypeAsIRI())) {
         return (SituatedAgent) resource;
@@ -71,7 +72,7 @@ public class AgentProfileGraphReader extends ResourceProfileGraphReader {
   }
 
   private Agent readAgent(Agent.AbstractBuilder<?, ?> builder, Resource node) {
-    return (Agent) readProfiledResource(builder, node);
+    return (Agent) readResource(builder, node);
   }
 
   protected Set<Ability> readAgentAbilities(Resource agentNode) {
