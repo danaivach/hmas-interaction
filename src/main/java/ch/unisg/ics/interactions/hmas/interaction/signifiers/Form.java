@@ -1,5 +1,8 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+
 import java.util.*;
 
 public class Form {
@@ -99,6 +102,17 @@ public class Form {
   // Package-level access, used for setting affordance-specific default values after instantiation
   void addOperationType(String operationType) {
     this.operationTypes.add(operationType);
+  }
+
+  public String getIRIAsString() {
+    return additionalProperties.get("IRI").toString();
+  }
+
+  public Optional<IRI> getIRI() {
+    return Optional.ofNullable(getIRIAsString())
+            .map(s -> s.replace("<", ""))
+            .map(s -> s.replace(">", ""))
+            .map(SimpleValueFactory.getInstance()::createIRI);
   }
 
   public static class Builder {

@@ -6,20 +6,28 @@ import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HTV;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.impl.SimpleBNode;
+import org.eclipse.rdf4j.model.impl.SimpleIRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.spin.function.spif.For;
+import org.eclipse.rdf4j.spin.function.spif.Mod;
 
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.*;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.*;
+import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL.*;
 
 public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
 
@@ -101,15 +109,39 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
   }
 
   protected ActionSpecification readActionSpecification(Resource specNode) {
-    Set<Resource> formNodes = Models.objectResources(model.filter(specNode, HAS_FORM, null));
-    if (!formNodes.isEmpty()) {
-      Set<Form> forms = readForms(formNodes);
-      ActionSpecification.Builder builder = new ActionSpecification.Builder(forms);
-      return (ActionSpecification) readHostable(builder, specNode);
-    } else {
-      throw new InvalidResourceProfileException("An action specification was found with no forms. " +
-              "An action specification should have at least one form. ");
+    Resource propNode = Models.objectResource(model.filter(specNode, PROPERTY, null))
+            .orElseThrow(() -> new InvalidResourceProfileException(
+                    "An action specification was found with no property."));
+    return new ActionSpecification.Builder(readForms(readFormResources(propNode))).build();
+  }
+
+  protected Set<Resource> readFormResources(Resource propNode) {
+    if (model.contains(propNode, HAS_VALUE, null)) {
+      return Models.objectResources(model.filter(propNode, HAS_VALUE, null));
     }
+    if (model.contains(propNode, OR, null)) {
+      return Models.objectResource(model.filter(propNode, OR, null))
+              .map(orNode -> Models.objectResources(model.filter(orNode, null, null)))
+              .map(x -> x.stream().flatMap(l -> extractForms(l).stream()).collect(Collectors.toSet()))
+              .orElse(Set.of());
+    }
+    throw new InvalidResourceProfileException("An action specification was found with no forms. " +
+            "An action specification should have at least one form. ");
+  }
+
+  private Set<Resource> extractForms(Resource node) {
+    Set<Resource> resources = new HashSet<>();
+    Resource n = node;
+    while (Models.objectResources(model.filter(n, null, null)).stream()
+            .anyMatch(r -> r instanceof SimpleBNode)) {
+      Models.objectResources(model.filter(n, null, null)).stream()
+              .filter(r -> r instanceof SimpleIRI).findFirst().ifPresent(resources::add);
+      n = Models.objectResources(model.filter(n, null, null)).stream()
+              .filter(r -> r instanceof SimpleBNode).findFirst().get();
+    }
+    Models.objectResources(model.filter(n, null, null)).stream()
+            .filter(r -> r instanceof SimpleIRI).findFirst().ifPresent(resources::add);
+    return resources;
   }
 
   protected Set<Form> readForms(Set<Resource> formNodes) {
@@ -126,6 +158,8 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
         if (methodName.isPresent()) {
           builder.setMethodName(methodName.get().stringValue());
         }
+
+        builder.addProperty("IRI", formNode.stringValue());
 
         forms.add(builder.build());
 

@@ -1,18 +1,27 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
 import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphWriter;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
-import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
-import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HTV;
-import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
-import org.eclipse.rdf4j.model.Resource;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.LinkedHashModel;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.util.Models;
+import org.eclipse.rdf4j.model.util.RDFCollections;
+import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.EXPOSES_SIGNIFIER;
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.SIGNIFIER;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.*;
+import static org.eclipse.rdf4j.model.util.Values.*;
 
 public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<ArtifactProfile> {
 
@@ -26,6 +35,9 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     this.setNamespace(INTERACTION.PREFIX, INTERACTION.NAMESPACE)
             .setNamespace(HCTL.PREFIX, HCTL.NAMESPACE)
             .setNamespace(HTV.PREFIX, HTV.NAMESPACE)
+            .setNamespace(SHACL.PREFIX, SHACL.NAMESPACE)
+            .setNamespace(PROV.PREFIX, PROV.NAMESPACE)
+            .setNamespace("urn", "http://example.org/urn#")
             .addSignifiers();
 
     return super.write();
@@ -50,8 +62,8 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
       Set<Ability> abilities = signifier.getRecommendedAbilities();
       addRecommendedAbilities(locatedSignifier, abilities);
 
-      BehavioralSpecification bSpec = signifier.getBehavioralSpecification();
-      addBehavioralSpecification(locatedSignifier, bSpec);
+      AbstractResource bSpec = signifier.getResource();
+      addAbstractResource(locatedSignifier, bSpec);
     }
     return this;
   }
@@ -70,27 +82,57 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     }
   }
 
-  private void addBehavioralSpecification(Resource signifier, BehavioralSpecification specification) {
+  private void addAbstractResource(Resource signifier, AbstractResource specification) {
 
-    Resource specId = rdf.createBNode();
-    graphBuilder.add(signifier, SIGNIFIES, specId);
-    graphBuilder.add(specId, RDF.TYPE, ACTION_SPECIFICATION);
+    Resource nodeShapeId = rdf.createBNode();
+    graphBuilder.add(signifier, SIGNIFIES, nodeShapeId);
+    graphBuilder.add(nodeShapeId, RDF.TYPE, SHACL.NODE_SHAPE);
+    graphBuilder.add(nodeShapeId, SHACL.CLASS, ACTION_EXECUTION);
+
+    Resource propertyId = rdf.createBNode();
+    graphBuilder.add(nodeShapeId, SHACL.PROPERTY, propertyId);
+    graphBuilder.add(propertyId, SHACL.PATH, PROV.USED);
+    graphBuilder.add(propertyId, SHACL.MIN_COUNT, literal("1"));
+    graphBuilder.add(propertyId, SHACL.MAX_COUNT, literal("1"));
 
     ActionSpecification actionSpecification = (ActionSpecification) specification;
     Set<Form> forms = actionSpecification.getForms();
 
-    for (Form form : forms) {
-      Resource formId = rdf.createBNode();
-
-      graphBuilder.add(specId, HAS_FORM, formId);
-      graphBuilder.add(formId, RDF.TYPE, HCTL.FORM);
-      graphBuilder.add(formId, HCTL.HAS_TARGET, rdf.createIRI(form.getTarget()));
-      //graphBuilder.add(formId, HCTL.FOR_CONTENT_TYPE, form.getContentType());
-
-      if (form.getMethodName().isPresent()) {
-        graphBuilder.add(formId, HTV.METHOD_NAME, form.getMethodName().get());
-      }
+    if (forms.size() == 1) {
+      Form form = forms.iterator().next();
+      createFormNode(form);
+      graphBuilder.add(propertyId, SHACL.HAS_VALUE, form.getIRI().get());
     }
-    addHostable(specification, specId);
+    if (forms.size() > 1) {
+      List<IRI> formNodes = forms.stream().map(f -> f.getIRI().get()).toList();
+
+      BNode collectionNode = bnode();
+
+      BNode node = bnode();
+      graphBuilder.add(node, SHACL.HAS_VALUE, formNodes.get(0));
+      graphBuilder.add(collectionNode, RDF.FIRST, node);
+
+      // Create the rest of the collection
+      BNode previousNode = collectionNode;
+      for (int i = 1; i < formNodes.size(); i++) {
+        BNode nextNode = bnode();
+        graphBuilder.add(previousNode, RDF.REST, nextNode);
+        BNode n = bnode();
+        graphBuilder.add(n, SHACL.HAS_VALUE, formNodes.get(i));
+        graphBuilder.add(nextNode, RDF.FIRST, n);
+        previousNode = nextNode;
+      }
+
+      // Add rdf:nil to terminate the collection
+      graphBuilder.add(previousNode, RDF.REST, RDF.NIL);
+      graphBuilder.add(propertyId, SHACL.OR, collectionNode);
+
+      forms.forEach(this::createFormNode);
+    }
+  }
+
+  private void createFormNode(Form form) {
+    graphBuilder.add(form.getIRI().get(), RDF.TYPE, HCTL.FORM);
+    graphBuilder.add(form.getIRI().get(), HCTL.HAS_TARGET, iri(form.getTarget()));
   }
 }

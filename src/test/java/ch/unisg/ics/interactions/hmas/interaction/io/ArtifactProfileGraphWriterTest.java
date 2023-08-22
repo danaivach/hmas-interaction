@@ -5,6 +5,8 @@ import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.PROV;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -15,6 +17,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,14 +31,19 @@ public class ArtifactProfileGraphWriterTest {
   private static final String HMAS_PREFIX = "@prefix hmas: <" + CORE.NAMESPACE + ">";
 
   private static final String PREFIXES =
-          HMAS_PREFIX + ".\n" +
+          "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +
+                  "@prefix hctl: <" + HCTL.NAMESPACE + "> .\n" +
                   "@prefix prs: <http://example.org/prs#> .\n" +
-                  "@prefix hctl: <" + HCTL.NAMESPACE + "> \n";
+                  "@prefix prov: <" + PROV.NAMESPACE + "> .\n" +
+                  "@prefix urn: <http://example.org/urn#> .\n" +
+                  "@prefix sh: <" + SHACL.NAMESPACE + ">";
 
-
+  private static final String FORM_IRI = "<urn:3g6lpq9v>";
+  private static final String SECOND_FORM_IRI = "<urn:x7aym3hn>";
   private static final String BASE_URI = "http://example.org/";
   private static final String TARGET = "https://example.org/resource";
-  private static final Form BASIC_FORM = new Form.Builder(TARGET).build();
+  private static final Form BASIC_FORM = new Form.Builder(TARGET)
+          .addProperty("IRI", FORM_IRI).build();
 
   private static Model readModelFromString(String profile, String baseURI)
           throws RDFParseException, RDFHandlerException, IOException {
@@ -55,12 +65,18 @@ public class ArtifactProfileGraphWriterTest {
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
             " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
-            "   hmas:signifies [ a hmas:ActionSpecification ;\n" +
-            "     hmas:hasForm [ a hctl:Form ;\n" +
-            "       hctl:hasTarget <https://example.org/resource> \n" +
-            "     ]\n" +
+            "    hmas:signifies [ a sh:NodeShape ;\n" +
+            "       sh:class hmas:ActionExecution ;\n" +
+            "       sh:property [\n" +
+            "          sh:path prov:used ;\n" +
+            "          sh:minCount 1;\n" +
+            "          sh:maxCount 1;\n" +
+            "          sh:hasValue " + FORM_IRI + " ;\n" +
+            "      ]\n" +
             "   ]\n" +
-            " ]. ";
+            "] .\n" +
+            "<urn:3g6lpq9v> a hctl:Form ;\n" + //here the URN is randomly generated
+            "   hctl:hasTarget <https://example.org/resource> .";
 
     ActionSpecification actionSpec = new ActionSpecification.Builder(BASIC_FORM).build();
 
@@ -184,6 +200,47 @@ public class ArtifactProfileGraphWriterTest {
     ArtifactProfile profile =
             new ArtifactProfile.Builder(body)
                     .setIRIAsString("http://example.org/profile")
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteArtifactProfileMultipleForms() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            "    hmas:signifies [ a sh:NodeShape ;\n" +
+            "       sh:class hmas:ActionExecution ;\n" +
+            "       sh:property [\n" +
+            "          sh:path prov:used ;\n" +
+            "          sh:minCount \"1\" ;\n" +
+            "          sh:maxCount \"1\";\n" +
+            "          sh:or (\n" +
+            "             [ sh:hasValue " + FORM_IRI + " ]\n" +
+            "             [ sh:hasValue " + SECOND_FORM_IRI + " ]\n" +
+            "         ) ;\n" +
+            "      ]\n" +
+            "   ]\n" +
+            "] .\n" +
+            FORM_IRI + " a hctl:Form ;\n" + //here the URN is randomly generated
+            "   hctl:hasTarget <https://example.org/resource> .\n" +
+            SECOND_FORM_IRI + " a hctl:Form ;\n" + //here the URN is randomly generated
+            "   hctl:hasTarget <coaps://example.org/resource> .";
+
+    Form coapForm = new Form.Builder("coaps://example.org/resource")
+            .addProperty("IRI", SECOND_FORM_IRI).build();
+
+    Set<Form> forms = new HashSet<>(Arrays.asList(coapForm, BASIC_FORM));
+
+    ActionSpecification actionSpec = new ActionSpecification.Builder(forms).build();
+
+    ArtifactProfile profile =
+            new ArtifactProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(new Signifier.Builder(actionSpec).build())
                     .build();
 
     assertIsomorphicGraphs(expectedProfile, profile);
