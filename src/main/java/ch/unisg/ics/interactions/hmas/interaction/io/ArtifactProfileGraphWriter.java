@@ -1,22 +1,14 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
 import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphWriter;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
-import org.eclipse.rdf4j.model.*;
-import org.eclipse.rdf4j.model.impl.LinkedHashModel;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.util.Models;
-import org.eclipse.rdf4j.model.util.RDFCollections;
-import org.eclipse.rdf4j.model.util.Values;
+import org.eclipse.rdf4j.model.BNode;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.EXPOSES_SIGNIFIER;
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.SIGNIFIER;
@@ -24,6 +16,7 @@ import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTIO
 import static org.eclipse.rdf4j.model.util.Values.*;
 
 public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<ArtifactProfile> {
+  private final Map<Resource, Set<Input>> addedContexts = new HashMap<>();
 
   public ArtifactProfileGraphWriter(ArtifactProfile profile) {
     super(profile);
@@ -31,14 +24,16 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
 
   @Override
   public String write() {
-
     this.setNamespace(INTERACTION.PREFIX, INTERACTION.NAMESPACE)
-            .setNamespace(HCTL.PREFIX, HCTL.NAMESPACE)
-            .setNamespace(HTV.PREFIX, HTV.NAMESPACE)
-            .setNamespace(SHACL.PREFIX, SHACL.NAMESPACE)
-            .setNamespace(PROV.PREFIX, PROV.NAMESPACE)
-            .setNamespace("urn", "http://example.org/urn#")
-            .addSignifiers();
+        .setNamespace(HCTL.PREFIX, HCTL.NAMESPACE)
+        .setNamespace(HTV.PREFIX, HTV.NAMESPACE)
+        .setNamespace(SHACL.PREFIX, SHACL.NAMESPACE)
+        .setNamespace(PROV.PREFIX, PROV.NAMESPACE)
+        .setNamespace(RDFS.PREFIX, RDFS.NAMESPACE)
+        .setNamespace("urn", "http://example.org/urn#")
+        .setNamespace("ex", "http://example.org/")
+        .setNamespace("xs", "http://www.w3.org/2001/XMLSchema#")
+        .addSignifiers();
 
     return super.write();
   }
@@ -49,7 +44,7 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     return this;
   }
 
-  private ArtifactProfileGraphWriter addSignifiers() {
+  private void addSignifiers() {
 
     Set<Signifier> signifiers = profile.getExposedSignifiers();
 
@@ -59,22 +54,25 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
       graphBuilder.add(profileIRI, EXPOSES_SIGNIFIER, locatedSignifier);
       graphBuilder.add(locatedSignifier, RDF.TYPE, SIGNIFIER);
 
+      signifier.getLabel().ifPresent(label -> graphBuilder.add(locatedSignifier, RDFS.LABEL, label));
+      signifier.getComment().ifPresent(comment -> graphBuilder.add(locatedSignifier, RDFS.COMMENT, comment));
+
       Set<Ability> abilities = signifier.getRecommendedAbilities();
       addRecommendedAbilities(locatedSignifier, abilities);
 
-      AbstractResource bSpec = signifier.getResource();
-      addAbstractResource(locatedSignifier, bSpec);
+      addRecommendedContexts(locatedSignifier, signifier.getRecommendedContexts());
+
+      ActionSpecification bSpec = (ActionSpecification) signifier.getResource();
+      addActionSpecification(locatedSignifier, bSpec);
     }
-    return this;
   }
 
   private void addRecommendedAbilities(Resource signifier, Set<Ability> abilities) {
-
     for (Ability ability : abilities) {
       Resource abilityId = rdf.createBNode();
 
       graphBuilder.add(signifier, RECOMMENDS_ABILITY, abilityId);
-      graphBuilder.add(abilityId, RDF.TYPE, ABILITY);
+      // graphBuilder.add(abilityId, RDF.TYPE, ABILITY);
 
       for (String type : ability.getSemanticTypes()) {
         graphBuilder.add(abilityId, RDF.TYPE, rdf.createIRI(type));
@@ -82,21 +80,35 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     }
   }
 
-  private void addAbstractResource(Resource signifier, AbstractResource specification) {
+  private void addRecommendedContexts(Resource signifier, Set<Context> contexts) {
+    contexts.forEach(context -> {
+      Resource locatedContext = resolveHostableLocation(context);
+      if (!addedContexts.containsKey(locatedContext)) {
+        addedContexts.put(locatedContext, new HashSet<>());
+      }
+      graphBuilder.add(signifier, RECOMMENDS_CONTEXT, locatedContext);
+      graphBuilder.add(locatedContext, RDF.TYPE, context.getType().toIRI());
+      graphBuilder.add(locatedContext, SHACL.TARGET_CLASS, iri(context.getTargetClass()));
+      context.getInputs().stream()
+          .filter(i -> !addedContexts.get(locatedContext).contains(i))
+          .peek(i -> addedContexts.get(locatedContext).add(i))
+          .map(this::addInput)
+          .forEach(input -> {
+            graphBuilder.add(locatedContext, SHACL.PROPERTY, input);
+          });
+    });
+  }
 
-    Resource nodeShapeId = rdf.createBNode();
-    graphBuilder.add(signifier, SIGNIFIES, nodeShapeId);
-    graphBuilder.add(nodeShapeId, RDF.TYPE, SHACL.NODE_SHAPE);
-    graphBuilder.add(nodeShapeId, SHACL.CLASS, ACTION_EXECUTION);
+  private void addActionSpecification(Resource signifier, ActionSpecification specification) {
+    Resource locatedAcSpec = resolveHostableLocation(specification);
 
-    Resource propertyId = rdf.createBNode();
-    graphBuilder.add(nodeShapeId, SHACL.PROPERTY, propertyId);
-    graphBuilder.add(propertyId, SHACL.PATH, PROV.USED);
-    graphBuilder.add(propertyId, SHACL.MIN_COUNT, literal("1"));
-    graphBuilder.add(propertyId, SHACL.MAX_COUNT, literal("1"));
+    graphBuilder.add(signifier, SIGNIFIES, locatedAcSpec);
+    graphBuilder.add(locatedAcSpec, RDF.TYPE, SHACL.NODE_SHAPE);
+    graphBuilder.add(locatedAcSpec, SHACL.CLASS, ACTION_EXECUTION);
 
-    ActionSpecification actionSpecification = (ActionSpecification) specification;
-    Set<Form> forms = actionSpecification.getForms();
+    Resource propertyId = addPropertyNode(locatedAcSpec);
+
+    Set<Form> forms = specification.getForms();
 
     if (forms.size() == 1) {
       Form form = forms.iterator().next();
@@ -104,35 +116,116 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
       graphBuilder.add(propertyId, SHACL.HAS_VALUE, form.getIRI().get());
     }
     if (forms.size() > 1) {
-      List<IRI> formNodes = forms.stream().map(f -> f.getIRI().get()).toList();
-
-      BNode collectionNode = bnode();
-
-      BNode node = bnode();
-      graphBuilder.add(node, SHACL.HAS_VALUE, formNodes.get(0));
-      graphBuilder.add(collectionNode, RDF.FIRST, node);
-
-      // Create the rest of the collection
-      BNode previousNode = collectionNode;
-      for (int i = 1; i < formNodes.size(); i++) {
-        BNode nextNode = bnode();
-        graphBuilder.add(previousNode, RDF.REST, nextNode);
-        BNode n = bnode();
-        graphBuilder.add(n, SHACL.HAS_VALUE, formNodes.get(i));
-        graphBuilder.add(nextNode, RDF.FIRST, n);
-        previousNode = nextNode;
-      }
-
-      // Add rdf:nil to terminate the collection
-      graphBuilder.add(previousNode, RDF.REST, RDF.NIL);
-      graphBuilder.add(propertyId, SHACL.OR, collectionNode);
-
+      addFormsList(propertyId, forms.stream().map(f -> f.getIRI().get()).toList());
       forms.forEach(this::createFormNode);
     }
+
+    specification.getInput().ifPresent(input -> {
+      Resource inputNode = addInput(input);
+      graphBuilder.add(inputNode, SHACL.PATH, INTERACTION.HAS_INPUT);
+      graphBuilder.add(locatedAcSpec, SHACL.PROPERTY, inputNode);
+    });
+  }
+
+  private Resource addInput(Input input) {
+    return input instanceof CompoundInput ? addCompoundInput((CompoundInput) input) :
+        addSimpleInput((SimpleInput) input);
+  }
+
+  private Resource addSimpleInput(SimpleInput input) {
+    Resource inputId = rdf.createBNode();
+    graphBuilder.add(inputId, SHACL.PATH, iri(input.getPath()));
+    input.getMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(c)));
+    input.getMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(c)));
+    Optional.ofNullable(input.getDataType()).ifPresent(dt -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(dt)));
+    input.getName().ifPresent(name -> graphBuilder.add(inputId, SHACL.NAME, literal(name)));
+    input.getDescription().ifPresent(desc -> graphBuilder.add(inputId, SHACL.DESCRIPTION, literal(desc)));
+    input.getOrder().ifPresent(order -> graphBuilder.add(inputId, SHACL.ORDER, literal(order)));
+    input.getMinCount().ifPresent(minCount -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(minCount)));
+    input.getMaxCount().ifPresent(maxCount -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(maxCount)));
+    input.getMinInclusive().ifPresent(m -> graphBuilder.add(inputId, SHACL.MIN_INCLUSIVE, literal(m)));
+    input.getMaxInclusive().ifPresent(m -> graphBuilder.add(inputId, SHACL.MAX_INCLUSIVE, literal(m)));
+    input.getQualifiedMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MIN_COUNT, literal(c)));
+    input.getQualifiedMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MAX_COUNT, literal(c)));
+    input.getGroup().ifPresent(g -> addGroup(g, inputId));
+    input.getHasValue().ifPresent(v -> graphBuilder.add(inputId, SHACL.HAS_VALUE, v.isRight() ? iri(v.get()) : literal(v.getLeft())));
+    input.getDefaultValue().ifPresent(dv -> {
+      if (dv.isRight()) {
+        Resource bNode = rdf.createBNode();
+        graphBuilder.add(bNode, SHACL.NODE, iri(dv.get()));
+        graphBuilder.add(inputId, SHACL.DEFAULT_VALUE, bNode);
+      } else {
+        graphBuilder.add(inputId, SHACL.DEFAULT_VALUE, literal(dv.getLeft()));
+      }
+    });
+
+    return inputId;
+  }
+
+  private Resource addCompoundInput(CompoundInput input) {
+    Resource inputId = rdf.createBNode();
+    graphBuilder.add(inputId, SHACL.QUALIFIED_VALUE_SHAPE, iri(input.getQualifiedValueShape()));
+    input.getMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(c)));
+    input.getMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(c)));
+    input.getQualifiedMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MIN_COUNT, literal(c)));
+    input.getQualifiedMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MAX_COUNT, literal(c)));
+    input.getDataType().ifPresent(c -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(c)));
+    input.getPath().ifPresent(path -> graphBuilder.add(inputId, SHACL.PATH, iri(path)));
+    input.getOrder().ifPresent(order -> graphBuilder.add(inputId, SHACL.ORDER, literal(order)));
+    input.getGroup().ifPresent(g -> addGroup(g, inputId));
+
+    graphBuilder.add(iri(input.getQualifiedValueShape()), RDF.TYPE, SHACL.NODE_SHAPE);
+    Optional.ofNullable(input.getClazz())
+        .ifPresent(c -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.CLASS, iri(c)));
+    input.getInputs().forEach(i -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.PROPERTY, addInput(i)));
+
+    return inputId;
+  }
+
+  private void addGroup(Group group, Resource propertyId) {
+    Resource groupNode = resolveHostableLocation(group);
+    graphBuilder.add(propertyId, SHACL.GROUP, groupNode);
+    graphBuilder.add(groupNode, RDF.TYPE, group.getType().toIRI());
+    group.getOrder().ifPresent(order -> graphBuilder.add(groupNode, SHACL.ORDER, literal(order)));
+    group.getLabel().ifPresent(label -> graphBuilder.add(groupNode, RDFS.LABEL, literal(label)));
+    group.getComment().ifPresent(comment -> graphBuilder.add(groupNode, RDFS.COMMENT, literal(comment)));
+  }
+
+  private void addFormsList(Resource propertyId, List<IRI> formNodes) {
+    Resource collectionNode = createFormsCollection(formNodes);
+    graphBuilder.add(propertyId, SHACL.OR, collectionNode);
+  }
+
+  private Resource createFormsCollection(List<IRI> formNodes) {
+    if (formNodes.isEmpty()) {
+      return RDF.NIL;
+    }
+
+    BNode node = bnode();
+    BNode valueNode = bnode();
+
+    graphBuilder.add(node, RDF.FIRST, valueNode);
+    graphBuilder.add(valueNode, SHACL.HAS_VALUE, formNodes.get(0));
+    graphBuilder.add(node, RDF.REST, createFormsCollection(formNodes.subList(1, formNodes.size())));
+
+    return node;
+  }
+
+  private Resource addPropertyNode(Resource acSpec) {
+    Resource propertyId = rdf.createBNode();
+
+    graphBuilder.add(acSpec, SHACL.PROPERTY, propertyId);
+    graphBuilder.add(propertyId, SHACL.PATH, PROV.USED);
+    graphBuilder.add(propertyId, SHACL.MIN_COUNT, literal(1));
+    graphBuilder.add(propertyId, SHACL.MAX_COUNT, literal(1));
+
+    return propertyId;
   }
 
   private void createFormNode(Form form) {
     graphBuilder.add(form.getIRI().get(), RDF.TYPE, HCTL.FORM);
     graphBuilder.add(form.getIRI().get(), HCTL.HAS_TARGET, iri(form.getTarget()));
+    form.getMethodName().ifPresent(m -> graphBuilder.add(form.getIRI().get(), HTV.METHOD_NAME, literal(m)));
+    graphBuilder.add(form.getIRI().get(), HCTL.FOR_CONTENT_TYPE, literal(form.getContentType()));
   }
 }

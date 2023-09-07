@@ -1,0 +1,575 @@
+@prefix manu: <http://example.org/manufacturing/> .
+@prefix lang: <http://example.org/languages/> .
+@prefix shopfloor: <http://example.org/shoopfloor/> .
+@prefix hmas: <https://purl.org/hmas/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xs: <https://www.w3.org/2001/XMLSchema#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@base <http://example.org> .
+
+<> a hmas:ResourceProfile ;
+   hmas:isProfileOf <#artifact> ;
+   hmas:exposesSignifier <#register-expert-sp>, <#register-novice-en>, <#set-tcp-expert-sp>, <#set-tcp-novice-en>, <#set-gripper>, <#close-gripper>, <#open-gripper> .
+
+<#artifact> a hmas:Artifact .
+
+<#register-expert-sp> a hmas:Signifier ;
+                      rdfs:label "Registrarse" ;
+                      hmas:signifies <#register-behavior-expert> ;
+                      hmas:recommendsAbility [ a manu:ExpertUser ] ;
+                      hmas:recommendsAbility [ a lang:SpanishSpeaker ] ;
+                      hmas:recommendsContext <#user-location-shape> ;
+                      hmas:recommendsContext <#personal-details-shape> .
+
+<#register-novice-en> a hmas:Signifier ;
+                      rdfs:label "Register" ;
+                      rdfs:comment "Register as an operator to start using the robot. Only one operator is allowed at a time, and the operator is automatically de-registered after 15 minutes of inactivity." ;
+                      hmas:signifies <#register-behavior-novice> ;
+                      hmas:recommendsAbility [ a manu:NoviceUser ] ;
+                      hmas:recommendsAbility [ a lang:EnglishSpeaker ] ;
+                      hmas:recommendsContext <#user-location-shape> ;
+                      hmas:recommendsContext <#personal-details-shape> .
+
+<#set-tcp-expert-sp> a hmas:Signifier;
+                     rdfs:label "Establecer TCP" ;
+                     hmas:signifies <#set-tcp-behavior-expert> ;
+                     hmas:recommendsAbility [ a manu:ExpertUser ] ;
+                     hmas:recommendsAbility [ a lang:SpanishSpeaker ] ;
+                     hmas:recommendsAbility [ a manu:RobotOperator ] .
+
+<#set-tcp-novice-en> a hmas:Signifier;
+                     rdfs:label "Set TCP" ;
+                     rdfs:comment "Set a new target for the robot's tool center point, which will move the robot towards said target." ;
+                     hmas:signifies <#set-tcp-behavior-novice> ;
+                     hmas:recommendsAbility [ a manu:NoviceUser ] ;
+                     hmas:recommendsAbility [ a lang:EnglishSpeaker ] ;
+                     hmas:recommendsAbility [ a manu:RobotOperator ] .
+
+<#set-gripper> a hmas:Signifier ;
+               rdfs:label "Establecer la Pinza " ;
+               hmas:signifies <#set-gripper-behavior> ;
+               hmas:recommendsAbility [ a manu:ExpertUser ] ;
+               hmas:recommendsAbility [ a lang:SpanishSpeaker ] ;
+               hmas:recommendsAbility [ a manu:RobotOperator ] .
+
+<#close-gripper> a hmas:Signifier ;
+                 rdfs:label "Close the Gripper" ;
+                 rdfs:comment "Close the gripper by setting the distance between the fingers to 0 cm. The movement will stop if an object is detected between the closing fingers." ;
+                 hmas:signifies <#close-gripper-behavior> ;
+                 hmas:recommendsAbility [ a manu:NoviceUser ] ;
+                 hmas:recommendsAbility [ a lang:EnglishSpeaker ] ;
+                 hmas:recommendsAbility [ a manu:RobotOperator ] .
+
+<#open-gripper> a hmas:Signifier ;
+                rdfs:label "Open the Gripper" ;
+                rdfs:comment "Open the gripper by setting the distance between the fingers to 7.5 cm." ;
+                hmas:signifies <#open-gripper-behavior> ;
+                hmas:recommendsAbility [ a manu:NoviceUser ] ;
+                hmas:recommendsAbility [ a lang:EnglishSpeaker ] ;
+                hmas:recommendsAbility [ a manu:RobotOperator ] .
+
+<#user-location-shape> a sh:NodeShape ;
+                       sh:targetClass hmas:Agent ;
+                       sh:property [
+                             sh:path hmas:isContainedIn ;
+                             sh:minCount 1;
+                             sh:hasValue <http://localhost:8080/environments/env1/workspaces/shopfloor42> ;
+                         ] .
+
+<#personal-details-shape> a sh:NodeShape ;
+                          sh:targetClass hmas:Agent ;
+                          sh:property [
+                                sh:path foaf:name ;
+                                sh:minCount 1;
+                                sh:datatype xs:string ;
+                                sh:qualifiedValueShape <#name-shape> ;
+                                sh:qualifiedMinCount 1 ;
+                            ] ;
+                          sh:property [
+                                sh:path foaf:mbox ;
+                                sh:minCount 1;
+                                sh:datatype xs:string ;
+                                sh:qualifiedValueShape <#mbox-shape> ;
+                                sh:qualifiedMinCount 1 ;
+                            ] .
+
+<#name-shape> a sh:NodeShape .
+<#mbox-shape> a sh:NodeShape .
+
+<#register-behavior-expert> a sh:NodeShape;
+                            sh:class hmas:ActionExecution ;
+                            sh:property [
+                                  sh:path prov:used ;
+                                  sh:minCount 1;
+                                  sh:maxCount 1 ;
+                                  sh:hasValue <#register-form> ;
+                              ] ;
+                            sh:property [
+                                  sh:path hmas:hasInput;
+                                  sh:qualifiedValueShape <#agent-shape-sp> ;
+                                  sh:qualifiedMinCount 1 ;
+                                  sh:qualifiedMaxCount 1 ;
+                              ] .
+
+<#agent-shape-sp> a sh:NodeShape ;
+                  sh:class hmas:Agent ;
+                  sh:property [
+                        sh:name "nombre de los operadores" ;
+                        sh:path foaf:name ;
+                        sh:minCount 1;
+                        sh:maxCount 1 ;
+                        sh:defaultValue [ sh:node <#name-shape> ] ;
+                        sh:datatype xs:string ;
+                        sh:order 0 ;
+                        sh:group <#personal-details-group-sp> ;
+                    ] ;
+                  sh:property [
+                        sh:name "email de los operadores" ;
+                        sh:path foaf:mbox ;
+                        sh:minCount 1;
+                        sh:maxCount 1 ;
+                        sh:defaultValue [ sh:node <#mbox-shape> ] ;
+                        sh:datatype xs:string ;
+                        sh:order 1 ;
+                        sh:group <#personal-details-group-sp> ;
+                    ] .
+
+<#register-behavior-novice> a sh:NodeShape;
+                            sh:class hmas:ActionExecution ;
+                            sh:property [
+                                  sh:path prov:used ;
+                                  sh:minCount 1;
+                                  sh:maxCount 1 ;
+                                  sh:hasValue <#register-form> ;
+                              ] ;
+                            sh:property [
+                                  sh:path hmas:hasInput;
+                                  sh:qualifiedValueShape <#agent-shape-en> ;
+                                  sh:qualifiedMinCount 1 ;
+                                  sh:qualifiedMaxCount 1 ;
+                              ] .
+
+<#agent-shape-en> a sh:NodeShape ;
+                  sh:class hmas:Agent ;
+                  sh:property [
+                        sh:name "operator's name" ;
+                        sh:path foaf:name ;
+                        sh:minCount 1;
+                        sh:maxCount 1 ;
+                        sh:defaultValue [ sh:node <#name-shape> ] ;
+                        sh:datatype xs:string ;
+                        sh:order 0 ;
+                        sh:group <#personal-details-group-en> ;
+                    ] ;
+                  sh:property [
+                        sh:name "operator's email" ;
+                        sh:path foaf:mbox ;
+                        sh:minCount 1;
+                        sh:maxCount 1 ;
+                        sh:defaultValue [ sh:node <#mbox-shape> ] ;
+                        sh:datatype xs:string ;
+                        sh:order 1 ;
+                        sh:group <#personal-details-group-en> ;
+                    ] .
+
+<#set-tcp-behavior-expert> a sh:NodeShape;
+                           sh:class hmas:ActionExecution ;
+                           sh:property [
+                                 sh:path prov:used ;
+                                 sh:minCount 1;
+                                 sh:maxCount 1 ;
+                                 sh:hasValue <#set-tcp-form> ;
+                             ] ;
+                           sh:property [
+                                 sh:path hmas:hasInput;
+                                 sh:qualifiedValueShape <#movement-shape-sp> ;
+                                 sh:qualifiedMinCount 1 ;
+                                 sh:qualifiedMaxCount 1 ;
+                             ] .
+
+<#movement-shape-sp> a sh:NodeShape ;
+                     sh:class manu:TCPMovement ;
+                     sh:property [
+                           sh:path manu:hasSpeed ;
+                           sh:name "velocidad" ;
+                           sh:minCount 1;
+                           sh:maxCount 1 ;
+                           sh:datatype xs:integer ;
+                           sh:minInclusive 10 ;
+                           sh:maxInclusive 400 ;
+                           sh:defaultValue 50 ;
+                           sh:order 0 ;
+                           sh:group <#movement-group-sp> ;
+                       ] ;
+                     sh:property [
+                           sh:path manu:hasTarget ;
+                           sh:qualifiedValueShape <#target-shape-sp> ;
+                           sh:qualifiedMinCount 1 ;
+                           sh:qualifiedMaxCount 1 ;
+                           sh:order 1 ;
+                           sh:group <#movement-group-sp> ;
+                       ] .
+
+<#target-shape-sp> a sh:NodeShape ;
+                   sh:class manu:Target ;
+                   sh:property [
+                         sh:path manu:hasCoordinates ;
+                         sh:qualifiedValueShape <#coordinates-shape-sp> ;
+                         sh:qualifiedMinCount 1 ;
+                         sh:qualifiedMaxCount 1 ;
+                         sh:order 0 ;
+                         sh:group <#target-group-sp> ;
+                     ] ;
+                   sh:property [
+                         sh:path manu:hasRotation ;
+                         sh:qualifiedValueShape <#rotation-shape-sp> ;
+                         sh:qualifiedMinCount 1 ;
+                         sh:qualifiedMaxCount 1 ;
+                         sh:order 1 ;
+                         sh:group <#target-group-sp> ;
+                     ] .
+
+<#coordinates-shape-sp> a sh:NodeShape ;
+                        sh:class manu:Coordinates ;
+                        sh:property [
+                              sh:path manu:hasX ;
+                              sh:name "x" ;
+                              sh:minCount 1;
+                              sh:maxCount 1 ;
+                              sh:datatype xs:float ;
+                              sh:minInclusive -720 ;
+                              sh:maxInclusive 720 ;
+                              sh:defaultValue 300 ;
+                              sh:order 0 ;
+                              sh:group <#coordinates-group-sp> ;
+                          ] ;
+                        sh:property [
+                              sh:path manu:hasY ;
+                              sh:name "y" ;
+                              sh:minCount 1;
+                              sh:maxCount 1 ;
+                              sh:datatype xs:float ;
+                              sh:minInclusive -720 ;
+                              sh:maxInclusive 720 ;
+                              sh:defaultValue 0 ;
+                              sh:order 1 ;
+                              sh:group <#coordinates-group-sp> ;
+                          ] ;
+                        sh:property [
+                              sh:path manu:hasZ ;
+                              sh:name "z" ;
+                              sh:minCount 1;
+                              sh:maxCount 1 ;
+                              sh:datatype xs:float ;
+                              sh:minInclusive -178.3 ;
+                              sh:maxInclusive 1010 ;
+                              sh:defaultValue 400 ;
+                              sh:order 2 ;
+                              sh:group <#coordinates-group-sp> ;
+                          ] .
+
+<#rotation-shape-sp> a sh:NodeShape ;
+                     sh:class manu:Rotation ;
+                     sh:property [
+                           sh:path manu:hasRoll ;
+                           sh:name "balanceo" ;
+                           sh:minCount 1;
+                           sh:maxCount 1 ;
+                           sh:datatype xs:float ;
+                           sh:minInclusive -180 ;
+                           sh:maxInclusive 180 ;
+                           sh:defaultValue 180 ;
+                           sh:order 0 ;
+                           sh:group <#rotation-group-sp> ;
+                       ] ;
+                     sh:property [
+                           sh:path manu:hasPitch ;
+                           sh:name "inclinación" ;
+                           sh:minCount 1;
+                           sh:maxCount 1 ;
+                           sh:datatype xs:float ;
+                           sh:minInclusive -180 ;
+                           sh:maxInclusive 180 ;
+                           sh:defaultValue 0 ;
+                           sh:order 1 ;
+                           sh:group <#rotation-group-sp> ;
+                       ] ;
+                     sh:property [
+                           sh:path manu:hasYaw ;
+                           sh:name "guiñada" ;
+                           sh:minCount 1;
+                           sh:maxCount 1 ;
+                           sh:datatype xs:float ;
+                           sh:minInclusive -180 ;
+                           sh:maxInclusive 180 ;
+                           sh:defaultValue 0 ;
+                           sh:order 2 ;
+                           sh:group <#rotation-group-sp> ;
+                       ] .
+
+<#set-tcp-behavior-novice> a sh:NodeShape;
+                           sh:class hmas:ActionExecution ;
+                           sh:property [
+                                 sh:path prov:used ;
+                                 sh:minCount 1;
+                                 sh:maxCount 1 ;
+                                 sh:hasValue <#set-tcp-form> ;
+                             ] ;
+                           sh:property [
+                                 sh:path hmas:hasInput;
+                                 sh:qualifiedValueShape <#movement-shape-en> ;
+                                 sh:qualifiedMinCount 1 ;
+                                 sh:qualifiedMaxCount 1 ;
+                             ] .
+
+<#movement-shape-en> a sh:NodeShape ;
+                     sh:class manu:TCPMovement ;
+                     sh:property [
+                           sh:path manu:hasSpeed ;
+                           sh:name "speed" ;
+                           sh:description "The speed of the TCP movement in mm/s" ;
+                           sh:minCount 1;
+                           sh:maxCount 1 ;
+                           sh:datatype xs:integer ;
+                           sh:minInclusive 10 ;
+                           sh:maxInclusive 400 ;
+                           sh:defaultValue 50 ;
+                           sh:order 0 ;
+                           sh:group <#movement-group-en> ;
+                       ] ;
+                     sh:property [
+                           sh:path manu:hasTarget ;
+                           sh:qualifiedValueShape <#target-shape-en> ;
+                           sh:qualifiedMinCount 1 ;
+                           sh:qualifiedMaxCount 1 ;
+                           sh:order 1 ;
+                           sh:group <#movement-group-en> ;
+                       ] .
+
+<#target-shape-en> a sh:NodeShape ;
+                   sh:class manu:Target ;
+                   sh:property [
+                         sh:path manu:hasCoordinates ;
+                         sh:qualifiedValueShape <#coordinates-shape-en> ;
+                         sh:qualifiedMinCount 1 ;
+                         sh:qualifiedMaxCount 1 ;
+                         sh:order 0 ;
+                         sh:group <#target-group-en> ;
+                     ] ;
+                   sh:property [
+                         sh:path manu:hasRotation ;
+                         sh:qualifiedValueShape <#rotation-shape-en> ;
+                         sh:qualifiedMinCount 1 ;
+                         sh:qualifiedMaxCount 1 ;
+                         sh:order 1 ;
+                         sh:group <#target-group-en> ;
+                     ] .
+
+<#coordinates-shape-en> a sh:NodeShape ;
+                        sh:class manu:Coordinates ;
+                        sh:property [
+                              sh:path manu:hasX ;
+                              sh:name "x" ;
+                              sh:minCount 1;
+                              sh:maxCount 1 ;
+                              sh:datatype xs:float ;
+                              sh:minInclusive -720 ;
+                              sh:maxInclusive 720 ;
+                              sh:defaultValue 300 ;
+                              sh:order 0 ;
+                              sh:group <#coordinates-group-en> ;
+                          ] ;
+                        sh:property [
+                              sh:path manu:hasY ;
+                              sh:name "y" ;
+                              sh:minCount 1;
+                              sh:maxCount 1 ;
+                              sh:datatype xs:float ;
+                              sh:minInclusive -720 ;
+                              sh:maxInclusive 720 ;
+                              sh:defaultValue 0 ;
+                              sh:order 1 ;
+                              sh:group <#coordinates-group-en> ;
+                          ] ;
+                        sh:property [
+                              sh:path manu:hasZ ;
+                              sh:name "z" ;
+                              sh:minCount 1;
+                              sh:maxCount 1 ;
+                              sh:datatype xs:float ;
+                              sh:minInclusive -178.3 ;
+                              sh:maxInclusive 1010 ;
+                              sh:defaultValue 400 ;
+                              sh:order 2 ;
+                              sh:group <#coordinates-group-en> ;
+                          ] .
+
+<#rotation-shape-en> a sh:NodeShape ;
+                     sh:class manu:Rotation ;
+                     sh:property [
+                           sh:path manu:hasRoll ;
+                           sh:name "roll" ;
+                           sh:minCount 1;
+                           sh:maxCount 1 ;
+                           sh:datatype xs:float ;
+                           sh:minInclusive -180 ;
+                           sh:maxInclusive 180 ;
+                           sh:defaultValue 180 ;
+                           sh:order 0 ;
+                           sh:group <#rotation-group-en> ;
+                       ] ;
+                     sh:property [
+                           sh:path manu:hasPitch ;
+                           sh:name "pitch" ;
+                           sh:minCount 1;
+                           sh:maxCount 1 ;
+                           sh:datatype xs:float ;
+                           sh:minInclusive -180 ;
+                           sh:maxInclusive 180 ;
+                           sh:defaultValue 0 ;
+                           sh:order 1 ;
+                           sh:group <#rotation-group-en> ;
+                       ] ;
+                     sh:property [
+                           sh:path manu:hasYaw ;
+                           sh:name "yaw" ;
+                           sh:minCount 1;
+                           sh:maxCount 1 ;
+                           sh:datatype xs:float ;
+                           sh:minInclusive -180 ;
+                           sh:maxInclusive 180 ;
+                           sh:defaultValue 0 ;
+                           sh:order 2 ;
+                           sh:group <#rotation-group-en> ;
+                       ] .
+
+<#set-gripper-behavior> a sh:NodeShape;
+                       sh:class hmas:ActionExecution ;
+                       sh:property [
+                             sh:path prov:used ;
+                             sh:minCount 1;
+                             sh:maxCount 1 ;
+                             sh:hasValue <#set-gripper-form> ;
+                         ] ;
+                       sh:property [
+                             sh:path hmas:hasInput;
+                             sh:name "gripper" ;
+                             sh:minCount 1;
+                             sh:maxCount 1 ;
+                             sh:datatype xs:integer ;
+                             sh:minInclusive 0 ;
+                             sh:maxInclusive 800 ;
+                             sh:defaultValue 20 ;
+                             sh:order 0 ;
+                             sh:group <#joints-group-sp> ;
+                         ] .
+
+<#close-gripper-behavior> a sh:NodeShape;
+                          sh:class hmas:ActionExecution ;
+                          sh:property [
+                                sh:path prov:used ;
+                                sh:minCount 1;
+                                sh:maxCount 1 ;
+                                sh:hasValue <#set-gripper-form> ;
+                            ] ;
+                          sh:property [
+                                sh:path hmas:hasInput;
+                                sh:name "gripper" ;
+                                sh:minCount 1;
+                                sh:maxCount 1 ;
+                                sh:datatype xs:integer ;
+                                sh:hasValue 0 ;
+                                sh:order 0 ;
+                                sh:group <#joints-group-en> ;
+                            ] .
+
+<#open-gripper-behavior> a sh:NodeShape;
+                         sh:class hmas:ActionExecution ;
+                         sh:property [
+                               sh:path prov:used ;
+                               sh:minCount 1;
+                               sh:maxCount 1 ;
+                               sh:hasValue <#set-gripper-form> ;
+                           ] ;
+                         sh:property [
+                               sh:path hmas:hasInput;
+                               sh:name "gripper" ;
+                               sh:minCount 1;
+                               sh:maxCount 1 ;
+                               sh:datatype xs:integer ;
+                               sh:hasValue 750 ;
+                               sh:order 0 ;
+                               sh:group <#joints-group-en> ;
+                           ] .
+
+# Groups for organizing UI components
+<#personal-details-group-sp> a sh:PropertyGroup ;
+                             sh:order 0 ;
+                             rdfs:label "Detalles Personales" .
+
+<#movement-group-sp> a sh:PropertyGroup ;
+                     sh:order 0 ;
+                     rdfs:label "Movimiento" .
+
+<#target-group-sp> a sh:PropertyGroup ;
+                   sh:order 1 ;
+                   rdfs:label "Objetivo" .
+
+<#coordinates-group-sp> a sh:PropertyGroup ;
+                        sh:order 2 ;
+                        rdfs:label "Coordenadas" .
+
+<#rotation-group-sp> a sh:PropertyGroup ;
+                     sh:order 3 ;
+                     rdfs:label "Rotación" .
+
+<#joints-group-sp> a sh:PropertyGroup ;
+                   sh:order 0 ;
+                   rdfs:label "Articulaciones" .
+
+<#personal-details-group-en> a sh:PropertyGroup ;
+                             sh:order 0 ;
+                             rdfs:label "Personal Details" .
+
+<#movement-group-en> a sh:PropertyGroup ;
+                     sh:order 0 ;
+                     rdfs:label "Movement" .
+
+<#target-group-en> a sh:PropertyGroup ;
+                   sh:order 1 ;
+                   rdfs:label "Target" .
+
+<#coordinates-group-en> a sh:PropertyGroup ;
+                        sh:order 2 ;
+                        rdfs:label "Coordinates" ;
+                        rdfs:comment "The position of the target in the Cartesian system (front and back: X axis, left and right: Y axis, up and down: Z axis) in mm." .
+
+<#rotation-group-en> a sh:PropertyGroup ;
+                     sh:order 3 ;
+                     rdfs:label "Rotation" ;
+                     rdfs:comment "Roll / Pitch / Yaw sequentially rotate around the X / Y / Z of the base coordinate system in degrees." .
+
+<#joints-group-en> a sh:PropertyGroup ;
+                   sh:order 0 ;
+                   rdfs:label "Joints" .
+
+# Hypermedia controls
+<#register-form> a hctl:Form ;
+                     hctl:hasTarget <https://api.interactions.ics.unisg.ch/cherrybot/operator> ;
+                     hctl:forContentType "application/xarm+json" ;
+                     htv:methodName "POST" .
+
+<#set-tcp-form> a hctl:Form ;
+                hctl:hasTarget <https://api.interactions.ics.unisg.ch/cherrybot/tcp> ;
+                hctl:forContentType "application/xarm+json" ;
+                htv:methodName "PUT" .
+
+<#set-gripper-form> a hctl:Form ;
+                   hctl:hasTarget <https://api.interactions.ics.unisg.ch/cherrybot/gripper> ;
+                   hctl:forContentType "application/xarm+json" ;
+                   htv:methodName "PUT" .

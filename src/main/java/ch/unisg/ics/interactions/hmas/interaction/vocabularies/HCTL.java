@@ -1,5 +1,6 @@
 package ch.unisg.ics.interactions.hmas.interaction.vocabularies;
 
+import ch.unisg.ics.interactions.hmas.core.vocabularies.HMAS;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.Vocabulary;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Namespace;
@@ -33,5 +34,29 @@ public class HCTL {
     HAS_OPERATION_TYPE = rdf.createIRI(NAMESPACE + "hasOperationType");
     FOR_CONTENT_TYPE = rdf.createIRI(NAMESPACE + "forContentType");
     FOR_SUB_PROTOCOL = rdf.createIRI(NAMESPACE + "forSubProtocol");
+  }
+
+  public enum TERM implements HMAS {
+    FORM(HCTL.FORM),
+    HAS_TARGET(HCTL.HAS_TARGET),
+    HAS_OPERATION_TYPE(HCTL.HAS_OPERATION_TYPE),
+    FOR_CONTENT_TYPE(HCTL.FOR_CONTENT_TYPE),
+    FOR_SUB_PROTOCOL(HCTL.FOR_SUB_PROTOCOL);
+
+    private final IRI iri;
+
+    TERM(IRI iri) {
+      this.iri = iri;
+    }
+
+    @Override
+    public String toString() {
+      return iri.toString();
+    }
+
+    @Override
+    public IRI toIRI() {
+      return this.iri;
+    }
   }
 }

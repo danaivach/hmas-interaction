@@ -1,0 +1,16 @@
+@prefix prs: <http://example.org/prs#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix urn: <http://example.org/urn#> .
+@prefix ex: <http://example.org/> .
+@prefix xs: <http://www.w3.org/2001/XMLSchema#> .
+@prefix hmas: <https://purl.org/hmas/> .
+
+
+<http://example.org#register-form> a hctl:Form;
+                                   hctl:hasTarget <https://api.interactions.ics.unisg.ch/cherrybot/operator>;
+                                   htv:methodName "POST";
+                                   hctl:forContentType "application/json" .

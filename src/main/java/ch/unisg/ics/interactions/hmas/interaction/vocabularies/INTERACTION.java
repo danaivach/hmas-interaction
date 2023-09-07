@@ -39,6 +39,8 @@ public class INTERACTION {
 
   public static final IRI RECOMMENDS_ABILITY;
 
+  public static final IRI RECOMMENDS_CONTEXT;
+
   public static final IRI HAS_ABILITY;
 
   public static final IRI EXPECTS;
@@ -50,6 +52,8 @@ public class INTERACTION {
   public static final IRI HAS_ACTION;
 
   public static final IRI HAS_AGENT_BODY;
+
+  public static final IRI HAS_INPUT;
 
   static {
     SimpleValueFactory rdf = SimpleValueFactory.getInstance();
@@ -66,12 +70,14 @@ public class INTERACTION {
 
     SIGNIFIES = rdf.createIRI(NAMESPACE + "signifies");
     RECOMMENDS_ABILITY = rdf.createIRI(NAMESPACE + "recommendsAbility");
+    RECOMMENDS_CONTEXT = rdf.createIRI(NAMESPACE + "recommendsContext");
     HAS_ABILITY = rdf.createIRI(NAMESPACE + "hasAbility");
     EXPECTS = rdf.createIRI(NAMESPACE + "expects");
     HAS_INPUT_SCHEMA = rdf.createIRI(NAMESPACE + "hasInputSchema");
     HAS_FORM = rdf.createIRI(NAMESPACE + "hasForm");
     HAS_ACTION = rdf.createIRI(NAMESPACE + "hasAction");
     HAS_AGENT_BODY = rdf.createIRI(NAMESPACE + "hasAgentBody");
+    HAS_INPUT = rdf.createIRI(NAMESPACE + "hasInput");
   }
 
   public enum TERM implements HMAS {
@@ -90,12 +96,14 @@ public class INTERACTION {
     /* Object Properties */
     SIGNIFIES(INTERACTION.SIGNIFIES),
     RECOMMENDS_ABILITY(INTERACTION.RECOMMENDS_ABILITY),
+    RECOMMENDS_CONTEXT(INTERACTION.RECOMMENDS_CONTEXT),
     HAS_ABILITY(INTERACTION.HAS_ABILITY),
     EXPECTS(INTERACTION.EXPECTS),
     HAS_INPUT_SCHEMA(INTERACTION.HAS_INPUT_SCHEMA),
     HAS_FORM(INTERACTION.HAS_FORM),
     HAS_ACTION(INTERACTION.HAS_ACTION),
-    HAS_AGENT_BODY(INTERACTION.HAS_AGENT_BODY);
+    HAS_AGENT_BODY(INTERACTION.HAS_AGENT_BODY),
+    HAS_INPUT(INTERACTION.HAS_INPUT);
 
     private final IRI type;
 

@@ -1,21 +1,24 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import java.util.*;
 
-public class Form {
+public class Form extends AbstractResource {
 
   private final String target;
-  private final String contentType;
+  private String contentType;
   private final Set<String> operationTypes;
-  private final Optional<String> subProtocol;
+  private Optional<String> subProtocol;
   private final Map<String, Object> additionalProperties = new HashMap<>();
   private Optional<String> methodName;
 
   private Form(String href, Optional<String> methodName, String mediaType, Set<String> operationTypes,
-               Optional<String> subProtocol) {
+               Optional<String> subProtocol, Builder builder) {
+    super(null, builder);
     this.methodName = methodName;
     this.target = href;
     this.contentType = mediaType;
@@ -24,8 +27,8 @@ public class Form {
   }
 
   private Form(String href, Optional<String> methodName, String mediaType, Set<String> operationTypes,
-               Optional<String> subProtocol, Map<String, Object> additionalProperties) {
-    this(href, methodName, mediaType, operationTypes, subProtocol);
+               Optional<String> subProtocol, Map<String, Object> additionalProperties, Builder builder) {
+    this(href, methodName, mediaType, operationTypes, subProtocol, builder);
     this.additionalProperties.putAll(additionalProperties);
   }
 
@@ -104,32 +107,29 @@ public class Form {
     this.operationTypes.add(operationType);
   }
 
-  public String getIRIAsString() {
-    return additionalProperties.get("IRI").toString();
-  }
-
   public Optional<IRI> getIRI() {
-    return Optional.ofNullable(getIRIAsString())
+    return getIRIAsString()
             .map(s -> s.replace("<", ""))
             .map(s -> s.replace(">", ""))
             .map(SimpleValueFactory.getInstance()::createIRI);
   }
 
-  public static class Builder {
-    private final String target;
-    private final Set<String> operationTypes;
-    private Optional<String> methodName;
+  public static class Builder extends AbstractResource.AbstractBuilder<Builder, Form> {
+    private String target;
     private String contentType;
+    private Set<String> operationTypes;
     private Optional<String> subProtocol;
-    private final Map<String, Object> additionalProperties;
+    private Map<String, Object> additionalProperties;
+    private Optional<String> methodName;
 
     public Builder(String target) {
+      super(HCTL.TERM.FORM);
       this.target = target;
-      this.methodName = Optional.empty();
       this.contentType = "application/json";
-      this.operationTypes = new HashSet<String>();
+      this.operationTypes = new HashSet<>();
       this.subProtocol = Optional.empty();
       this.additionalProperties = new HashMap<>();
+      this.methodName = Optional.empty();
     }
 
     public Builder addOperationType(String operationType) {
@@ -162,9 +162,14 @@ public class Form {
       return this;
     }
 
+    public Builder setIRIAsString(String IRI) {
+      this.IRI = Optional.of(IRI);
+      return this;
+    }
+
     public Form build() {
       return new Form(this.target, this.methodName, this.contentType, this.operationTypes,
-              this.subProtocol, this.additionalProperties);
+              this.subProtocol, this.additionalProperties, this);
     }
 
   }
