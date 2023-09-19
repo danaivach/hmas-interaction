@@ -2,45 +2,43 @@ package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL;
-
-import java.util.HashSet;
-import java.util.Set;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.util.ModelBuilder;
 
 public class Context extends AbstractResource {
-  private final String targetClass;
-  private final Set<Input> inputs;
-
-  public String getTargetClass() {
-    return this.targetClass;
-  }
-
-  public Set<Input> getInputs() {
-    return this.inputs;
-  }
+  private final Model model;
 
   protected Context(Builder builder) {
     super(SHACL.TERM.NODE_SHAPE, builder);
-    this.targetClass = builder.targetClass;
-    this.inputs = builder.inputs;
+    this.model = builder.model;
+  }
+
+  public Model getModel() {
+    return this.model;
   }
 
   public static class Builder extends AbstractBuilder<Builder, Context> {
-    protected String targetClass;
-    protected Set<Input> inputs;
+    protected Model model;
+    private final ModelBuilder modelBuilder;
 
     public Builder() {
       super(SHACL.TERM.NODE_SHAPE);
-      this.targetClass = "";
-      this.inputs = new HashSet<>();
+      this.modelBuilder = new ModelBuilder();
+      this.model = modelBuilder.build();
     }
 
-    public Builder withInput(Input input) {
-      this.inputs.add(input);
+    public Builder addStatement(Statement statement) {
+      this.modelBuilder.add(statement.getSubject(), statement.getPredicate(), statement.getObject());
+      this.model = this.modelBuilder.build();
       return this;
     }
 
-    public Builder withTargetClass(String targetClass) {
-      this.targetClass = targetClass;
+    public Builder addModel(Model model) {
+      for (Statement statement : model) {
+        addStatement(statement);
+      }
+
       return this;
     }
 

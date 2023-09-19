@@ -7,15 +7,14 @@ import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
 import io.vavr.control.Either;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.spin.function.spif.Mod;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,10 +41,10 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     ArtifactProfileGraphReader reader = new ArtifactProfileGraphReader(RDFFormat.TURTLE, representation);
 
     ArtifactProfile.Builder artifactBuilder =
-        new ArtifactProfile.Builder(reader.readOwnerResource())
-            .addHMASPlatforms(reader.readHomeHMASPlatforms())
-            .addSemanticTypes(reader.readSemanticTypes())
-            .exposeSignifiers(reader.readSignifiers());
+            new ArtifactProfile.Builder(reader.readOwnerResource())
+                    .addHMASPlatforms(reader.readHomeHMASPlatforms())
+                    .addSemanticTypes(reader.readSemanticTypes())
+                    .exposeSignifiers(reader.readSignifiers());
 
     Optional<IRI> profileIRI = reader.readProfileIRI();
     if (profileIRI.isPresent()) {
@@ -71,13 +70,13 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
       return readArtifact(node);
     }
     throw new InvalidResourceProfileException("Unknown type of profiled resource. " +
-        "Supported resource types: Artifact, AgentBody.");
+            "Supported resource types: Artifact, AgentBody.");
   }
 
   protected Set<Signifier> readSignifiers() {
     Set<Signifier> signifiers = new HashSet<>();
     Set<Resource> signifierNodes = Models.objectResources(model.filter(profileIRI, EXPOSES_SIGNIFIER,
-        null));
+            null));
     for (Resource signifierNode : signifierNodes) {
       Optional<Resource> bSpecNode = Models.objectResource(model.filter(signifierNode, SIGNIFIES, null));
 
@@ -90,12 +89,12 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
         }
 
         Set<Resource> abilities = Models.objectResources(model.filter(signifierNode, RECOMMENDS_ABILITY,
-            null));
+                null));
 
         for (Resource ability : abilities) {
           Ability.Builder abilityBuilder = new Ability.Builder();
           Set<IRI> abilityTypes = Models.objectIRIs(model.filter(ability, RDF.TYPE,
-              null));
+                  null));
 
           for (IRI abilityType : abilityTypes) {
             abilityBuilder.addSemanticType(abilityType.stringValue());
@@ -104,22 +103,14 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
         }
 
         Models.objectLiteral(model.filter(signifierNode, RDFS.LABEL, null))
-            .ifPresent(l -> builder.setLabel(l.getLabel()));
+                .ifPresent(l -> builder.setLabel(l.getLabel()));
         Models.objectLiteral(model.filter(signifierNode, RDFS.COMMENT, null))
-            .ifPresent(l -> builder.setComment(l.getLabel()));
+                .ifPresent(l -> builder.setComment(l.getLabel()));
 
         Set<Resource> contexts = Models.objectResources(model.filter(signifierNode, RECOMMENDS_CONTEXT, null));
         contexts.forEach(c -> {
-          Context.Builder contextBuilder = new Context.Builder();
-          if (c.isIRI()) {
-            contextBuilder.setIRIAsString(c.stringValue());
-          }
-          Models.objectIRI(model.filter(c, SHACL.TARGET_CLASS, null))
-              .ifPresent(t -> contextBuilder.withTargetClass(t.stringValue()));
-          Models.objectResources(model.filter(c, PROPERTY, null)).stream()
-              .map(this::readInput)
-              .forEach(contextBuilder::withInput);
-          builder.addRecommendedContext(contextBuilder.build());
+          Context context = readRecommendedContext(c);
+          builder.addRecommendedContext(context);
         });
 
         if (signifierNode.isIRI()) {
@@ -133,14 +124,48 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     return signifiers;
   }
 
+  protected Context readRecommendedContext(Resource contextNode) {
+    Context.Builder contextBuilder = new Context.Builder();
+    if (contextNode.isIRI()) {
+      contextBuilder.setIRIAsString(contextNode.stringValue());
+    }
+
+    Set<Statement> processedStatements = new HashSet<>();
+
+    // Create a queue for BFS traversal
+    Queue<Resource> queue = new LinkedList<>();
+
+    // Add the initial subject (contextNode) to the queue
+    queue.add(contextNode);
+
+    // Continue BFS traversal
+    while (!queue.isEmpty()) {
+      Resource currentResource = queue.poll();
+
+      // Iterate through triples with currentResource as subject
+      model.filter(currentResource, null, null).forEach(statement -> {
+        if (!processedStatements.contains(statement)) {
+          contextBuilder.addStatement(statement);
+          processedStatements.add(statement);
+
+          // Add the object of the statement to the queue for BFS traversal
+          if (statement.getObject() instanceof Resource) {
+            queue.add((Resource) statement.getObject());
+          }
+        }
+      });
+    }
+    return contextBuilder.build();
+  }
+
   protected ActionSpecification readActionSpecification(Resource specNode) {
     Set<Resource> propNodes = Models.objectResources(model.filter(specNode, PROPERTY, null));
     Resource propNodeForm = propNodes.stream().filter(this::isForm).findFirst()
-        .orElseThrow(() -> new InvalidResourceProfileException(
-            "An action specification was found with no forms. " + specNode.toString()));
+            .orElseThrow(() -> new InvalidResourceProfileException(
+                    "An action specification was found with no forms. " + specNode.toString()));
     Optional<Resource> propNodeInput = propNodes.stream().filter(this::isInput).findFirst();
     ActionSpecification.Builder acSpecBuilder =
-        new ActionSpecification.Builder(readForms(readFormResources(propNodeForm)));
+            new ActionSpecification.Builder(readForms(readFormResources(propNodeForm)));
     propNodeInput.ifPresent(input -> acSpecBuilder.withInput(readInput(input)));
     if (specNode.isIRI()) {
       acSpecBuilder.setIRIAsString(specNode.stringValue());
@@ -149,25 +174,25 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
   }
 
   protected Set<Resource> readFormResources(Resource propNode) {
-    if (model.contains(propNode, HAS_VALUE, null)) {
-      return Models.objectResources(model.filter(propNode, HAS_VALUE, null));
+    if (model.contains(propNode, SHACL.HAS_VALUE, null)) {
+      return Models.objectResources(model.filter(propNode, SHACL.HAS_VALUE, null));
     }
     if (model.contains(propNode, OR, null)) {
       return Models.objectResource(model.filter(propNode, OR, null))
-          .map(this::extractForms)
-          .orElse(Set.of());
+              .map(this::extractForms)
+              .orElse(Set.of());
     }
     throw new InvalidResourceProfileException("An action specification was found with no forms. " +
-        "An action specification should have at least one form. ");
+            "An action specification should have at least one form. ");
   }
 
   protected Input readInput(Resource propNode) {
     if (model.contains(propNode, QUALIFIED_VALUE_SHAPE, null)) {
       return readCompoundInput(
-          Models.objectResource(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null)).orElseThrow(() ->
-              new InvalidResourceProfileException("Invalid input property shape. " + propNode.toString())
-          ),
-          propNode
+              Models.objectResource(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null)).orElseThrow(() ->
+                      new InvalidResourceProfileException("Invalid input property shape. " + propNode.toString())
+              ),
+              propNode
       );
     }
     return readSimpleInput(propNode);
@@ -176,68 +201,68 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
   protected CompoundInput readCompoundInput(Resource inputNode, Resource propNode) {
     CompoundInput.Builder builder = new CompoundInput.Builder();
     Models.objectIRI(model.filter(inputNode, CLASS, null))
-        .ifPresent(clazz -> builder.withClazz(clazz.stringValue()));
+            .ifPresent(clazz -> builder.withClazz(clazz.stringValue()));
     Models.objectIRI(model.filter(propNode, PATH, null))
-        .ifPresent(path -> builder.withPath(path.stringValue()));
+            .ifPresent(path -> builder.withPath(path.stringValue()));
     Models.objectLiteral(model.filter(propNode, MIN_COUNT, null))
-        .ifPresent(minCount -> builder.withMinCount(minCount.intValue()));
+            .ifPresent(minCount -> builder.withMinCount(minCount.intValue()));
     Models.objectLiteral(model.filter(propNode, MAX_COUNT, null))
-        .ifPresent(maxCount -> builder.withMaxCount(maxCount.intValue()));
+            .ifPresent(maxCount -> builder.withMaxCount(maxCount.intValue()));
     Models.objectLiteral(model.filter(propNode, QUALIFIED_MIN_COUNT, null))
-        .ifPresent(count -> builder.withQualifiedMinCount(count.intValue()));
+            .ifPresent(count -> builder.withQualifiedMinCount(count.intValue()));
     Models.objectLiteral(model.filter(propNode, QUALIFIED_MAX_COUNT, null))
-        .ifPresent(count -> builder.withQualifiedMaxCount(count.intValue()));
+            .ifPresent(count -> builder.withQualifiedMaxCount(count.intValue()));
     Models.objectIRI(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null))
-        .ifPresent(qualifiedValueShape -> builder.withQualifiedValueShape(qualifiedValueShape.stringValue()));
+            .ifPresent(qualifiedValueShape -> builder.withQualifiedValueShape(qualifiedValueShape.stringValue()));
     Models.objectResource(model.filter(propNode, GROUP, null))
-        .ifPresent(groupResource -> builder.withGroup(readGroup(groupResource)));
+            .ifPresent(groupResource -> builder.withGroup(readGroup(groupResource)));
     Models.objectResources(model.filter(inputNode, PROPERTY, null))
-        .forEach(node -> builder.withInput(readInput(node)));
+            .forEach(node -> builder.withInput(readInput(node)));
     Models.objectLiteral(model.filter(propNode, ORDER, null))
-        .ifPresent(order -> builder.withOrder(order.intValue()));
+            .ifPresent(order -> builder.withOrder(order.intValue()));
     Models.objectIRI(model.filter(propNode, DATATYPE, null))
-        .ifPresent(dataType -> builder.withDataType(dataType.stringValue()));
+            .ifPresent(dataType -> builder.withDataType(dataType.stringValue()));
     return builder.build();
   }
 
   protected SimpleInput readSimpleInput(Resource inputNode) {
     String path = Models.objectIRI(model.filter(inputNode, PATH, null))
-        .orElseThrow(() -> new InvalidResourceProfileException(
-            "Invalid input property path. " + inputNode.toString())).stringValue();
+            .orElseThrow(() -> new InvalidResourceProfileException(
+                    "Invalid input property path. " + inputNode.toString())).stringValue();
     SimpleInput.Builder builder = new SimpleInput.Builder(path);
     Models.objectIRI(model.filter(inputNode, DATATYPE, null))
-        .ifPresent(dataType -> builder.withDataType(dataType.stringValue()));
+            .ifPresent(dataType -> builder.withDataType(dataType.stringValue()));
     Models.objectLiteral(model.filter(inputNode, NAME, null))
-        .ifPresent(literal -> builder.withName(literal.stringValue()));
+            .ifPresent(literal -> builder.withName(literal.stringValue()));
     Models.objectLiteral(model.filter(inputNode, DESCRIPTION, null))
-        .ifPresent(literal -> builder.withDescription(literal.stringValue()));
+            .ifPresent(literal -> builder.withDescription(literal.stringValue()));
     Models.objectLiteral(model.filter(inputNode, ORDER, null))
-        .ifPresent(literal -> builder.withOrder(literal.intValue()));
+            .ifPresent(literal -> builder.withOrder(literal.intValue()));
     Models.objectLiteral(model.filter(inputNode, MIN_COUNT, null))
-        .ifPresent(literal -> builder.withMinCount(literal.intValue()));
+            .ifPresent(literal -> builder.withMinCount(literal.intValue()));
     Models.objectLiteral(model.filter(inputNode, MAX_COUNT, null))
-        .ifPresent(literal -> builder.withMaxCount(literal.intValue()));
+            .ifPresent(literal -> builder.withMaxCount(literal.intValue()));
     Models.objectLiteral(model.filter(inputNode, QUALIFIED_MAX_COUNT, null))
-        .ifPresent(literal -> builder.withQualifiedMaxCount(literal.intValue()));
+            .ifPresent(literal -> builder.withQualifiedMaxCount(literal.intValue()));
     Models.objectLiteral(model.filter(inputNode, QUALIFIED_MIN_COUNT, null))
-        .ifPresent(literal -> builder.withQualifiedMinCount(literal.intValue()));
+            .ifPresent(literal -> builder.withQualifiedMinCount(literal.intValue()));
     Models.objectLiteral(model.filter(inputNode, MIN_INCLUSIVE, null))
-        .ifPresent(literal -> builder.withMinInclusive(literal.doubleValue()));
+            .ifPresent(literal -> builder.withMinInclusive(literal.doubleValue()));
     Models.objectLiteral(model.filter(inputNode, MAX_INCLUSIVE, null))
-        .ifPresent(literal -> builder.withMaxInclusive(literal.doubleValue()));
+            .ifPresent(literal -> builder.withMaxInclusive(literal.doubleValue()));
     Models.objectLiteral(model.filter(inputNode, DEFAULT_VALUE, null))
-        .ifPresentOrElse(
-            literal -> builder.withDefaultValue(Either.left(literal.doubleValue())),
-            () -> Models.objectResource(model.filter(inputNode, DEFAULT_VALUE, null))
-                .flatMap(resource -> Models.objectIRI(model.filter(resource, NODE, null)))
-                .ifPresent(iri -> builder.withDefaultValue(Either.right(iri.stringValue())))
-        );
+            .ifPresentOrElse(
+                    literal -> builder.withDefaultValue(Either.left(literal.doubleValue())),
+                    () -> Models.objectResource(model.filter(inputNode, DEFAULT_VALUE, null))
+                            .flatMap(resource -> Models.objectIRI(model.filter(resource, NODE, null)))
+                            .ifPresent(iri -> builder.withDefaultValue(Either.right(iri.stringValue())))
+            );
     Models.objectResource(model.filter(inputNode, GROUP, null))
-        .ifPresent(groupResource -> builder.withGroup(readGroup(groupResource)));
-    Models.objectIRI(model.filter(inputNode, HAS_VALUE, null))
-        .ifPresent(hasValue -> builder.withHasValue(Either.right(hasValue.stringValue())));
-    Models.objectLiteral(model.filter(inputNode, HAS_VALUE, null))
-        .ifPresent(hasValue -> builder.withHasValue(Either.left(hasValue.doubleValue())));
+            .ifPresent(groupResource -> builder.withGroup(readGroup(groupResource)));
+    Models.objectIRI(model.filter(inputNode, SHACL.HAS_VALUE, null))
+            .ifPresent(hasValue -> builder.withHasValue(Either.right(hasValue.stringValue())));
+    Models.objectLiteral(model.filter(inputNode, SHACL.HAS_VALUE, null))
+            .ifPresent(hasValue -> builder.withHasValue(Either.left(hasValue.doubleValue())));
     return builder.build();
   }
 
@@ -247,21 +272,21 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
       builder.setIRIAsString(groupNode.stringValue());
     }
     Models.objectLiteral(model.filter(groupNode, RDFS.LABEL, null))
-        .ifPresent(literal -> builder.withLabel(literal.stringValue()));
+            .ifPresent(literal -> builder.withLabel(literal.stringValue()));
     Models.objectLiteral(model.filter(groupNode, RDFS.COMMENT, null))
-        .ifPresent(literal -> builder.withComment(literal.stringValue()));
+            .ifPresent(literal -> builder.withComment(literal.stringValue()));
     Models.objectLiteral(model.filter(groupNode, ORDER, null))
-        .ifPresent(literal -> builder.withOrder(literal.intValue()));
+            .ifPresent(literal -> builder.withOrder(literal.intValue()));
     return builder.build();
   }
 
   private Set<Resource> extractForms(Resource node) {
     List<Value> values = RDFCollections.asValues(model, node, new ArrayList<>());
     return values.stream()
-        .map(r -> Models.objectResource(model.filter((Resource) r, HAS_VALUE, null)))
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .collect(Collectors.toSet());
+            .map(r -> Models.objectResource(model.filter((Resource) r, SHACL.HAS_VALUE, null)))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toSet());
   }
 
   private Boolean isForm(Resource node) {
@@ -281,9 +306,9 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
         Form.Builder builder = new Form.Builder(target.get().stringValue());
 
         Models.objectLiteral(model.filter(formNode, HTV.METHOD_NAME, null))
-            .ifPresent(literal -> builder.setMethodName(literal.stringValue()));
+                .ifPresent(literal -> builder.setMethodName(literal.stringValue()));
         Models.objectLiteral(model.filter(formNode, HCTL.FOR_CONTENT_TYPE, null))
-            .ifPresent(literal -> builder.setContentType(literal.stringValue()));
+                .ifPresent(literal -> builder.setContentType(literal.stringValue()));
         builder.setIRIAsString(formNode.stringValue());
 
         forms.add(builder.build());
