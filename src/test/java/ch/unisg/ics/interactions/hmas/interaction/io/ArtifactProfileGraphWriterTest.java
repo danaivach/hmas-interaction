@@ -7,10 +7,16 @@ import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.PROV;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL;
+import org.eclipse.rdf4j.model.BNode;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.model.util.Models;
+import org.eclipse.rdf4j.model.util.Values;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 import org.junit.jupiter.api.Test;
@@ -45,10 +51,10 @@ public class ArtifactProfileGraphWriterTest {
 
   private static final String FORM_IRI = "<urn:3g6lpq9v>";
   private static final String SECOND_FORM_IRI = "<urn:x7aym3hn>";
-  private static String BASE_URI = "http://example.org/";
   private static final String TARGET = "https://example.org/resource";
   private static final Form BASIC_FORM = new Form.Builder(TARGET)
           .setIRIAsString(FORM_IRI).build();
+  private static String BASE_URI = "http://example.org/";
 
   private static Model readModelFromString(String profile, String baseURI)
           throws RDFParseException, RDFHandlerException, IOException {
@@ -61,6 +67,27 @@ public class ArtifactProfileGraphWriterTest {
     rdfParser.parse(stringReader, baseURI);
 
     return model;
+  }
+
+  // Compare two RDF models
+  private static void compareModels(Model modelA, Model modelB) {
+    // Iterate through the triples in modelA
+    for (Statement stmtA : modelA) {
+      // Check if the same triple exists in modelB
+      if (!modelB.contains(stmtA)) {
+        // Triple in modelA does not exist in modelB
+        System.out.println("Triple in modelA but not in modelB: " + stmtA);
+      }
+    }
+
+    // Iterate through the triples in modelB
+    for (Statement stmtB : modelB) {
+      // Check if the same triple exists in modelA
+      if (!modelA.contains(stmtB)) {
+        // Triple in modelB does not exist in modelA
+        System.out.println("Triple in modelB but not in modelA: " + stmtB);
+      }
+    }
   }
 
   @Test
@@ -250,73 +277,158 @@ public class ArtifactProfileGraphWriterTest {
   @Test
   public void testWriteArtifactProfileWithInput() throws IOException {
     String expectedProfile = PREFIXES +
-        ".\n" +
-        "@prefix ex: <http://example.org/> .\n" +
-        "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
-        "<urn:profile> a hmas:ResourceProfile ;\n" +
-        "              hmas:isProfileOf [ a hmas:Artifact ] ;\n" +
-        "              hmas:exposesSignifier ex:signifier .\n" +
-        "\n" +
-        "ex:signifier a hmas:Signifier ;\n" +
-        "             hmas:signifies ex:moveGripperSpecification .\n" +
-        "\n" +
-        "ex:moveGripperSpecification a sh:NodeShape ;\n" +
-        "         sh:class hmas:ActionExecution ;\n" +
-        "         sh:property [\n" +
-        "             sh:path prov:used ;\n" +
-        "             sh:minCount \"1\"^^xs:int;\n" +
-        "             sh:maxCount \"1\"^^xs:int ;\n" +
-        "             sh:hasValue ex:httpForm\n" +
-        "         ] ;\n" +
-        "         sh:property [\n" +
-        "             sh:path hmas:hasInput;\n" +
-        "             sh:qualifiedValueShape ex:gripperJointShape ;\n" +
-        "             sh:qualifiedMinCount \"1\"^^xs:int ;\n" +
-        "             sh:qualifiedMaxCount \"1\"^^xs:int\n" +
-        "         ] ." +
-        "\n" +
-        "ex:httpForm a hctl:Form ;\n" +
-        "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
-        "  hctl:forContentType \"application/json\" ;\n" +
-        "  htv:methodName \"PUT\" ." +
-        "\n" +
-        "ex:gripperJointShape a sh:NodeShape ;\n" +
-        "  sh:class ex:GripperJoint ;\n" +
-        "  sh:property [\n" +
-        "    sh:path ex:hasGripperValue ;\n" +
-        "    sh:minCount \"1\"^^xs:int;\n" +
-        "    sh:maxCount \"1\"^^xs:int;\n" +
-        "    sh:datatype xs:integer\n" +
-        "  ] .\n";
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "              hmas:isProfileOf [ a hmas:Artifact ] ;\n" +
+            "              hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "             hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape ;\n" +
+            "         sh:class hmas:ActionExecution ;\n" +
+            "         sh:property [\n" +
+            "             sh:path prov:used ;\n" +
+            "             sh:minCount \"1\"^^xs:int;\n" +
+            "             sh:maxCount \"1\"^^xs:int ;\n" +
+            "             sh:hasValue ex:httpForm\n" +
+            "         ] ;\n" +
+            "         sh:property [\n" +
+            "             sh:path hmas:hasInput;\n" +
+            "             sh:qualifiedValueShape ex:gripperJointShape ;\n" +
+            "             sh:qualifiedMinCount \"1\"^^xs:int ;\n" +
+            "             sh:qualifiedMaxCount \"1\"^^xs:int\n" +
+            "         ] ." +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"PUT\" ." +
+            "\n" +
+            "ex:gripperJointShape a sh:NodeShape ;\n" +
+            "  sh:class ex:GripperJoint ;\n" +
+            "  sh:property [\n" +
+            "    sh:path ex:hasGripperValue ;\n" +
+            "    sh:minCount \"1\"^^xs:int;\n" +
+            "    sh:maxCount \"1\"^^xs:int;\n" +
+            "    sh:datatype xs:integer\n" +
+            "  ] .\n";
 
     Form httpForm = new Form.Builder("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper")
-        .setMethodName("PUT")
-        .setContentType("application/json")
-        .setIRIAsString("http://example.org/httpForm")
-        .build();
+            .setMethodName("PUT")
+            .setContentType("application/json")
+            .setIRIAsString("http://example.org/httpForm")
+            .build();
 
     Input gripperJointInput = new CompoundInput.Builder()
-        .withClazz("http://example.org/GripperJoint")
-        .withQualifiedValueShape("http://example.org/gripperJointShape")
-        .withInput(new SimpleInput.Builder("http://example.org/hasGripperValue")
-            .withDataType("http://www.w3.org/2001/XMLSchema#integer")
-            .build())
-        .build();
+            .withClazz("http://example.org/GripperJoint")
+            .withQualifiedValueShape("http://example.org/gripperJointShape")
+            .withInput(new SimpleInput.Builder("http://example.org/hasGripperValue")
+                    .withDataType("http://www.w3.org/2001/XMLSchema#integer")
+                    .build())
+            .build();
 
     ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
-        .withInput(gripperJointInput)
-        .setIRIAsString("http://example.org/moveGripperSpecification")
-        .build();
+            .withInput(gripperJointInput)
+            .setIRIAsString("http://example.org/moveGripperSpecification")
+            .build();
 
     ArtifactProfile profile =
-        new ArtifactProfile.Builder(new Artifact.Builder().build())
-            .setIRIAsString("urn:profile")
-            .exposeSignifier(
-                new Signifier.Builder(moveGripperSpec)
-                    .setIRIAsString("http://example.org/signifier")
-                    .build()
-            )
-            .build();
+            new ArtifactProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(
+                            new Signifier.Builder(moveGripperSpec)
+                                    .setIRIAsString("http://example.org/signifier")
+                                    .build()
+                    )
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteArtifactProfileWithContext() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            "    hmas:recommendsContext ex:situationShape ;\n" +
+            "    hmas:signifies [ a sh:NodeShape ;\n" +
+            "       sh:class hmas:ActionExecution ;\n" +
+            "       sh:property [\n" +
+            "          sh:path prov:used ;\n" +
+            "          sh:minCount \"1\"^^xs:int;\n" +
+            "          sh:maxCount \"1\"^^xs:int;\n" +
+            "          sh:hasValue " + FORM_IRI + " ;\n" +
+            "      ]\n" +
+            "   ]\n" +
+            "] .\n" +
+            FORM_IRI + " a hctl:Form ;\n" + //here the URN is randomly generated
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  hctl:hasTarget <https://example.org/resource> . \n" +
+            "\n" +
+            "ex:situationShape a sh:NodeShape ;\n" +
+            "  sh:class hmas:ResourceProfile ;\n" +
+            "  sh:property [\n" +
+            "    sh:path hmas:isProfileOf ;\n" +
+            "    sh:qualifiedValueShape ex:agentShape ;\n" +
+            "    sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "    sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "  ] .\n" +
+            "\n" +
+            "ex:agentShape a sh:NodeShape ;\n" +
+            "  sh:class hmas:Agent ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prs:hasBelief ;\n" +
+            "    sh:minCount \"1\"^^xs:int;\n" +
+            "    sh:maxCount \"1\"^^xs:int;\n" +
+            "    sh:hasValue \"room(empty)\"\n" +
+            "  ] .";
+
+    ActionSpecification actionSpec = new ActionSpecification.Builder(BASIC_FORM).build();
+
+    SimpleValueFactory rdfFactory = SimpleValueFactory.getInstance();
+    IRI situationShapeIRI = rdfFactory.createIRI("http://example.org/situationShape");
+    IRI agentShapeIRI = rdfFactory.createIRI("http://example.org/agentShape");
+    IRI beliefPropIRI = rdfFactory.createIRI("http://example.org/prs#hasBelief");
+    BNode profileProperty = Values.bnode();
+    BNode agentProperty = Values.bnode();
+
+    ModelBuilder contextModelBuilder = new ModelBuilder()
+            .subject(situationShapeIRI)
+            .add(RDF.TYPE, SHACL.NODE_SHAPE)
+            .add(SHACL.CLASS, CORE.RESOURCE_PROFILE)
+            .add(SHACL.PROPERTY, profileProperty)
+            .subject(profileProperty)
+            .add(SHACL.PATH, CORE.IS_PROFILE_OF)
+            .add(SHACL.QUALIFIED_MIN_COUNT, 1)
+            .add(SHACL.QUALIFIED_MAX_COUNT, 1)
+            .add(SHACL.QUALIFIED_VALUE_SHAPE, agentShapeIRI)
+            .subject(agentShapeIRI)
+            .add(RDF.TYPE, SHACL.NODE_SHAPE)
+            .add(SHACL.CLASS, CORE.AGENT)
+            .add(SHACL.PROPERTY, agentProperty)
+            .subject(agentProperty)
+            .add(SHACL.PATH, beliefPropIRI)
+            .add(SHACL.MIN_COUNT, 1)
+            .add(SHACL.MAX_COUNT, 1)
+            .add(SHACL.HAS_VALUE, "room(empty)");
+
+    Context context = new Context.Builder()
+            .setIRIAsString("http://example.org/situationShape")
+            .addModel(contextModelBuilder.build()).build();
+
+    ArtifactProfile profile =
+            new ArtifactProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(new Signifier.Builder(actionSpec)
+                            .addRecommendedContext(context)
+                            .build())
+                    .build();
 
     assertIsomorphicGraphs(expectedProfile, profile);
   }
@@ -326,7 +438,7 @@ public class ArtifactProfileGraphWriterTest {
     String baseUri = BASE_URI;
     BASE_URI = "http://example.org/ontology-example";
     URL fileResource = ArtifactProfileGraphReaderTest.class.getClassLoader()
-        .getResource("artifact-profile.ttl");
+            .getResource("artifact-profile.ttl");
     String profilePath = Paths.get(fileResource.toURI()).toFile().getPath();
     ArtifactProfile profile = ArtifactProfileGraphReader.readFromFile(profilePath);
     assertIsomorphicGraphs(Files.readString(Paths.get(profilePath)), profile);
@@ -348,6 +460,7 @@ public class ArtifactProfileGraphWriterTest {
     LOGGER.info("Actual:\n" + actualProfile);
 
     Model actualModel = readModelFromString(actualProfile, BASE_URI);
+    compareModels(expectedModel, actualModel);
 
     assertTrue(Models.isomorphic(expectedModel, actualModel));
   }

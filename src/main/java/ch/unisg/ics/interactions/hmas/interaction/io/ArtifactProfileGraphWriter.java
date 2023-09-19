@@ -3,9 +3,7 @@ package ch.unisg.ics.interactions.hmas.interaction.io;
 import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphWriter;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
-import org.eclipse.rdf4j.model.BNode;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 
 import java.util.*;
@@ -25,15 +23,15 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
   @Override
   public String write() {
     this.setNamespace(INTERACTION.PREFIX, INTERACTION.NAMESPACE)
-        .setNamespace(HCTL.PREFIX, HCTL.NAMESPACE)
-        .setNamespace(HTV.PREFIX, HTV.NAMESPACE)
-        .setNamespace(SHACL.PREFIX, SHACL.NAMESPACE)
-        .setNamespace(PROV.PREFIX, PROV.NAMESPACE)
-        .setNamespace(RDFS.PREFIX, RDFS.NAMESPACE)
-        .setNamespace("urn", "http://example.org/urn#")
-        .setNamespace("ex", "http://example.org/")
-        .setNamespace("xs", "http://www.w3.org/2001/XMLSchema#")
-        .addSignifiers();
+            .setNamespace(HCTL.PREFIX, HCTL.NAMESPACE)
+            .setNamespace(HTV.PREFIX, HTV.NAMESPACE)
+            .setNamespace(SHACL.PREFIX, SHACL.NAMESPACE)
+            .setNamespace(PROV.PREFIX, PROV.NAMESPACE)
+            .setNamespace(RDFS.PREFIX, RDFS.NAMESPACE)
+            .setNamespace("urn", "http://example.org/urn#")
+            .setNamespace("ex", "http://example.org/")
+            .setNamespace("xs", "http://www.w3.org/2001/XMLSchema#")
+            .addSignifiers();
 
     return super.write();
   }
@@ -87,15 +85,10 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
         addedContexts.put(locatedContext, new HashSet<>());
       }
       graphBuilder.add(signifier, RECOMMENDS_CONTEXT, locatedContext);
-      graphBuilder.add(locatedContext, RDF.TYPE, context.getType().toIRI());
-      graphBuilder.add(locatedContext, SHACL.TARGET_CLASS, iri(context.getTargetClass()));
-      context.getInputs().stream()
-          .filter(i -> !addedContexts.get(locatedContext).contains(i))
-          .peek(i -> addedContexts.get(locatedContext).add(i))
-          .map(this::addInput)
-          .forEach(input -> {
-            graphBuilder.add(locatedContext, SHACL.PROPERTY, input);
-          });
+      Model contextModel = context.getModel();
+      for (Statement st : contextModel) {
+        graphBuilder.add(st.getSubject(), st.getPredicate(), st.getObject());
+      }
     });
   }
 
@@ -129,7 +122,7 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
 
   private Resource addInput(Input input) {
     return input instanceof CompoundInput ? addCompoundInput((CompoundInput) input) :
-        addSimpleInput((SimpleInput) input);
+            addSimpleInput((SimpleInput) input);
   }
 
   private Resource addSimpleInput(SimpleInput input) {
@@ -176,7 +169,7 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
 
     graphBuilder.add(iri(input.getQualifiedValueShape()), RDF.TYPE, SHACL.NODE_SHAPE);
     Optional.ofNullable(input.getClazz())
-        .ifPresent(c -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.CLASS, iri(c)));
+            .ifPresent(c -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.CLASS, iri(c)));
     input.getInputs().forEach(i -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.PROPERTY, addInput(i)));
 
     return inputId;
