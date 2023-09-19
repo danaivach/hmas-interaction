@@ -1,6 +1,5 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
 import ch.unisg.ics.interactions.hmas.core.hostables.BaseSignifier;
 
 import java.util.HashSet;
@@ -9,7 +8,7 @@ import java.util.Set;
 
 public class Signifier extends BaseSignifier {
 
-  private final AbstractResource resource;
+  private final ActionSpecification actionSpecification;
   private final Set<Ability> recommendedAbilities;
   private final Optional<String> label;
   private final Optional<String> comment;
@@ -17,15 +16,15 @@ public class Signifier extends BaseSignifier {
 
   protected Signifier(AbstractBuilder builder) {
     super(builder);
-    this.resource = builder.resource;
+    this.actionSpecification = builder.actionSpecification;
     this.recommendedAbilities = builder.recommendedAbilities;
     this.recommendedContexts = builder.recommendedContexts;
     this.label = Optional.ofNullable(builder.label);
     this.comment = Optional.ofNullable(builder.comment);
   }
 
-  public AbstractResource getResource() {
-    return this.resource;
+  public ActionSpecification getActionSpecification() {
+    return this.actionSpecification;
   }
 
   public Set<Ability> getRecommendedAbilities() {
@@ -46,8 +45,8 @@ public class Signifier extends BaseSignifier {
 
   public static class Builder extends AbstractBuilder<Builder, Signifier> {
 
-    public Builder(AbstractResource resource) {
-      super(resource);
+    public Builder(ActionSpecification actionSpecification) {
+      super(actionSpecification);
     }
 
     public Signifier build() {
@@ -58,14 +57,14 @@ public class Signifier extends BaseSignifier {
   public abstract static class AbstractBuilder<S extends AbstractBuilder, T extends Signifier>
           extends BaseSignifier.AbstractBuilder<S, T> {
 
-    protected AbstractResource resource;
+    protected ActionSpecification actionSpecification;
     protected Set<Ability> recommendedAbilities;
     protected String label;
     protected Set<Context> recommendedContexts;
     protected String comment;
 
-    public AbstractBuilder(AbstractResource resource) {
-      this.resource = resource;
+    public AbstractBuilder(ActionSpecification actionSpecification) {
+      this.actionSpecification = actionSpecification;
       this.recommendedAbilities = new HashSet<>();
       this.recommendedContexts = new HashSet<>();
       this.label = null;

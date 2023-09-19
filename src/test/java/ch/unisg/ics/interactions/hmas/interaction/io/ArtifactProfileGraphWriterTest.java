@@ -322,12 +322,12 @@ public class ArtifactProfileGraphWriterTest {
             .setIRIAsString("http://example.org/httpForm")
             .build();
 
-    Input gripperJointInput = new CompoundInput.Builder()
-        .withClazz("http://example.org/GripperJoint")
+    InputSpecification gripperJointInput = new CompoundInputSpecification.Builder()
+        .withRequiredSemanticTypes(Set.of("http://example.org/GripperJoint"))
         .withQualifiedValueShape("http://example.org/gripperJointShape")
         .withQualifiedMinCount(1)
         .withQualifiedMaxCount(1)
-        .withInput(new SimpleInput.Builder("http://example.org/hasGripperValue")
+        .withInput(new SimpleInputSpecification.Builder("http://example.org/hasGripperValue")
             .withDataType("http://www.w3.org/2001/XMLSchema#integer")
             .withMinCount(1)
             .withMaxCount(1)
@@ -335,9 +335,9 @@ public class ArtifactProfileGraphWriterTest {
         .build();
 
     ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
-            .withInput(gripperJointInput)
-            .setIRIAsString("http://example.org/moveGripperSpecification")
-            .build();
+        .setRequiredInput(gripperJointInput)
+        .setIRIAsString("http://example.org/moveGripperSpecification")
+        .build();
 
     ArtifactProfile profile =
             new ArtifactProfile.Builder(new Artifact.Builder().build())

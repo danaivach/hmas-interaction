@@ -165,8 +165,13 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
                     "An action specification was found with no forms. " + specNode.toString()));
     Optional<Resource> propNodeInput = propNodes.stream().filter(this::isInput).findFirst();
     ActionSpecification.Builder acSpecBuilder =
-            new ActionSpecification.Builder(readForms(readFormResources(propNodeForm)));
-    propNodeInput.ifPresent(input -> acSpecBuilder.withInput(readInput(input)));
+        new ActionSpecification.Builder(readForms(readFormResources(propNodeForm)));
+    propNodeInput.ifPresent(input -> acSpecBuilder.setRequiredInput(readInput(input)));
+    acSpecBuilder.setRequiredSemanticTypes(
+        Models.objectIRIs(model.filter(specNode, CLASS, null)).stream()
+            .map(IRI::stringValue)
+            .collect(Collectors.toSet())
+    );
     if (specNode.isIRI()) {
       acSpecBuilder.setIRIAsString(specNode.stringValue());
     }
@@ -186,7 +191,7 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
             "An action specification should have at least one form. ");
   }
 
-  protected Input readInput(Resource propNode) {
+  protected InputSpecification readInput(Resource propNode) {
     if (model.contains(propNode, QUALIFIED_VALUE_SHAPE, null)) {
       return readCompoundInput(
               Models.objectResource(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null)).orElseThrow(() ->
@@ -198,10 +203,13 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     return readSimpleInput(propNode);
   }
 
-  protected CompoundInput readCompoundInput(Resource inputNode, Resource propNode) {
-    CompoundInput.Builder builder = new CompoundInput.Builder();
-    Models.objectIRI(model.filter(inputNode, CLASS, null))
-            .ifPresent(clazz -> builder.withClazz(clazz.stringValue()));
+  protected CompoundInputSpecification readCompoundInput(Resource inputNode, Resource propNode) {
+    CompoundInputSpecification.Builder builder = new CompoundInputSpecification.Builder();
+    builder.withRequiredSemanticTypes(
+        Models.objectIRIs(model.filter(inputNode, CLASS, null)).stream()
+            .map(IRI::stringValue)
+            .collect(Collectors.toSet())
+    );
     Models.objectIRI(model.filter(propNode, PATH, null))
             .ifPresent(path -> builder.withPath(path.stringValue()));
     Models.objectLiteral(model.filter(propNode, MIN_COUNT, null))
@@ -225,11 +233,11 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     return builder.build();
   }
 
-  protected SimpleInput readSimpleInput(Resource inputNode) {
+  protected SimpleInputSpecification readSimpleInput(Resource inputNode) {
     String path = Models.objectIRI(model.filter(inputNode, PATH, null))
-            .orElseThrow(() -> new InvalidResourceProfileException(
-                    "Invalid input property path. " + inputNode.toString())).stringValue();
-    SimpleInput.Builder builder = new SimpleInput.Builder(path);
+        .orElseThrow(() -> new InvalidResourceProfileException(
+            "Invalid input property path. " + inputNode.toString())).stringValue();
+    SimpleInputSpecification.Builder builder = new SimpleInputSpecification.Builder(path);
     Models.objectIRI(model.filter(inputNode, DATATYPE, null))
             .ifPresent(dataType -> builder.withDataType(dataType.stringValue()));
     Models.objectLiteral(model.filter(inputNode, NAME, null))

@@ -6,6 +6,8 @@ import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
 
+import java.util.Set;
+
 public class Context extends AbstractResource {
   private final Model model;
 

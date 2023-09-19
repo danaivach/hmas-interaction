@@ -5,9 +5,9 @@ import io.vavr.control.Either;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SimpleInput implements Input {
-  private String path;
-  private String dataType;
+public class SimpleInputSpecification implements InputSpecification {
+  private String requiredProperties;
+  private String requiredDataType;
   private Optional<String> name = Optional.empty();
   private Optional<String> description = Optional.empty();
   private Optional<Integer> order = Optional.empty();
@@ -21,8 +21,8 @@ public class SimpleInput implements Input {
   private Optional<Group> group = Optional.empty();
   private Optional<Either<Double, String>> hasValue = Optional.empty();
 
-  public String getPath() {
-    return this.path;
+  public String getRequiredProperties() {
+    return this.requiredProperties;
   }
 
   public Optional<String> getName() {
@@ -33,8 +33,8 @@ public class SimpleInput implements Input {
     return this.description;
   }
 
-  public String getDataType() {
-    return this.dataType;
+  public String getRequiredDataType() {
+    return this.requiredDataType;
   }
 
   public Optional<Integer> getOrder() {
@@ -81,9 +81,9 @@ public class SimpleInput implements Input {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    SimpleInput that = (SimpleInput) o;
-    return Objects.equals(path, that.path)
-        && Objects.equals(dataType, that.dataType)
+    SimpleInputSpecification that = (SimpleInputSpecification) o;
+    return Objects.equals(requiredProperties, that.requiredProperties)
+        && Objects.equals(requiredDataType, that.requiredDataType)
         && Objects.equals(name, that.name)
         && Objects.equals(description, that.description)
         && Objects.equals(order, that.order)
@@ -100,16 +100,16 @@ public class SimpleInput implements Input {
 
   @Override
   public int hashCode() {
-    return Objects.hash(path, dataType, name, description, order, minCount, maxCount, qualifiedMinCount,
+    return Objects.hash(requiredProperties, requiredDataType, name, description, order, minCount, maxCount, qualifiedMinCount,
         qualifiedMaxCount, minInclusive, maxInclusive, defaultValue, group);
   }
 
   public static class Builder {
-    private final SimpleInput input;
+    private final SimpleInputSpecification input;
 
     public Builder(String path) {
-      this.input = new SimpleInput();
-      this.input.path = path;
+      this.input = new SimpleInputSpecification();
+      this.input.requiredProperties = path;
     }
 
     public Builder withName(String name) {
@@ -123,7 +123,7 @@ public class SimpleInput implements Input {
     }
 
     public Builder withDataType(String dataType) {
-      this.input.dataType = dataType;
+      this.input.requiredDataType = dataType;
       return this;
     }
 
@@ -177,7 +177,7 @@ public class SimpleInput implements Input {
       return this;
     }
 
-    public SimpleInput build() {
+    public SimpleInputSpecification build() {
       return this.input;
     }
   }

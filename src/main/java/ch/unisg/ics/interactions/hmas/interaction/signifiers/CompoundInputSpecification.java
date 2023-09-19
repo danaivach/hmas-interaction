@@ -1,5 +1,7 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL;
 import io.vavr.control.Either;
 
 import java.util.HashSet;
@@ -7,30 +9,34 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public class CompoundInput implements Input {
-  private String clazz;
+public class CompoundInputSpecification extends AbstractResource implements InputSpecification {
+  private Set<String> requiredSemanticTypes;
   private String qualifiedValueShape;
-  private Optional<String> path = Optional.empty();
-  private final Set<Input> inputs = new HashSet<>();
+  private Optional<String> requiredProperties = Optional.empty();
+  private final Set<InputSpecification> inputs = new HashSet<>();
   private Optional<Group> group = Optional.empty();
   private Optional<Integer> order = Optional.empty();
   private Optional<Integer> minCount = Optional.empty();
   private Optional<Integer> maxCount = Optional.empty();
   private Optional<Integer> qualifiedMinCount = Optional.empty();
   private Optional<Integer> qualifiedMaxCount = Optional.empty();
-  private Optional<String> dataType = Optional.empty();
+  private Optional<String> requiredDataType = Optional.empty();
   private Optional<Either<Double, String>> hasValue = Optional.empty();
 
-  public String getClazz() {
-    return this.clazz;
+  protected CompoundInputSpecification(AbstractBuilder builder) {
+    super(SHACL.TERM.NODE_SHAPE, builder);
   }
 
-  public Set<Input> getInputs() {
+  public Set<String> getRequiredSemanticTypes() {
+    return this.requiredSemanticTypes;
+  }
+
+  public Set<InputSpecification> getInputs() {
     return this.inputs;
   }
 
-  public Optional<String> getPath() {
-    return this.path;
+  public Optional<String> getRequiredProperties() {
+    return this.requiredProperties;
   }
 
   public String getQualifiedValueShape() {
@@ -61,8 +67,8 @@ public class CompoundInput implements Input {
     return this.qualifiedMaxCount;
   }
 
-  public Optional<String> getDataType() {
-    return this.dataType;
+  public Optional<String> getRequiredDataType() {
+    return this.requiredDataType;
   }
 
   public Optional<Either<Double, String>> getHasValue() {
@@ -73,10 +79,10 @@ public class CompoundInput implements Input {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    CompoundInput that = (CompoundInput) o;
-    return Objects.equals(clazz, that.clazz)
+    CompoundInputSpecification that = (CompoundInputSpecification) o;
+    return Objects.equals(requiredSemanticTypes, that.requiredSemanticTypes)
         && Objects.equals(qualifiedValueShape, that.qualifiedValueShape)
-        && Objects.equals(path, that.path)
+        && Objects.equals(requiredProperties, that.requiredProperties)
         && Objects.equals(inputs, that.inputs)
         && Objects.equals(group, that.group)
         && Objects.equals(order, that.order)
@@ -84,23 +90,24 @@ public class CompoundInput implements Input {
         && Objects.equals(maxCount, that.maxCount)
         && Objects.equals(qualifiedMinCount, that.qualifiedMinCount)
         && Objects.equals(qualifiedMaxCount, that.qualifiedMaxCount)
-        && Objects.equals(dataType, that.dataType);
+        && Objects.equals(requiredDataType, that.requiredDataType);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(clazz, qualifiedValueShape, path, inputs, group, order);
+    return Objects.hash(requiredSemanticTypes, qualifiedValueShape, requiredProperties, inputs, group, order);
   }
 
-  public static class Builder {
-    private final CompoundInput input;
+  public static class Builder extends AbstractBuilder<Builder, CompoundInputSpecification> {
+    private final CompoundInputSpecification input;
 
     public Builder() {
-      this.input = new CompoundInput();
+      super(SHACL.TERM.NODE_SHAPE);
+      this.input = new CompoundInputSpecification(this);
     }
 
-    public Builder withClazz(String clazz) {
-      this.input.clazz = clazz;
+    public Builder withRequiredSemanticTypes(Set<String> clazz) {
+      this.input.requiredSemanticTypes = clazz;
       return this;
     }
 
@@ -109,13 +116,13 @@ public class CompoundInput implements Input {
       return this;
     }
 
-    public Builder withInput(Input shape) {
+    public Builder withInput(InputSpecification shape) {
       this.input.inputs.add(shape);
       return this;
     }
 
     public Builder withPath(String path) {
-      this.input.path = Optional.of(path);
+      this.input.requiredProperties = Optional.of(path);
       return this;
     }
 
@@ -150,7 +157,7 @@ public class CompoundInput implements Input {
     }
 
     public Builder withDataType(String dataType) {
-      this.input.dataType = Optional.of(dataType);
+      this.input.requiredDataType = Optional.of(dataType);
       return this;
     }
 
@@ -159,7 +166,7 @@ public class CompoundInput implements Input {
       return this;
     }
 
-    public CompoundInput build() {
+    public CompoundInputSpecification build() {
       return this.input;
     }
   }

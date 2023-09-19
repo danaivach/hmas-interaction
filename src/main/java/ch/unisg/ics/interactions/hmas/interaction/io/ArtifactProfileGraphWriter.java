@@ -14,7 +14,7 @@ import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTIO
 import static org.eclipse.rdf4j.model.util.Values.*;
 
 public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<ArtifactProfile> {
-  private final Map<Resource, Set<Input>> addedContexts = new HashMap<>();
+  private final Map<Resource, Set<InputSpecification>> addedContexts = new HashMap<>();
 
   public ArtifactProfileGraphWriter(ArtifactProfile profile) {
     super(profile);
@@ -60,7 +60,7 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
 
       addRecommendedContexts(locatedSignifier, signifier.getRecommendedContexts());
 
-      ActionSpecification bSpec = (ActionSpecification) signifier.getResource();
+      ActionSpecification bSpec = signifier.getActionSpecification();
       addActionSpecification(locatedSignifier, bSpec);
     }
   }
@@ -98,6 +98,8 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     graphBuilder.add(signifier, SIGNIFIES, locatedAcSpec);
     graphBuilder.add(locatedAcSpec, RDF.TYPE, SHACL.NODE_SHAPE);
     graphBuilder.add(locatedAcSpec, SHACL.CLASS, ACTION_EXECUTION);
+    specification.getRequiredSemanticTypes()
+        .forEach(type -> graphBuilder.add(locatedAcSpec, SHACL.CLASS, ACTION_EXECUTION));
 
     Resource propertyId = addPropertyNode(locatedAcSpec);
 
@@ -113,24 +115,24 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
       forms.forEach(this::createFormNode);
     }
 
-    specification.getInput().ifPresent(input -> {
+    specification.getInputSpecification().ifPresent(input -> {
       Resource inputNode = addInput(input);
       graphBuilder.add(inputNode, SHACL.PATH, INTERACTION.HAS_INPUT);
       graphBuilder.add(locatedAcSpec, SHACL.PROPERTY, inputNode);
     });
   }
 
-  private Resource addInput(Input input) {
-    return input instanceof CompoundInput ? addCompoundInput((CompoundInput) input) :
-            addSimpleInput((SimpleInput) input);
+  private Resource addInput(InputSpecification input) {
+    return input instanceof CompoundInputSpecification ? addCompoundInput((CompoundInputSpecification) input) :
+        addSimpleInput((SimpleInputSpecification) input);
   }
 
-  private Resource addSimpleInput(SimpleInput input) {
+  private Resource addSimpleInput(SimpleInputSpecification input) {
     Resource inputId = rdf.createBNode();
-    graphBuilder.add(inputId, SHACL.PATH, iri(input.getPath()));
+    graphBuilder.add(inputId, SHACL.PATH, iri(input.getRequiredProperties()));
     input.getMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(c)));
     input.getMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(c)));
-    Optional.ofNullable(input.getDataType()).ifPresent(dt -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(dt)));
+    Optional.ofNullable(input.getRequiredDataType()).ifPresent(dt -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(dt)));
     input.getName().ifPresent(name -> graphBuilder.add(inputId, SHACL.NAME, literal(name)));
     input.getDescription().ifPresent(desc -> graphBuilder.add(inputId, SHACL.DESCRIPTION, literal(desc)));
     input.getOrder().ifPresent(order -> graphBuilder.add(inputId, SHACL.ORDER, literal(order)));
@@ -155,21 +157,21 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
     return inputId;
   }
 
-  private Resource addCompoundInput(CompoundInput input) {
+  private Resource addCompoundInput(CompoundInputSpecification input) {
     Resource inputId = rdf.createBNode();
     graphBuilder.add(inputId, SHACL.QUALIFIED_VALUE_SHAPE, iri(input.getQualifiedValueShape()));
     input.getMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(c)));
     input.getMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(c)));
     input.getQualifiedMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MIN_COUNT, literal(c)));
     input.getQualifiedMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MAX_COUNT, literal(c)));
-    input.getDataType().ifPresent(c -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(c)));
-    input.getPath().ifPresent(path -> graphBuilder.add(inputId, SHACL.PATH, iri(path)));
+    input.getRequiredDataType().ifPresent(c -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(c)));
+    input.getRequiredProperties().ifPresent(path -> graphBuilder.add(inputId, SHACL.PATH, iri(path)));
     input.getOrder().ifPresent(order -> graphBuilder.add(inputId, SHACL.ORDER, literal(order)));
     input.getGroup().ifPresent(g -> addGroup(g, inputId));
 
     graphBuilder.add(iri(input.getQualifiedValueShape()), RDF.TYPE, SHACL.NODE_SHAPE);
-    Optional.ofNullable(input.getClazz())
-            .ifPresent(c -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.CLASS, iri(c)));
+    input.getRequiredSemanticTypes()
+        .forEach(type -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.CLASS, iri(type)));
     input.getInputs().forEach(i -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.PROPERTY, addInput(i)));
 
     return inputId;
