@@ -19,7 +19,7 @@ public class SHACL {
     public static final IRI MIN_COUNT;
     public static final IRI MAX_COUNT;
     public static final IRI OR;
-    public static final IRI HAS_VALUE;
+    public static final IRI VALUE;
     public static final IRI PATH;
     public static final IRI QUALIFIED_VALUE_SHAPE;
     public static final IRI QUALIFIED_MIN_COUNT;
@@ -46,7 +46,7 @@ public class SHACL {
         MIN_COUNT = rdf.createIRI(NAMESPACE + "minCount");
         MAX_COUNT = rdf.createIRI(NAMESPACE + "maxCount");
         OR = rdf.createIRI(NAMESPACE + "or");
-        HAS_VALUE = rdf.createIRI(NAMESPACE + "hasValue");
+        VALUE = rdf.createIRI(NAMESPACE + "value");
         PATH = rdf.createIRI(NAMESPACE + "path");
         QUALIFIED_VALUE_SHAPE = rdf.createIRI(NAMESPACE + "qualifiedValueShape");
         QUALIFIED_MIN_COUNT = rdf.createIRI(NAMESPACE + "qualifiedMinCount");
@@ -72,7 +72,7 @@ public class SHACL {
         MIN_COUNT(SHACL.MIN_COUNT),
         MAX_COUNT(SHACL.MAX_COUNT),
         OR(SHACL.OR),
-        HAS_VALUE(SHACL.HAS_VALUE),
+        VALUE(SHACL.VALUE),
         PATH(SHACL.PATH),
         QUALIFIED_VALUE_SHAPE(SHACL.QUALIFIED_VALUE_SHAPE),
         QUALIFIED_MIN_COUNT(SHACL.QUALIFIED_MIN_COUNT),
