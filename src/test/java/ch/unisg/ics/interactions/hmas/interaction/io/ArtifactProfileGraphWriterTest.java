@@ -323,12 +323,16 @@ public class ArtifactProfileGraphWriterTest {
             .build();
 
     Input gripperJointInput = new CompoundInput.Builder()
-            .withClazz("http://example.org/GripperJoint")
-            .withQualifiedValueShape("http://example.org/gripperJointShape")
-            .withInput(new SimpleInput.Builder("http://example.org/hasGripperValue")
-                    .withDataType("http://www.w3.org/2001/XMLSchema#integer")
-                    .build())
-            .build();
+        .withClazz("http://example.org/GripperJoint")
+        .withQualifiedValueShape("http://example.org/gripperJointShape")
+        .withQualifiedMinCount(1)
+        .withQualifiedMaxCount(1)
+        .withInput(new SimpleInput.Builder("http://example.org/hasGripperValue")
+            .withDataType("http://www.w3.org/2001/XMLSchema#integer")
+            .withMinCount(1)
+            .withMaxCount(1)
+            .build())
+        .build();
 
     ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
             .withInput(gripperJointInput)
