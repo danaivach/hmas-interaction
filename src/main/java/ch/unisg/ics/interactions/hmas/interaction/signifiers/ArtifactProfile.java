@@ -5,6 +5,7 @@ import ch.unisg.ics.interactions.hmas.core.hostables.ResourceProfile;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,12 @@ public class ArtifactProfile extends ResourceProfile {
     return this.signifiers.stream()
             .filter(sig -> sig.getActionSpecification().getSemanticTypes().contains(actionSemanticType))
             .collect(Collectors.toSet());
+  }
+
+  public Optional<Signifier> getFirstExposedSignifier(String actionSemanticType) {
+    return this.signifiers.stream()
+            .filter(sig -> sig.getActionSpecification().getSemanticTypes().contains(actionSemanticType))
+            .findFirst();
   }
 
   public Artifact getArtifact() {

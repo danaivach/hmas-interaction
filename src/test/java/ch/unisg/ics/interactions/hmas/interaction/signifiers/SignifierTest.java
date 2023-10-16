@@ -3,6 +3,7 @@ package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,6 +52,19 @@ public class SignifierTest {
     assertTrue(setLevelCommandSignifiers.contains(sig1));
     assertTrue(setLevelCommandSignifiers.contains(sig2));
     assertFalse(setLevelCommandSignifiers.contains(sig3));
+
+    Optional<Signifier> firstToggleCommandSignifier = profile
+            .getFirstExposedSignifier("https://saref.etsi.org/core/ToggleCommand");
+    assertTrue(firstToggleCommandSignifier.isPresent());
+
+    Optional<Signifier> firstSetLevelCommandSignifier = profile
+            .getFirstExposedSignifier("https://saref.etsi.org/core/SetLevelCommand");
+    assertTrue(firstSetLevelCommandSignifier.isPresent());
+
+    Optional<Signifier> firstStopCommandSignifier = profile
+            .getFirstExposedSignifier("https://saref.etsi.org/core/StopCommand");
+    assertFalse(firstStopCommandSignifier.isPresent());
+
   }
 
 }
