@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ArtifactProfile extends ResourceProfile {
 
@@ -18,6 +19,13 @@ public class ArtifactProfile extends ResourceProfile {
 
   public Set<Signifier> getExposedSignifiers() {
     return this.signifiers;
+  }
+
+  public Set<Signifier> getExposedSignifiers(String actionSemanticType) {
+
+    return this.signifiers.stream()
+            .filter(sig -> sig.getActionSpecification().getSemanticTypes().contains(actionSemanticType))
+            .collect(Collectors.toSet());
   }
 
   public Artifact getArtifact() {
