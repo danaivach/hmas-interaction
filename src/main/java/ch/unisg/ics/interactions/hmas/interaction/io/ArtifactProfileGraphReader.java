@@ -193,84 +193,59 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
 
   protected InputSpecification readInput(Resource propNode) {
     if (model.contains(propNode, QUALIFIED_VALUE_SHAPE, null)) {
-      return readCompoundInput(
+      return readInput2(
               Models.objectResource(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null)).orElseThrow(() ->
                       new InvalidResourceProfileException("Invalid input property shape. " + propNode.toString())
               ),
               propNode
       );
     }
-    return readSimpleInput(propNode);
+    return readInput2(null, propNode);
   }
 
-  protected CompoundInputSpecification readCompoundInput(Resource inputNode, Resource propNode) {
-    CompoundInputSpecification.Builder builder = new CompoundInputSpecification.Builder();
-    builder.withRequiredSemanticTypes(
+  protected InputSpecification readInput2(Resource inputNode, Resource propNode) {
+    InputSpecification.Builder builder = new InputSpecification.Builder();
+    builder.setRequiredSemanticTypes(
         Models.objectIRIs(model.filter(inputNode, CLASS, null)).stream()
             .map(IRI::stringValue)
             .collect(Collectors.toSet())
     );
-    Models.objectIRI(model.filter(propNode, PATH, null))
-            .ifPresent(path -> builder.withPath(path.stringValue()));
-    Models.objectLiteral(model.filter(propNode, MIN_COUNT, null))
-            .ifPresent(minCount -> builder.withMinCount(minCount.intValue()));
-    Models.objectLiteral(model.filter(propNode, MAX_COUNT, null))
-            .ifPresent(maxCount -> builder.withMaxCount(maxCount.intValue()));
-    Models.objectLiteral(model.filter(propNode, QUALIFIED_MIN_COUNT, null))
-            .ifPresent(count -> builder.withQualifiedMinCount(count.intValue()));
-    Models.objectLiteral(model.filter(propNode, QUALIFIED_MAX_COUNT, null))
-            .ifPresent(count -> builder.withQualifiedMaxCount(count.intValue()));
-    Models.objectIRI(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null))
-            .ifPresent(qualifiedValueShape -> builder.withQualifiedValueShape(qualifiedValueShape.stringValue()));
-    Models.objectResource(model.filter(propNode, GROUP, null))
-            .ifPresent(groupResource -> builder.withGroup(readGroup(groupResource)));
-    Models.objectResources(model.filter(inputNode, PROPERTY, null))
-            .forEach(node -> builder.withInput(readInput(node)));
-    Models.objectLiteral(model.filter(propNode, ORDER, null))
-            .ifPresent(order -> builder.withOrder(order.intValue()));
-    Models.objectIRI(model.filter(propNode, DATATYPE, null))
-            .ifPresent(dataType -> builder.withDataType(dataType.stringValue()));
-    return builder.build();
-  }
-
-  protected SimpleInputSpecification readSimpleInput(Resource inputNode) {
-    String path = Models.objectIRI(model.filter(inputNode, PATH, null))
-        .orElseThrow(() -> new InvalidResourceProfileException(
-            "Invalid input property path. " + inputNode.toString())).stringValue();
-    SimpleInputSpecification.Builder builder = new SimpleInputSpecification.Builder(path);
-    Models.objectIRI(model.filter(inputNode, DATATYPE, null))
-            .ifPresent(dataType -> builder.withDataType(dataType.stringValue()));
     Models.objectLiteral(model.filter(inputNode, NAME, null))
-            .ifPresent(literal -> builder.withName(literal.stringValue()));
+        .ifPresent(literal -> builder.setName(literal.stringValue()));
     Models.objectLiteral(model.filter(inputNode, DESCRIPTION, null))
-            .ifPresent(literal -> builder.withDescription(literal.stringValue()));
-    Models.objectLiteral(model.filter(inputNode, ORDER, null))
-            .ifPresent(literal -> builder.withOrder(literal.intValue()));
-    Models.objectLiteral(model.filter(inputNode, MIN_COUNT, null))
-            .ifPresent(literal -> builder.withMinCount(literal.intValue()));
-    Models.objectLiteral(model.filter(inputNode, MAX_COUNT, null))
-            .ifPresent(literal -> builder.withMaxCount(literal.intValue()));
-    Models.objectLiteral(model.filter(inputNode, QUALIFIED_MAX_COUNT, null))
-            .ifPresent(literal -> builder.withQualifiedMaxCount(literal.intValue()));
-    Models.objectLiteral(model.filter(inputNode, QUALIFIED_MIN_COUNT, null))
-            .ifPresent(literal -> builder.withQualifiedMinCount(literal.intValue()));
+        .ifPresent(literal -> builder.setDescription(literal.stringValue()));
+    Models.objectIRI(model.filter(propNode, PATH, null))
+            .ifPresent(path -> builder.setPath(path.stringValue()));
+    Models.objectLiteral(model.filter(propNode, MIN_COUNT, null))
+            .ifPresent(minCount -> builder.setMinCount(minCount.intValue()));
+    Models.objectLiteral(model.filter(propNode, MAX_COUNT, null))
+            .ifPresent(maxCount -> builder.setMaxCount(maxCount.intValue()));
+    Models.objectLiteral(model.filter(propNode, QUALIFIED_MIN_COUNT, null))
+            .ifPresent(count -> builder.setQualifiedMinCount(count.intValue()));
+    Models.objectLiteral(model.filter(propNode, QUALIFIED_MAX_COUNT, null))
+            .ifPresent(count -> builder.setQualifiedMaxCount(count.intValue()));
+    Models.objectIRI(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null))
+            .ifPresent(qualifiedValueShape -> builder.setQualifiedValueShape(qualifiedValueShape.stringValue()));
+    Models.objectResource(model.filter(propNode, GROUP, null))
+            .ifPresent(groupResource -> builder.setGroup(readGroup(groupResource)));
+    Models.objectResources(model.filter(Optional.ofNullable(inputNode).orElse(propNode), PROPERTY, null))
+            .forEach(node -> builder.setInput(readInput(node)));
+    Models.objectLiteral(model.filter(propNode, ORDER, null))
+            .ifPresent(order -> builder.setOrder(order.intValue()));
+    Models.objectIRI(model.filter(propNode, DATATYPE, null))
+            .ifPresent(dataType -> builder.setDataType(dataType.stringValue()));
     Models.objectLiteral(model.filter(inputNode, MIN_INCLUSIVE, null))
-            .ifPresent(literal -> builder.withMinInclusive(literal.doubleValue()));
+        .ifPresent(literal -> builder.setMinInclusive(literal.doubleValue()));
     Models.objectLiteral(model.filter(inputNode, MAX_INCLUSIVE, null))
-            .ifPresent(literal -> builder.withMaxInclusive(literal.doubleValue()));
+        .ifPresent(literal -> builder.setMaxInclusive(literal.doubleValue()));
     Models.objectLiteral(model.filter(inputNode, DEFAULT_VALUE, null))
-            .ifPresentOrElse(
-                    literal -> builder.withDefaultValue(Either.left(literal.doubleValue())),
-                    () -> Models.objectResource(model.filter(inputNode, DEFAULT_VALUE, null))
-                            .flatMap(resource -> Models.objectIRI(model.filter(resource, NODE, null)))
-                            .ifPresent(iri -> builder.withDefaultValue(Either.right(iri.stringValue())))
-            );
-    Models.objectResource(model.filter(inputNode, GROUP, null))
-            .ifPresent(groupResource -> builder.withGroup(readGroup(groupResource)));
-    Models.objectIRI(model.filter(inputNode, SHACL.HAS_VALUE, null))
-            .ifPresent(hasValue -> builder.withHasValue(Either.right(hasValue.stringValue())));
-    Models.objectLiteral(model.filter(inputNode, SHACL.HAS_VALUE, null))
-            .ifPresent(hasValue -> builder.withHasValue(Either.left(hasValue.doubleValue())));
+        .ifPresentOrElse(
+            literal -> builder.setDefaultValue(Either.left(literal.doubleValue())),
+            () -> Models.objectResource(model.filter(inputNode, DEFAULT_VALUE, null))
+                .flatMap(resource -> Models.objectIRI(model.filter(resource, NODE, null)))
+                .ifPresent(iri -> builder.setDefaultValue(Either.right(iri.stringValue())))
+        );
+
     return builder.build();
   }
 
@@ -280,11 +255,11 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
       builder.setIRIAsString(groupNode.stringValue());
     }
     Models.objectLiteral(model.filter(groupNode, RDFS.LABEL, null))
-            .ifPresent(literal -> builder.withLabel(literal.stringValue()));
+            .ifPresent(literal -> builder.setLabel(literal.stringValue()));
     Models.objectLiteral(model.filter(groupNode, RDFS.COMMENT, null))
-            .ifPresent(literal -> builder.withComment(literal.stringValue()));
+            .ifPresent(literal -> builder.setComment(literal.stringValue()));
     Models.objectLiteral(model.filter(groupNode, ORDER, null))
-            .ifPresent(literal -> builder.withOrder(literal.intValue()));
+            .ifPresent(literal -> builder.setOrder(literal.intValue()));
     return builder.build();
   }
 

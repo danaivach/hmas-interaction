@@ -77,7 +77,7 @@
                        sh:targetClass hmas:Agent ;
                        sh:property [
                              sh:path hmas:isContainedIn ;
-                             sh:minCount 1;
+                             sh:minCount "1"^^xs:int;
                              sh:hasValue <http://localhost:8080/environments/env1/workspaces/shopfloor42> ;
                          ] .
 
@@ -85,17 +85,17 @@
                           sh:targetClass hmas:Agent ;
                           sh:property [
                                 sh:path foaf:name ;
-                                sh:minCount 1;
+                                sh:minCount "1"^^xs:int;
                                 sh:datatype xs:string ;
                                 sh:qualifiedValueShape <#name-shape> ;
-                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedMinCount "1"^^xs:int;
                             ] ;
                           sh:property [
                                 sh:path foaf:mbox ;
-                                sh:minCount 1;
+                                sh:minCount "1"^^xs:int;
                                 sh:datatype xs:string ;
                                 sh:qualifiedValueShape <#mbox-shape> ;
-                                sh:qualifiedMinCount 1 ;
+                                sh:qualifiedMinCount "1"^^xs:int;
                             ] .
 
 <#name-shape> a sh:NodeShape .
@@ -105,15 +105,15 @@
                             sh:class hmas:ActionExecution ;
                             sh:property [
                                   sh:path prov:used ;
-                                  sh:minCount 1;
-                                  sh:maxCount 1 ;
+                                  sh:minCount "1"^^xs:int;
+                                  sh:maxCount "1"^^xs:int;
                                   sh:hasValue <#register-form> ;
                               ] ;
                             sh:property [
                                   sh:path hmas:hasInput;
                                   sh:qualifiedValueShape <#agent-shape-sp> ;
-                                  sh:qualifiedMinCount 1 ;
-                                  sh:qualifiedMaxCount 1 ;
+                                  sh:qualifiedMinCount "1"^^xs:int;
+                                  sh:qualifiedMaxCount "1"^^xs:int;
                               ] .
 
 <#agent-shape-sp> a sh:NodeShape ;
@@ -121,21 +121,21 @@
                   sh:property [
                         sh:name "nombre de los operadores" ;
                         sh:path foaf:name ;
-                        sh:minCount 1;
-                        sh:maxCount 1 ;
+                        sh:minCount "1"^^xs:int;
+                        sh:maxCount "1"^^xs:int;
                         sh:defaultValue [ sh:node <#name-shape> ] ;
                         sh:datatype xs:string ;
-                        sh:order 0 ;
+                        sh:order "0"^^xs:int;
                         sh:group <#personal-details-group-sp> ;
                     ] ;
                   sh:property [
                         sh:name "email de los operadores" ;
                         sh:path foaf:mbox ;
-                        sh:minCount 1;
-                        sh:maxCount 1 ;
+                        sh:minCount "1"^^xs:int;
+                        sh:maxCount "1"^^xs:int;
                         sh:defaultValue [ sh:node <#mbox-shape> ] ;
                         sh:datatype xs:string ;
-                        sh:order 1 ;
+                        sh:order "1"^^xs:int;
                         sh:group <#personal-details-group-sp> ;
                     ] .
 
@@ -143,15 +143,15 @@
                             sh:class hmas:ActionExecution ;
                             sh:property [
                                   sh:path prov:used ;
-                                  sh:minCount 1;
-                                  sh:maxCount 1 ;
+                                  sh:minCount "1"^^xs:int;
+                                  sh:maxCount "1"^^xs:int;
                                   sh:hasValue <#register-form> ;
                               ] ;
                             sh:property [
                                   sh:path hmas:hasInput;
                                   sh:qualifiedValueShape <#agent-shape-en> ;
-                                  sh:qualifiedMinCount 1 ;
-                                  sh:qualifiedMaxCount 1 ;
+                                  sh:qualifiedMinCount "1"^^xs:int;
+                                  sh:qualifiedMaxCount "1"^^xs:int;
                               ] .
 
 <#agent-shape-en> a sh:NodeShape ;
@@ -159,21 +159,21 @@
                   sh:property [
                         sh:name "operator's name" ;
                         sh:path foaf:name ;
-                        sh:minCount 1;
-                        sh:maxCount 1 ;
+                        sh:minCount "1"^^xs:int;
+                        sh:maxCount "1"^^xs:int;
                         sh:defaultValue [ sh:node <#name-shape> ] ;
                         sh:datatype xs:string ;
-                        sh:order 0 ;
+                        sh:order "0"^^xs:int;
                         sh:group <#personal-details-group-en> ;
                     ] ;
                   sh:property [
                         sh:name "operator's email" ;
                         sh:path foaf:mbox ;
-                        sh:minCount 1;
-                        sh:maxCount 1 ;
+                        sh:minCount "1"^^xs:int;
+                        sh:maxCount "1"^^xs:int;
                         sh:defaultValue [ sh:node <#mbox-shape> ] ;
                         sh:datatype xs:string ;
-                        sh:order 1 ;
+                        sh:order "1"^^xs:int;
                         sh:group <#personal-details-group-en> ;
                     ] .
 
@@ -181,15 +181,15 @@
                            sh:class hmas:ActionExecution ;
                            sh:property [
                                  sh:path prov:used ;
-                                 sh:minCount 1;
-                                 sh:maxCount 1 ;
+                                 sh:minCount "1"^^xs:int;
+                                 sh:maxCount "1"^^xs:int;
                                  sh:hasValue <#set-tcp-form> ;
                              ] ;
                            sh:property [
                                  sh:path hmas:hasInput;
                                  sh:qualifiedValueShape <#movement-shape-sp> ;
-                                 sh:qualifiedMinCount 1 ;
-                                 sh:qualifiedMaxCount 1 ;
+                                 sh:qualifiedMinCount "1"^^xs:int;
+                                 sh:qualifiedMaxCount "1"^^xs:int;
                              ] .
 
 <#movement-shape-sp> a sh:NodeShape ;
@@ -197,21 +197,21 @@
                      sh:property [
                            sh:path manu:hasSpeed ;
                            sh:name "velocidad" ;
-                           sh:minCount 1;
-                           sh:maxCount 1 ;
+                           sh:minCount "1"^^xs:int;
+                           sh:maxCount "1"^^xs:int;
                            sh:datatype xs:integer ;
-                           sh:minInclusive 10 ;
-                           sh:maxInclusive 400 ;
-                           sh:defaultValue 50 ;
-                           sh:order 0 ;
+                           sh:minInclusive "10"^^xs:int;
+                           sh:maxInclusive "400"^^xs:int;
+                           sh:defaultValue "50"^^xs:int;
+                           sh:order "0"^^xs:int;
                            sh:group <#movement-group-sp> ;
                        ] ;
                      sh:property [
                            sh:path manu:hasTarget ;
                            sh:qualifiedValueShape <#target-shape-sp> ;
-                           sh:qualifiedMinCount 1 ;
-                           sh:qualifiedMaxCount 1 ;
-                           sh:order 1 ;
+                           sh:qualifiedMinCount "1"^^xs:int;
+                           sh:qualifiedMaxCount "1"^^xs:int;
+                           sh:order "1"^^xs:int;
                            sh:group <#movement-group-sp> ;
                        ] .
 
@@ -220,17 +220,17 @@
                    sh:property [
                          sh:path manu:hasCoordinates ;
                          sh:qualifiedValueShape <#coordinates-shape-sp> ;
-                         sh:qualifiedMinCount 1 ;
-                         sh:qualifiedMaxCount 1 ;
-                         sh:order 0 ;
+                         sh:qualifiedMinCount "1"^^xs:int;
+                         sh:qualifiedMaxCount "1"^^xs:int;
+                         sh:order "0"^^xs:int;
                          sh:group <#target-group-sp> ;
                      ] ;
                    sh:property [
                          sh:path manu:hasRotation ;
                          sh:qualifiedValueShape <#rotation-shape-sp> ;
-                         sh:qualifiedMinCount 1 ;
-                         sh:qualifiedMaxCount 1 ;
-                         sh:order 1 ;
+                         sh:qualifiedMinCount "1"^^xs:int;
+                         sh:qualifiedMaxCount "1"^^xs:int;
+                         sh:order "1"^^xs:int;
                          sh:group <#target-group-sp> ;
                      ] .
 
@@ -239,37 +239,37 @@
                         sh:property [
                               sh:path manu:hasX ;
                               sh:name "x" ;
-                              sh:minCount 1;
-                              sh:maxCount 1 ;
+                              sh:minCount "1"^^xs:int;
+                              sh:maxCount "1"^^xs:int;
                               sh:datatype xs:float ;
-                              sh:minInclusive -720 ;
-                              sh:maxInclusive 720 ;
-                              sh:defaultValue 300 ;
-                              sh:order 0 ;
+                              sh:minInclusive "-720"^^xs:int;
+                              sh:maxInclusive "720"^^xs:int;
+                              sh:defaultValue "300"^^xs:int;
+                              sh:order "0"^^xs:int;
                               sh:group <#coordinates-group-sp> ;
                           ] ;
                         sh:property [
                               sh:path manu:hasY ;
                               sh:name "y" ;
-                              sh:minCount 1;
-                              sh:maxCount 1 ;
+                              sh:minCount "1"^^xs:int;
+                              sh:maxCount "1"^^xs:int;
                               sh:datatype xs:float ;
-                              sh:minInclusive -720 ;
-                              sh:maxInclusive 720 ;
-                              sh:defaultValue 0 ;
-                              sh:order 1 ;
+                              sh:minInclusive "-720"^^xs:int;
+                              sh:maxInclusive "720"^^xs:int;
+                              sh:defaultValue "0"^^xs:int;
+                              sh:order "1"^^xs:int;
                               sh:group <#coordinates-group-sp> ;
                           ] ;
                         sh:property [
                               sh:path manu:hasZ ;
                               sh:name "z" ;
-                              sh:minCount 1;
-                              sh:maxCount 1 ;
+                              sh:minCount "1"^^xs:int;
+                              sh:maxCount "1"^^xs:int;
                               sh:datatype xs:float ;
-                              sh:minInclusive -178.3 ;
-                              sh:maxInclusive 1010 ;
-                              sh:defaultValue 400 ;
-                              sh:order 2 ;
+                              sh:minInclusive "-178.3"^^xs:float;
+                              sh:maxInclusive "1010"^^xs:int;
+                              sh:defaultValue "400"^^xs:int;
+                              sh:order "2"^^xs:int;
                               sh:group <#coordinates-group-sp> ;
                           ] .
 
@@ -278,37 +278,37 @@
                      sh:property [
                            sh:path manu:hasRoll ;
                            sh:name "balanceo" ;
-                           sh:minCount 1;
-                           sh:maxCount 1 ;
+                           sh:minCount "1"^^xs:int;
+                           sh:maxCount "1"^^xs:int;
                            sh:datatype xs:float ;
-                           sh:minInclusive -180 ;
-                           sh:maxInclusive 180 ;
-                           sh:defaultValue 180 ;
-                           sh:order 0 ;
+                           sh:minInclusive "-180"^^xs:int;
+                           sh:maxInclusive "180"^^xs:int;
+                           sh:defaultValue "180"^^xs:int;
+                           sh:order "0"^^xs:int;
                            sh:group <#rotation-group-sp> ;
                        ] ;
                      sh:property [
                            sh:path manu:hasPitch ;
                            sh:name "inclinación" ;
-                           sh:minCount 1;
-                           sh:maxCount 1 ;
+                           sh:minCount "1"^^xs:int;
+                           sh:maxCount "1"^^xs:int;
                            sh:datatype xs:float ;
-                           sh:minInclusive -180 ;
-                           sh:maxInclusive 180 ;
-                           sh:defaultValue 0 ;
-                           sh:order 1 ;
+                           sh:minInclusive "-180"^^xs:int;
+                           sh:maxInclusive "180"^^xs:int;
+                           sh:defaultValue "0"^^xs:int;
+                           sh:order "1"^^xs:int;
                            sh:group <#rotation-group-sp> ;
                        ] ;
                      sh:property [
                            sh:path manu:hasYaw ;
                            sh:name "guiñada" ;
-                           sh:minCount 1;
-                           sh:maxCount 1 ;
+                           sh:minCount "1"^^xs:int;
+                           sh:maxCount "1"^^xs:int;
                            sh:datatype xs:float ;
-                           sh:minInclusive -180 ;
-                           sh:maxInclusive 180 ;
-                           sh:defaultValue 0 ;
-                           sh:order 2 ;
+                           sh:minInclusive "-180"^^xs:int;
+                           sh:maxInclusive "180"^^xs:int;
+                           sh:defaultValue "0"^^xs:int;
+                           sh:order "2"^^xs:int;
                            sh:group <#rotation-group-sp> ;
                        ] .
 
@@ -316,15 +316,15 @@
                            sh:class hmas:ActionExecution ;
                            sh:property [
                                  sh:path prov:used ;
-                                 sh:minCount 1;
-                                 sh:maxCount 1 ;
+                                 sh:minCount "1"^^xs:int;
+                                 sh:maxCount "1"^^xs:int;
                                  sh:hasValue <#set-tcp-form> ;
                              ] ;
                            sh:property [
                                  sh:path hmas:hasInput;
                                  sh:qualifiedValueShape <#movement-shape-en> ;
-                                 sh:qualifiedMinCount 1 ;
-                                 sh:qualifiedMaxCount 1 ;
+                                 sh:qualifiedMinCount "1"^^xs:int;
+                                 sh:qualifiedMaxCount "1"^^xs:int;
                              ] .
 
 <#movement-shape-en> a sh:NodeShape ;
@@ -333,21 +333,21 @@
                            sh:path manu:hasSpeed ;
                            sh:name "speed" ;
                            sh:description "The speed of the TCP movement in mm/s" ;
-                           sh:minCount 1;
-                           sh:maxCount 1 ;
+                           sh:minCount "1"^^xs:int;
+                           sh:maxCount "1"^^xs:int;
                            sh:datatype xs:integer ;
-                           sh:minInclusive 10 ;
-                           sh:maxInclusive 400 ;
-                           sh:defaultValue 50 ;
-                           sh:order 0 ;
+                           sh:minInclusive "10"^^xs:int;
+                           sh:maxInclusive "400"^^xs:int;
+                           sh:defaultValue "50"^^xs:int;
+                           sh:order "0"^^xs:int;
                            sh:group <#movement-group-en> ;
                        ] ;
                      sh:property [
                            sh:path manu:hasTarget ;
                            sh:qualifiedValueShape <#target-shape-en> ;
-                           sh:qualifiedMinCount 1 ;
-                           sh:qualifiedMaxCount 1 ;
-                           sh:order 1 ;
+                           sh:qualifiedMinCount "1"^^xs:int;
+                           sh:qualifiedMaxCount "1"^^xs:int;
+                           sh:order "1"^^xs:int;
                            sh:group <#movement-group-en> ;
                        ] .
 
@@ -356,17 +356,17 @@
                    sh:property [
                          sh:path manu:hasCoordinates ;
                          sh:qualifiedValueShape <#coordinates-shape-en> ;
-                         sh:qualifiedMinCount 1 ;
-                         sh:qualifiedMaxCount 1 ;
-                         sh:order 0 ;
+                         sh:qualifiedMinCount "1"^^xs:int;
+                         sh:qualifiedMaxCount "1"^^xs:int;
+                         sh:order "0"^^xs:int;
                          sh:group <#target-group-en> ;
                      ] ;
                    sh:property [
                          sh:path manu:hasRotation ;
                          sh:qualifiedValueShape <#rotation-shape-en> ;
-                         sh:qualifiedMinCount 1 ;
-                         sh:qualifiedMaxCount 1 ;
-                         sh:order 1 ;
+                         sh:qualifiedMinCount "1"^^xs:int;
+                         sh:qualifiedMaxCount "1"^^xs:int;
+                         sh:order "1"^^xs:int;
                          sh:group <#target-group-en> ;
                      ] .
 
@@ -375,13 +375,13 @@
                         sh:property [
                               sh:path manu:hasX ;
                               sh:name "x" ;
-                              sh:minCount 1;
-                              sh:maxCount 1 ;
+                              sh:minCount "1"^^xs:int;
+                              sh:maxCount "1"^^xs:int;
                               sh:datatype xs:float ;
-                              sh:minInclusive -720 ;
-                              sh:maxInclusive 720 ;
-                              sh:defaultValue 300 ;
-                              sh:order 0 ;
+                              sh:minInclusive "-720"^^xs:int;
+                              sh:maxInclusive "720"^^xs:int;
+                              sh:defaultValue "300"^^xs:int;
+                              sh:order "0"^^xs:int;
                               sh:group <#coordinates-group-en> ;
                           ] ;
                         sh:property [
@@ -390,22 +390,22 @@
                               sh:minCount 1;
                               sh:maxCount 1 ;
                               sh:datatype xs:float ;
-                              sh:minInclusive -720 ;
-                              sh:maxInclusive 720 ;
-                              sh:defaultValue 0 ;
-                              sh:order 1 ;
+                              sh:minInclusive "-720"^^xs:int;
+                              sh:maxInclusive "720"^^xs:int;
+                              sh:defaultValue "0"^^xs:int;
+                              sh:order "1"^^xs:int;
                               sh:group <#coordinates-group-en> ;
                           ] ;
                         sh:property [
                               sh:path manu:hasZ ;
                               sh:name "z" ;
-                              sh:minCount 1;
-                              sh:maxCount 1 ;
+                              sh:minCount "1"^^xs:int;
+                              sh:maxCount "1"^^xs:int;
                               sh:datatype xs:float ;
-                              sh:minInclusive -178.3 ;
-                              sh:maxInclusive 1010 ;
-                              sh:defaultValue 400 ;
-                              sh:order 2 ;
+                              sh:minInclusive "-178.3"^^xs:float;
+                              sh:maxInclusive "1010"^^xs:int;
+                              sh:defaultValue "400"^^xs:int;
+                              sh:order "2"^^xs:int;
                               sh:group <#coordinates-group-en> ;
                           ] .
 
@@ -414,37 +414,37 @@
                      sh:property [
                            sh:path manu:hasRoll ;
                            sh:name "roll" ;
-                           sh:minCount 1;
-                           sh:maxCount 1 ;
+                           sh:minCount "1"^^xs:int;
+                           sh:maxCount "1"^^xs:int;
                            sh:datatype xs:float ;
-                           sh:minInclusive -180 ;
-                           sh:maxInclusive 180 ;
-                           sh:defaultValue 180 ;
-                           sh:order 0 ;
+                           sh:minInclusive "-180"^^xs:int;
+                           sh:maxInclusive "180"^^xs:int;
+                           sh:defaultValue "180"^^xs:int;
+                           sh:order "0"^^xs:int;
                            sh:group <#rotation-group-en> ;
                        ] ;
                      sh:property [
                            sh:path manu:hasPitch ;
                            sh:name "pitch" ;
-                           sh:minCount 1;
-                           sh:maxCount 1 ;
+                           sh:minCount "1"^^xs:int;
+                           sh:maxCount "1"^^xs:int;
                            sh:datatype xs:float ;
-                           sh:minInclusive -180 ;
-                           sh:maxInclusive 180 ;
-                           sh:defaultValue 0 ;
-                           sh:order 1 ;
+                           sh:minInclusive "-180"^^xs:int;
+                           sh:maxInclusive "180"^^xs:int;
+                           sh:defaultValue "0"^^xs:int;
+                           sh:order "1"^^xs:int;
                            sh:group <#rotation-group-en> ;
                        ] ;
                      sh:property [
                            sh:path manu:hasYaw ;
                            sh:name "yaw" ;
-                           sh:minCount 1;
-                           sh:maxCount 1 ;
+                           sh:minCount "1"^^xs:int;
+                           sh:maxCount "1"^^xs:int;
                            sh:datatype xs:float ;
-                           sh:minInclusive -180 ;
-                           sh:maxInclusive 180 ;
-                           sh:defaultValue 0 ;
-                           sh:order 2 ;
+                           sh:minInclusive "-180"^^xs:int;
+                           sh:maxInclusive "180"^^xs:int;
+                           sh:defaultValue "0"^^xs:int;
+                           sh:order "2"^^xs:int;
                            sh:group <#rotation-group-en> ;
                        ] .
 
@@ -452,20 +452,20 @@
                        sh:class hmas:ActionExecution ;
                        sh:property [
                              sh:path prov:used ;
-                             sh:minCount 1;
-                             sh:maxCount 1 ;
+                             sh:minCount "1"^^xs:int;
+                             sh:maxCount "1"^^xs:int;
                              sh:hasValue <#set-gripper-form> ;
                          ] ;
                        sh:property [
                              sh:path hmas:hasInput;
                              sh:name "gripper" ;
-                             sh:minCount 1;
-                             sh:maxCount 1 ;
+                             sh:minCount "1"^^xs:int;
+                             sh:maxCount "1"^^xs:int;
                              sh:datatype xs:integer ;
-                             sh:minInclusive 0 ;
-                             sh:maxInclusive 800 ;
-                             sh:defaultValue 20 ;
-                             sh:order 0 ;
+                             sh:minInclusive "0"^^xs:int;
+                             sh:maxInclusive "800"^^xs:int;
+                             sh:defaultValue "20"^^xs:int;
+                             sh:order "0"^^xs:int;
                              sh:group <#joints-group-sp> ;
                          ] .
 
@@ -473,18 +473,18 @@
                           sh:class hmas:ActionExecution ;
                           sh:property [
                                 sh:path prov:used ;
-                                sh:minCount 1;
-                                sh:maxCount 1 ;
+                                sh:minCount "1"^^xs:int;
+                                sh:maxCount "1"^^xs:int;
                                 sh:hasValue <#set-gripper-form> ;
                             ] ;
                           sh:property [
                                 sh:path hmas:hasInput;
                                 sh:name "gripper" ;
-                                sh:minCount 1;
-                                sh:maxCount 1 ;
+                                sh:minCount "1"^^xs:int;
+                                sh:maxCount "1"^^xs:int ;
                                 sh:datatype xs:integer ;
-                                sh:hasValue 0 ;
-                                sh:order 0 ;
+                                sh:hasValue "0"^^xs:int;
+                                sh:order "0"^^xs:int;
                                 sh:group <#joints-group-en> ;
                             ] .
 
@@ -492,70 +492,70 @@
                          sh:class hmas:ActionExecution ;
                          sh:property [
                                sh:path prov:used ;
-                               sh:minCount 1;
-                               sh:maxCount 1 ;
+                               sh:minCount "1"^^xs:int;
+                               sh:maxCount "1"^^xs:int;
                                sh:hasValue <#set-gripper-form> ;
                            ] ;
                          sh:property [
                                sh:path hmas:hasInput;
                                sh:name "gripper" ;
-                               sh:minCount 1;
-                               sh:maxCount 1 ;
+                               sh:minCount "1"^^xs:int;
+                               sh:maxCount "1"^^xs:int;
                                sh:datatype xs:integer ;
-                               sh:hasValue 750 ;
-                               sh:order 0 ;
+                               sh:hasValue "750"^^xs:int;
+                               sh:order "0"^^xs:int;
                                sh:group <#joints-group-en> ;
                            ] .
 
 # Groups for organizing UI components
 <#personal-details-group-sp> a sh:PropertyGroup ;
-                             sh:order 0 ;
+                             sh:order "0"^^xs:int;
                              rdfs:label "Detalles Personales" .
 
 <#movement-group-sp> a sh:PropertyGroup ;
-                     sh:order 0 ;
+                     sh:order "0"^^xs:int;
                      rdfs:label "Movimiento" .
 
 <#target-group-sp> a sh:PropertyGroup ;
-                   sh:order 1 ;
+                   sh:order "0"^^xs:int;
                    rdfs:label "Objetivo" .
 
 <#coordinates-group-sp> a sh:PropertyGroup ;
-                        sh:order 2 ;
+                        sh:order "2"^^xs:int;
                         rdfs:label "Coordenadas" .
 
 <#rotation-group-sp> a sh:PropertyGroup ;
-                     sh:order 3 ;
+                     sh:order "3"^^xs:int;
                      rdfs:label "Rotación" .
 
 <#joints-group-sp> a sh:PropertyGroup ;
-                   sh:order 0 ;
+                   sh:order "0"^^xs:int;
                    rdfs:label "Articulaciones" .
 
 <#personal-details-group-en> a sh:PropertyGroup ;
-                             sh:order 0 ;
+                             sh:order "0"^^xs:int;
                              rdfs:label "Personal Details" .
 
 <#movement-group-en> a sh:PropertyGroup ;
-                     sh:order 0 ;
+                     sh:order "0"^^xs:int;
                      rdfs:label "Movement" .
 
 <#target-group-en> a sh:PropertyGroup ;
-                   sh:order 1 ;
+                   sh:order "1"^^xs:int;
                    rdfs:label "Target" .
 
 <#coordinates-group-en> a sh:PropertyGroup ;
-                        sh:order 2 ;
+                        sh:order "2"^^xs:int;
                         rdfs:label "Coordinates" ;
                         rdfs:comment "The position of the target in the Cartesian system (front and back: X axis, left and right: Y axis, up and down: Z axis) in mm." .
 
 <#rotation-group-en> a sh:PropertyGroup ;
-                     sh:order 3 ;
+                     sh:order "3"^^xs:int;
                      rdfs:label "Rotation" ;
                      rdfs:comment "Roll / Pitch / Yaw sequentially rotate around the X / Y / Z of the base coordinate system in degrees." .
 
 <#joints-group-en> a sh:PropertyGroup ;
-                   sh:order 0 ;
+                   sh:order "0"^^xs:int;
                    rdfs:label "Joints" .
 
 # Hypermedia controls

@@ -123,27 +123,20 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
   }
 
   private Resource addInput(InputSpecification input) {
-    return input instanceof CompoundInputSpecification ? addCompoundInput((CompoundInputSpecification) input) :
-        addSimpleInput((SimpleInputSpecification) input);
-  }
-
-  private Resource addSimpleInput(SimpleInputSpecification input) {
     Resource inputId = rdf.createBNode();
-    graphBuilder.add(inputId, SHACL.PATH, iri(input.getRequiredProperties()));
-    input.getMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(c)));
-    input.getMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(c)));
-    Optional.ofNullable(input.getRequiredDataType()).ifPresent(dt -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(dt)));
+    input.getQualifiedValueShape().ifPresent(shape -> graphBuilder.add(inputId, SHACL.QUALIFIED_VALUE_SHAPE, iri(shape)));
     input.getName().ifPresent(name -> graphBuilder.add(inputId, SHACL.NAME, literal(name)));
     input.getDescription().ifPresent(desc -> graphBuilder.add(inputId, SHACL.DESCRIPTION, literal(desc)));
-    input.getOrder().ifPresent(order -> graphBuilder.add(inputId, SHACL.ORDER, literal(order)));
-    input.getMinCount().ifPresent(minCount -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(minCount)));
-    input.getMaxCount().ifPresent(maxCount -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(maxCount)));
-    input.getMinInclusive().ifPresent(m -> graphBuilder.add(inputId, SHACL.MIN_INCLUSIVE, literal(m)));
-    input.getMaxInclusive().ifPresent(m -> graphBuilder.add(inputId, SHACL.MAX_INCLUSIVE, literal(m)));
+    input.getMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(c)));
+    input.getMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(c)));
     input.getQualifiedMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MIN_COUNT, literal(c)));
     input.getQualifiedMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MAX_COUNT, literal(c)));
+    input.getRequiredDataType().ifPresent(c -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(c)));
+    input.getRequiredProperties().ifPresent(path -> graphBuilder.add(inputId, SHACL.PATH, iri(path)));
+    input.getOrder().ifPresent(order -> graphBuilder.add(inputId, SHACL.ORDER, literal(order)));
     input.getGroup().ifPresent(g -> addGroup(g, inputId));
-    input.getHasValue().ifPresent(v -> graphBuilder.add(inputId, SHACL.HAS_VALUE, v.isRight() ? iri(v.get()) : literal(v.getLeft())));
+    input.getMinInclusive().ifPresent(m -> graphBuilder.add(inputId, SHACL.MIN_INCLUSIVE, literal(m)));
+    input.getMaxInclusive().ifPresent(m -> graphBuilder.add(inputId, SHACL.MAX_INCLUSIVE, literal(m)));
     input.getDefaultValue().ifPresent(dv -> {
       if (dv.isRight()) {
         Resource bNode = rdf.createBNode();
@@ -154,26 +147,11 @@ public class ArtifactProfileGraphWriter extends ResourceProfileGraphWriter<Artif
       }
     });
 
-    return inputId;
-  }
-
-  private Resource addCompoundInput(CompoundInputSpecification input) {
-    Resource inputId = rdf.createBNode();
-    graphBuilder.add(inputId, SHACL.QUALIFIED_VALUE_SHAPE, iri(input.getQualifiedValueShape()));
-    input.getMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MIN_COUNT, literal(c)));
-    input.getMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.MAX_COUNT, literal(c)));
-    input.getQualifiedMinCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MIN_COUNT, literal(c)));
-    input.getQualifiedMaxCount().ifPresent(c -> graphBuilder.add(inputId, SHACL.QUALIFIED_MAX_COUNT, literal(c)));
-    input.getRequiredDataType().ifPresent(c -> graphBuilder.add(inputId, SHACL.DATATYPE, iri(c)));
-    input.getRequiredProperties().ifPresent(path -> graphBuilder.add(inputId, SHACL.PATH, iri(path)));
-    input.getOrder().ifPresent(order -> graphBuilder.add(inputId, SHACL.ORDER, literal(order)));
-    input.getGroup().ifPresent(g -> addGroup(g, inputId));
-
-    graphBuilder.add(iri(input.getQualifiedValueShape()), RDF.TYPE, SHACL.NODE_SHAPE);
-    input.getRequiredSemanticTypes()
-        .forEach(type -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.CLASS, iri(type)));
-    input.getInputs().forEach(i -> graphBuilder.add(iri(input.getQualifiedValueShape()), SHACL.PROPERTY, addInput(i)));
-
+    input.getQualifiedValueShape().ifPresent(shape -> {
+      graphBuilder.add(iri(shape), RDF.TYPE, SHACL.NODE_SHAPE);
+      input.getRequiredSemanticTypes().forEach(type -> graphBuilder.add(iri(shape), SHACL.CLASS, iri(type)));
+      input.getInputs().forEach(i -> graphBuilder.add(iri(shape), SHACL.PROPERTY, addInput(i)));
+    });
     return inputId;
   }
 

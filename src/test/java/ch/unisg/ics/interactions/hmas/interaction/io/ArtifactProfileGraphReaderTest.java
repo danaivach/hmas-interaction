@@ -224,12 +224,12 @@ public class ArtifactProfileGraphReaderTest {
 
     Optional<InputSpecification> i = actionSpec.getInputSpecification();
     assertTrue(i.isPresent());
-    CompoundInputSpecification input = (CompoundInputSpecification) i.get();
+    InputSpecification input = (InputSpecification) i.get();
     assertEquals(Set.of("http://example.org/GripperJoint"), input.getRequiredSemanticTypes());
     assertEquals("http://example.org/hasGripperValue",
-        ((SimpleInputSpecification) input.getInputs().stream().findFirst().get()).getRequiredProperties());
+        input.getInputs().stream().findFirst().get().getRequiredProperties().get());
     assertEquals("https://www.w3.org/2001/XMLSchema#integer",
-        ((SimpleInputSpecification) input.getInputs().stream().findFirst().get()).getRequiredDataType());
+        input.getInputs().stream().findFirst().get().getRequiredDataType().get());
   }
 
   @Test
@@ -386,16 +386,16 @@ public class ArtifactProfileGraphReaderTest {
 
     Optional<InputSpecification> inputSpec = actionSpec.getInputSpecification();
     assertTrue(inputSpec.isPresent());
-    CompoundInputSpecification comInputSpec = (CompoundInputSpecification)  inputSpec.get();
+    InputSpecification comInputSpec = (InputSpecification)  inputSpec.get();
 
     Set<String> inputTypes = comInputSpec.getRequiredSemanticTypes(); //defined as a `Set` since there can be more than one objects for the property `sh:class`
     assertEquals(1, inputTypes.size());
     actionTypes.contains("https://saref.etsi.org/core/OnOffState");
 
     assertEquals("https://saref.etsi.org/core/hasValue",
-        ((SimpleInputSpecification) comInputSpec.getInputs().stream().findFirst().get()).getRequiredProperties());
+        comInputSpec.getInputs().stream().findFirst().get().getRequiredProperties().get());
     assertEquals("https://www.w3.org/2001/XMLSchema#integer",
-        ((SimpleInputSpecification) comInputSpec.getInputs().stream().findFirst().get()).getRequiredDataType());
+        comInputSpec.getInputs().stream().findFirst().get().getRequiredDataType().get());
 
    /* To be discussed
    Set<Property> properties = comInputSpec.getRequiredProperties();

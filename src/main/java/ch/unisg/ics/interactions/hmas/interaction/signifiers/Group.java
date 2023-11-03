@@ -42,17 +42,17 @@ public class Group extends AbstractResource {
       this.order = Optional.empty();
     }
 
-    public Builder withLabel(String label) {
+    public Builder setLabel(String label) {
       this.label = Optional.of(label);
       return this;
     }
 
-    public Builder withComment(String comment) {
+    public Builder setComment(String comment) {
       this.comment = Optional.of(comment);
       return this;
     }
 
-    public Builder withOrder(int order) {
+    public Builder setOrder(int order) {
       this.order = Optional.of(order);
       return this;
     }

@@ -322,15 +322,16 @@ public class ArtifactProfileGraphWriterTest {
             .setIRIAsString("http://example.org/httpForm")
             .build();
 
-    InputSpecification gripperJointInput = new CompoundInputSpecification.Builder()
-        .withRequiredSemanticTypes(Set.of("http://example.org/GripperJoint"))
-        .withQualifiedValueShape("http://example.org/gripperJointShape")
-        .withQualifiedMinCount(1)
-        .withQualifiedMaxCount(1)
-        .withInput(new SimpleInputSpecification.Builder("http://example.org/hasGripperValue")
-            .withDataType("http://www.w3.org/2001/XMLSchema#integer")
-            .withMinCount(1)
-            .withMaxCount(1)
+    InputSpecification gripperJointInput = new InputSpecification.Builder()
+        .setRequiredSemanticTypes(Set.of("http://example.org/GripperJoint"))
+        .setQualifiedValueShape("http://example.org/gripperJointShape")
+        .setQualifiedMinCount(1)
+        .setQualifiedMaxCount(1)
+        .setInput(new InputSpecification.Builder()
+            .setPath("http://example.org/hasGripperValue")
+            .setDataType("http://www.w3.org/2001/XMLSchema#integer")
+            .setMinCount(1)
+            .setMaxCount(1)
             .build())
         .build();
 
@@ -438,7 +439,7 @@ public class ArtifactProfileGraphWriterTest {
   }
 
   @Test
-  public void testReadArtifactProfileFromFile() throws IOException, URISyntaxException {
+  public void testWriteArtifactProfileReadFromFile() throws IOException, URISyntaxException {
     String baseUri = BASE_URI;
     BASE_URI = "http://example.org/ontology-example";
     URL fileResource = ArtifactProfileGraphReaderTest.class.getClassLoader()
