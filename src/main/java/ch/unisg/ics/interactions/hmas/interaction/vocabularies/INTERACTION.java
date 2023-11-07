@@ -28,10 +28,6 @@ public class INTERACTION {
 
   public static final IRI ACTION_SPECIFICATION;
 
-  public static final IRI EXPECTED_INPUT;
-
-  public static final IRI INPUT_SCHEMA;
-
   public static final IRI AGENT_BODY;
 
   /* Object Properties */
@@ -42,12 +38,6 @@ public class INTERACTION {
   public static final IRI RECOMMENDS_CONTEXT;
 
   public static final IRI HAS_ABILITY;
-
-  public static final IRI EXPECTS;
-
-  public static final IRI HAS_INPUT_SCHEMA;
-
-  public static final IRI HAS_FORM;
 
   public static final IRI HAS_ACTION;
 
@@ -64,17 +54,12 @@ public class INTERACTION {
     BEHAVIORAL_SPECIFICATION = rdf.createIRI(NAMESPACE + "BehavioralSpecification");
     ACTION_EXECUTION = rdf.createIRI(NAMESPACE + "ActionExecution");
     ACTION_SPECIFICATION = rdf.createIRI(NAMESPACE + "ActionSpecification");
-    EXPECTED_INPUT = rdf.createIRI(NAMESPACE + "Input");
-    INPUT_SCHEMA = rdf.createIRI(NAMESPACE + "Signfiier");
     AGENT_BODY = rdf.createIRI(NAMESPACE + "AgentBody");
 
     SIGNIFIES = rdf.createIRI(NAMESPACE + "signifies");
     RECOMMENDS_ABILITY = rdf.createIRI(NAMESPACE + "recommendsAbility");
     RECOMMENDS_CONTEXT = rdf.createIRI(NAMESPACE + "recommendsContext");
     HAS_ABILITY = rdf.createIRI(NAMESPACE + "hasAbility");
-    EXPECTS = rdf.createIRI(NAMESPACE + "expects");
-    HAS_INPUT_SCHEMA = rdf.createIRI(NAMESPACE + "hasInputSchema");
-    HAS_FORM = rdf.createIRI(NAMESPACE + "hasForm");
     HAS_ACTION = rdf.createIRI(NAMESPACE + "hasAction");
     HAS_AGENT_BODY = rdf.createIRI(NAMESPACE + "hasAgentBody");
     HAS_INPUT = rdf.createIRI(NAMESPACE + "hasInput");
@@ -89,8 +74,6 @@ public class INTERACTION {
     BEHAVIORAL_SPECIFICATION(INTERACTION.BEHAVIORAL_SPECIFICATION),
     ACTION_EXECUTION(INTERACTION.ACTION_EXECUTION),
     ACTION_SPECIFICATION(INTERACTION.ACTION_SPECIFICATION),
-    EXPECTED_INPUT(INTERACTION.EXPECTED_INPUT),
-    INPUT_SCHEMA(INTERACTION.INPUT_SCHEMA),
     AGENT_BODY(INTERACTION.AGENT_BODY),
 
     /* Object Properties */
@@ -98,9 +81,6 @@ public class INTERACTION {
     RECOMMENDS_ABILITY(INTERACTION.RECOMMENDS_ABILITY),
     RECOMMENDS_CONTEXT(INTERACTION.RECOMMENDS_CONTEXT),
     HAS_ABILITY(INTERACTION.HAS_ABILITY),
-    EXPECTS(INTERACTION.EXPECTS),
-    HAS_INPUT_SCHEMA(INTERACTION.HAS_INPUT_SCHEMA),
-    HAS_FORM(INTERACTION.HAS_FORM),
     HAS_ACTION(INTERACTION.HAS_ACTION),
     HAS_AGENT_BODY(INTERACTION.HAS_AGENT_BODY),
     HAS_INPUT(INTERACTION.HAS_INPUT);
