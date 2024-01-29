@@ -42,9 +42,6 @@ public class Form extends AbstractResource {
   }
 
   public Optional<String> getMethodName(String operationType) {
-    if (!operationTypes.contains(operationType)) {
-      throw new IllegalArgumentException("Unknown operation type: " + operationType);
-    }
 
     if (methodName.isPresent()) {
       return methodName;
