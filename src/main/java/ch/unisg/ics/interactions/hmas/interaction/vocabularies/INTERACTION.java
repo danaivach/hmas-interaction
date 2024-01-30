@@ -45,6 +45,8 @@ public class INTERACTION {
 
   public static final IRI HAS_INPUT;
 
+  public static final IRI HAS_OUTPUT;
+
   static {
     SimpleValueFactory rdf = SimpleValueFactory.getInstance();
 
@@ -63,6 +65,7 @@ public class INTERACTION {
     HAS_ACTION = rdf.createIRI(NAMESPACE + "hasAction");
     HAS_AGENT_BODY = rdf.createIRI(NAMESPACE + "hasAgentBody");
     HAS_INPUT = rdf.createIRI(NAMESPACE + "hasInput");
+    HAS_OUTPUT = rdf.createIRI(NAMESPACE + "hasOutput");
   }
 
   public enum TERM implements HMAS {
@@ -83,7 +86,8 @@ public class INTERACTION {
     HAS_ABILITY(INTERACTION.HAS_ABILITY),
     HAS_ACTION(INTERACTION.HAS_ACTION),
     HAS_AGENT_BODY(INTERACTION.HAS_AGENT_BODY),
-    HAS_INPUT(INTERACTION.HAS_INPUT);
+    HAS_INPUT(INTERACTION.HAS_INPUT),
+    HAS_OUTPUT(INTERACTION.HAS_OUTPUT);
 
     private final IRI type;
 

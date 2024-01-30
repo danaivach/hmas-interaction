@@ -152,6 +152,9 @@ public class ArtifactProfileGraphReaderTest {
     Set<Form> forms = actionSpec.getForms();
     assertEquals(2, forms.size());
 
+    Form firstForm = actionSpec.getFirstForm();
+    assertTrue(forms.contains(firstForm));
+
     assertTrue(forms.stream().anyMatch(form ->
         "https://example.org/resource".equals(form.getTarget()) && "urn:3g6lpq9v".equals(form.getIRIAsString().get())));
 
@@ -224,12 +227,89 @@ public class ArtifactProfileGraphReaderTest {
 
     Optional<InputSpecification> i = actionSpec.getInputSpecification();
     assertTrue(i.isPresent());
-    InputSpecification input = (InputSpecification) i.get();
+    InputSpecification input = i.get();
     assertEquals(Set.of("http://example.org/GripperJoint"), input.getRequiredSemanticTypes());
     assertEquals("http://example.org/hasGripperValue",
         input.getInputs().stream().findFirst().get().getRequiredProperties().get());
     assertEquals("https://www.w3.org/2001/XMLSchema#integer",
         input.getInputs().stream().findFirst().get().getRequiredDataType().get());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithOutput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <https://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "  hmas:signifies ex:readGripperSpecification .\n" +
+            "\n" +
+            "ex:readGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property [\n" +
+            "    sh:path hmas:hasOutput;\n" +
+            "    sh:qualifiedValueShape ex:gripperJointShape ;\n" +
+            "    sh:qualifiedMinCount 1 ;\n" +
+            "    sh:qualifiedMaxCount 1 \n" +
+            "  ] .\n" +
+            "\n" +
+            "ex:gripperJointShape a sh:NodeShape ;\n" +
+            "  sh:class ex:GripperJoint ;\n" +
+            "  sh:property [\n" +
+            "    sh:path ex:hasGripperValue ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:datatype xs:integer\n" +
+            "  ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"GET\" .";
+
+    ArtifactProfile profile = ArtifactProfileGraphReader.readFromString(expectedProfile);
+
+    Artifact artifact = profile.getArtifact();
+    assertEquals(ARTIFACT, artifact.getTypeAsIRI());
+    assertFalse(artifact.getIRI().isPresent());
+
+    assertEquals(1, profile.getExposedSignifiers().size());
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    assertEquals(0, signifier.getRecommendedAbilities().size());
+
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Set<Form> forms = actionSpec.getForms();
+    assertEquals(1, forms.size());
+    Form form = new ArrayList<>(forms).get(0);
+    assertEquals("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper", form.getTarget());
+    assertEquals("http://example.org/httpForm", form.getIRIAsString().get());
+
+
+    Optional<OutputSpecification> i = actionSpec.getOuputSpecification();
+    assertTrue(i.isPresent());
+    /*
+    InputSpecification input = (InputSpecification) i.get();
+    assertEquals(Set.of("http://example.org/GripperJoint"), input.getRequiredSemanticTypes());
+    assertEquals("http://example.org/hasGripperValue",
+            input.getInputs().stream().findFirst().get().getRequiredProperties().get());
+    assertEquals("https://www.w3.org/2001/XMLSchema#integer",
+            input.getInputs().stream().findFirst().get().getRequiredDataType().get());
+
+     */
   }
 
   @Test

@@ -163,14 +163,18 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
     Resource propNodeForm = propNodes.stream().filter(this::isForm).findFirst()
             .orElseThrow(() -> new InvalidResourceProfileException(
                     "An action specification was found with no forms. " + specNode.toString()));
+
     Optional<Resource> propNodeInput = propNodes.stream().filter(this::isInput).findFirst();
+    Optional<Resource> propNodeOutput = propNodes.stream().filter(this::isOutput).findFirst();
+
     ActionSpecification.Builder acSpecBuilder =
-        new ActionSpecification.Builder(readForms(readFormResources(propNodeForm)));
+            new ActionSpecification.Builder(readForms(readFormResources(propNodeForm)));
     propNodeInput.ifPresent(input -> acSpecBuilder.setRequiredInput(readInput(input)));
+    propNodeOutput.ifPresent(output -> acSpecBuilder.setRequiredOutput(readOutput(output)));
     acSpecBuilder.setRequiredSemanticTypes(
-        Models.objectIRIs(model.filter(specNode, CLASS, null)).stream()
-            .map(IRI::stringValue)
-            .collect(Collectors.toSet())
+            Models.objectIRIs(model.filter(specNode, CLASS, null)).stream()
+                    .map(IRI::stringValue)
+                    .collect(Collectors.toSet())
     );
     if (specNode.isIRI()) {
       acSpecBuilder.setIRIAsString(specNode.stringValue());
@@ -191,29 +195,44 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
             "An action specification should have at least one form. ");
   }
 
-  protected InputSpecification readInput(Resource propNode) {
-    if (model.contains(propNode, QUALIFIED_VALUE_SHAPE, null)) {
-      return readInput2(
-              Models.objectResource(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null)).orElseThrow(() ->
-                      new InvalidResourceProfileException("Invalid input property shape. " + propNode.toString())
-              ),
-              propNode
-      );
-    }
-    return readInput2(null, propNode);
+  protected InputSpecification readInput(Resource node) {
+    System.out.println("in input");
+    InputSpecification.Builder builder = new InputSpecification.Builder();
+    return (InputSpecification) readIOSpecification(builder, node, "in");
   }
 
-  protected InputSpecification readInput2(Resource inputNode, Resource propNode) {
-    InputSpecification.Builder builder = new InputSpecification.Builder();
+  protected OutputSpecification readOutput(Resource node) {
+    OutputSpecification.Builder builder = new OutputSpecification.Builder();
+    return (OutputSpecification) readIOSpecification(builder, node, "out");
+  }
+
+  protected AbstractIOSpecification readIOSpecification(AbstractIOSpecification.AbstractBuilder<?, ?> builder, Resource propNode, String io) {
+    if (model.contains(propNode, QUALIFIED_VALUE_SHAPE, null)) {
+      System.out.println("there is a qualified value shape");
+      return readNestedIOSpecification(builder,
+              Models.objectResource(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null)).orElseThrow(() ->
+                      new InvalidResourceProfileException("Invalid action property (input/output) shape. " + propNode.toString())
+              ),
+              propNode,
+              io
+      );
+    }
+    return readNestedIOSpecification(builder, null, propNode, io);
+  }
+
+  protected AbstractIOSpecification readNestedIOSpecification(AbstractIOSpecification.AbstractBuilder<?, ?> builder, Resource baseNode, Resource propNode, String io) {
+
     builder.setRequiredSemanticTypes(
-        Models.objectIRIs(model.filter(inputNode, CLASS, null)).stream()
-            .map(IRI::stringValue)
-            .collect(Collectors.toSet())
+            Models.objectIRIs(model.filter(baseNode, CLASS, null)).stream()
+                    .peek(iri -> System.out.println("IRI stringValue: " + iri.stringValue()))  // Print statement added
+                    .map(IRI::stringValue)
+                    .collect(Collectors.toSet())
     );
-    Models.objectLiteral(model.filter(inputNode, NAME, null))
-        .ifPresent(literal -> builder.setName(literal.stringValue()));
-    Models.objectLiteral(model.filter(inputNode, DESCRIPTION, null))
-        .ifPresent(literal -> builder.setDescription(literal.stringValue()));
+
+    Models.objectLiteral(model.filter(baseNode, NAME, null))
+            .ifPresent(literal -> builder.setName(literal.stringValue()));
+    Models.objectLiteral(model.filter(baseNode, DESCRIPTION, null))
+            .ifPresent(literal -> builder.setDescription(literal.stringValue()));
     Models.objectIRI(model.filter(propNode, PATH, null))
             .ifPresent(path -> builder.setPath(path.stringValue()));
     Models.objectLiteral(model.filter(propNode, MIN_COUNT, null))
@@ -228,23 +247,30 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
             .ifPresent(qualifiedValueShape -> builder.setQualifiedValueShape(qualifiedValueShape.stringValue()));
     Models.objectResource(model.filter(propNode, GROUP, null))
             .ifPresent(groupResource -> builder.setGroup(readGroup(groupResource)));
-    Models.objectResources(model.filter(Optional.ofNullable(inputNode).orElse(propNode), PROPERTY, null))
-            .forEach(node -> builder.setInput(readInput(node)));
     Models.objectLiteral(model.filter(propNode, ORDER, null))
             .ifPresent(order -> builder.setOrder(order.intValue()));
     Models.objectIRI(model.filter(propNode, DATATYPE, null))
             .ifPresent(dataType -> builder.setDataType(dataType.stringValue()));
-    Models.objectLiteral(model.filter(inputNode, MIN_INCLUSIVE, null))
-        .ifPresent(literal -> builder.setMinInclusive(literal.doubleValue()));
-    Models.objectLiteral(model.filter(inputNode, MAX_INCLUSIVE, null))
-        .ifPresent(literal -> builder.setMaxInclusive(literal.doubleValue()));
-    Models.objectLiteral(model.filter(inputNode, DEFAULT_VALUE, null))
-        .ifPresentOrElse(
-            literal -> builder.setDefaultValue(Either.left(literal.doubleValue())),
-            () -> Models.objectResource(model.filter(inputNode, DEFAULT_VALUE, null))
-                .flatMap(resource -> Models.objectIRI(model.filter(resource, NODE, null)))
-                .ifPresent(iri -> builder.setDefaultValue(Either.right(iri.stringValue())))
-        );
+    Models.objectLiteral(model.filter(baseNode, MIN_INCLUSIVE, null))
+            .ifPresent(literal -> builder.setMinInclusive(literal.doubleValue()));
+    Models.objectLiteral(model.filter(baseNode, MAX_INCLUSIVE, null))
+            .ifPresent(literal -> builder.setMaxInclusive(literal.doubleValue()));
+    Models.objectLiteral(model.filter(baseNode, DEFAULT_VALUE, null))
+            .ifPresentOrElse(
+                    literal -> builder.setDefaultValue(Either.left(literal.doubleValue())),
+                    () -> Models.objectResource(model.filter(baseNode, DEFAULT_VALUE, null))
+                            .flatMap(resource -> Models.objectIRI(model.filter(resource, NODE, null)))
+                            .ifPresent(iri -> builder.setDefaultValue(Either.right(iri.stringValue())))
+            );
+
+    if ("in".equals(io)) {
+      Models.objectResources(model.filter(Optional.ofNullable(baseNode).orElse(propNode), PROPERTY, null))
+              .forEach(node -> ((InputSpecification.Builder) builder).setInput(readInput(node)));
+    } else if ("out".equals(io)) {
+      Models.objectResources(model.filter(Optional.ofNullable(baseNode).orElse(propNode), PROPERTY, null))
+              .forEach(node -> ((OutputSpecification.Builder) builder).setOutput(readOutput(node)));
+    }
+
 
     return builder.build();
   }
@@ -278,6 +304,10 @@ public class ArtifactProfileGraphReader extends ResourceProfileGraphReader {
 
   private Boolean isInput(Resource node) {
     return model.contains(node, PATH, HAS_INPUT);
+  }
+
+  private Boolean isOutput(Resource node) {
+    return model.contains(node, PATH, HAS_OUTPUT);
   }
 
   protected Set<Form> readForms(Set<Resource> formNodes) {
