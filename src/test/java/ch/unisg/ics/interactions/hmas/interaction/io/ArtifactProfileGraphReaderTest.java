@@ -299,7 +299,7 @@ public class ArtifactProfileGraphReaderTest {
     assertEquals("http://example.org/httpForm", form.getIRIAsString().get());
 
 
-    Optional<OutputSpecification> i = actionSpec.getOuputSpecification();
+    Optional<OutputSpecification> i = actionSpec.getOutputSpecification();
     assertTrue(i.isPresent());
     /*
     InputSpecification input = (InputSpecification) i.get();

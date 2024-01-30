@@ -41,7 +41,7 @@ public class ActionSpecification extends AbstractResource {
     return this.input;
   }
 
-  public Optional<OutputSpecification> getOuputSpecification() {
+  public Optional<OutputSpecification> getOutputSpecification() {
     return this.output;
   }
 
