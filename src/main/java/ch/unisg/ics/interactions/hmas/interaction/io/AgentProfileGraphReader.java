@@ -1,10 +1,9 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
-import ch.unisg.ics.interactions.hmas.core.hostables.ProfiledResource;
 import ch.unisg.ics.interactions.hmas.core.hostables.Agent;
+import ch.unisg.ics.interactions.hmas.core.io.BaseResourceProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
-import ch.unisg.ics.interactions.hmas.core.io.ResourceProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.Ability;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.AgentBody;
@@ -24,7 +23,7 @@ import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.IS_PROFILE_O
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.HAS_ABILITY;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.HAS_AGENT_BODY;
 
-public class AgentProfileGraphReader extends ResourceProfileGraphReader {
+public class AgentProfileGraphReader extends BaseResourceProfileGraphReader {
 
   protected AgentProfileGraphReader(RDFFormat format, String representation) {
     super(format, representation);
@@ -48,7 +47,7 @@ public class AgentProfileGraphReader extends ResourceProfileGraphReader {
   protected final SituatedAgent readOwnerAgent() {
     Optional<Resource> node = Models.objectResource(model.filter(profileIRI, IS_PROFILE_OF, null));
     if (node.isPresent()) {
-      AbstractResource resource =  readResource(node.get());
+      AbstractResource resource = readResource(node.get());
 
       if (CORE.AGENT.equals(resource.getTypeAsIRI())) {
         return (SituatedAgent) resource;

@@ -1,7 +1,5 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.ResourceProfile;
-
 public class AgentProfile extends ResourceProfile {
 
   protected AgentProfile(AbstractBuilder builder) {

@@ -1,12 +1,13 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
-import ch.unisg.ics.interactions.hmas.core.hostables.ProfiledResource;
 import ch.unisg.ics.interactions.hmas.core.hostables.BaseResourceProfile;
+import ch.unisg.ics.interactions.hmas.core.hostables.ProfiledResource;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ResourceProfile extends BaseResourceProfile {
 
@@ -19,6 +20,19 @@ public class ResourceProfile extends BaseResourceProfile {
 
   public Set<Signifier> getExposedSignifiers() {
     return this.signifiers;
+  }
+
+  public Set<Signifier> getExposedSignifiers(String actionSemanticType) {
+
+    return this.signifiers.stream()
+            .filter(sig -> sig.getActionSpecification().getSemanticTypes().contains(actionSemanticType))
+            .collect(Collectors.toSet());
+  }
+
+  public Optional<Signifier> getFirstExposedSignifier(String actionSemanticType) {
+    return this.signifiers.stream()
+            .filter(sig -> sig.getActionSpecification().getSemanticTypes().contains(actionSemanticType))
+            .findFirst();
   }
 
   public static class Builder extends AbstractBuilder<Builder, ResourceProfile> {

@@ -2,7 +2,6 @@ package ch.unisg.ics.interactions.hmas.interaction.io;
 
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
-import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

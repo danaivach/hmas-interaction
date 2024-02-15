@@ -2,10 +2,10 @@ package ch.unisg.ics.interactions.hmas.interaction.examples;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
-import ch.unisg.ics.interactions.hmas.interaction.io.ArtifactProfileGraphWriter;
+import ch.unisg.ics.interactions.hmas.interaction.io.ResourceProfileGraphWriter;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.ActionSpecification;
-import ch.unisg.ics.interactions.hmas.interaction.signifiers.ArtifactProfile;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.Form;
+import ch.unisg.ics.interactions.hmas.interaction.signifiers.ResourceProfile;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.Signifier;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 
@@ -19,8 +19,8 @@ public class LightbulbProfileExample {
                     .addSemanticType("https://saref.etsi.org/core/ToggleCommand")
                     .build();
 
-    ArtifactProfile profile =
-            new ArtifactProfile.Builder(new Artifact.Builder()
+    ResourceProfile profile =
+            new ResourceProfile.Builder(new Artifact.Builder()
                     .setIRIAsString("http://example.org/workspaces/meetingroom/artifacts/lightbulb1#artifact")
                     .build())
                     .setIRIAsString("http://example.org/workspaces/meetingroom/artifacts/lightbulb1")
@@ -28,7 +28,7 @@ public class LightbulbProfileExample {
                             .build())
                     .build();
 
-    String profileStr = new ArtifactProfileGraphWriter(profile)
+    String profileStr = new ResourceProfileGraphWriter(profile)
             .setNamespace(CORE.PREFIX, CORE.NAMESPACE)
             .setNamespace(INTERACTION.PREFIX, INTERACTION.NAMESPACE)
             .write();
