@@ -1,20 +1,24 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
 import ch.unisg.ics.interactions.hmas.core.io.BaseResourceProfileGraphWriter;
+import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
+import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 
 import java.util.*;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.EXPOSES_SIGNIFIER;
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.SIGNIFIER;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.*;
+import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL.*;
 import static org.eclipse.rdf4j.model.util.Values.*;
 
 public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<ResourceProfile> {
-  private final Map<Resource, Set<InputSpecification>> addedContexts = new HashMap<>();
+  private final Map<Resource, Set<AbstractIOSpecification>> addedContexts = new HashMap<>();
 
   public ResourceProfileGraphWriter(ResourceProfile profile) {
     super(profile);
@@ -108,72 +112,160 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     if (forms.size() == 1) {
       Form form = forms.iterator().next();
       createFormNode(form);
-      graphBuilder.add(propertyId, SHACL.HAS_VALUE, form.getIRI().get());
+      graphBuilder.add(propertyId, HAS_VALUE, form.getIRI().get());
     }
     if (forms.size() > 1) {
       addFormsList(propertyId, forms.stream().map(f -> f.getIRI().get()).toList());
       forms.forEach(this::createFormNode);
     }
 
+
     specification.getInputSpecification().ifPresent(input -> {
-      Resource inputNode = addInput(input);
+      Resource inputNode = addAbstractIOSpecification((AbstractIOSpecification) input);
       graphBuilder.add(inputNode, SHACL.PATH, INTERACTION.HAS_INPUT);
       graphBuilder.add(locatedAcSpec, SHACL.PROPERTY, inputNode);
     });
 
     specification.getOutputSpecification().ifPresent(output -> {
-      Resource outputNode = addOutput(output);
+      Resource outputNode = addAbstractIOSpecification((AbstractIOSpecification) output);
       graphBuilder.add(outputNode, SHACL.PATH, INTERACTION.HAS_OUTPUT);
       graphBuilder.add(locatedAcSpec, SHACL.PROPERTY, outputNode);
     });
   }
 
-  private Resource addOutput(OutputSpecification output) {
-    Resource outputId = addIOSpecification(output);
-    output.getQualifiedValueShape().ifPresent(shape -> {
-      output.getOutputs().forEach(out -> graphBuilder.add(iri(shape), SHACL.PROPERTY, addOutput(out)));
-    });
-    return outputId;
+  protected Resource addAbstractIOSpecification(AbstractIOSpecification specification) {
+    Resource node;
+
+    if (specification instanceof AbstractValueSpecification) {
+      node = resolveHostableLocation(specification);
+      addAbstractValueSpecification((AbstractValueSpecification) specification, node);
+    } else if (specification instanceof QualifiedValueSpecification) {
+      node = rdf.createBNode();
+      addQualifiedValueSpecification((QualifiedValueSpecification) specification, node);
+    } else throw new InvalidResourceProfileException("Unrecognized shape of input/output specification.");
+    return node;
   }
 
-  private Resource addInput(InputSpecification input) {
-    Resource inputId = addIOSpecification(input);
-    input.getQualifiedValueShape().ifPresent(shape -> {
-      input.getInputs().forEach(in -> graphBuilder.add(iri(shape), SHACL.PROPERTY, addInput(in)));
+  private void addAbstractValueSpecification(AbstractValueSpecification specification, Resource node) {
+    if (specification.getRequiredSemanticTypes().contains(XSD.BOOLEAN.stringValue())) {
+      addBooleanSpecification((BooleanSpecification) specification, node);
+    } else if (specification.getRequiredSemanticTypes().contains(XSD.DOUBLE.stringValue())) {
+      addDoubleSpecification((DoubleSpecification) specification, node);
+    } else if (specification.getRequiredSemanticTypes().contains(XSD.FLOAT.stringValue())) {
+      addFloatSpecification((FloatSpecification) specification, node);
+    } else if (specification.getRequiredSemanticTypes().contains(XSD.INT.stringValue()) ||
+            specification.getRequiredSemanticTypes().contains(XSD.INTEGER.stringValue())) {
+      addIntegerSpecification((IntegerSpecification) specification, node);
+    } else if (specification.getRequiredSemanticTypes().contains(XSD.STRING.stringValue())) {
+      addStringSpecification((StringSpecification) specification, node);
+    } else if (specification instanceof ValueSpecification) {
+      addValueSpecification((ValueSpecification) specification, node);
+    }
+    specification.getRequiredSemanticTypes().forEach(type -> {
+      this.graphBuilder.add(node, DATATYPE, iri(type));
     });
-    return inputId;
+    specification.getName().ifPresent(present -> {
+      this.graphBuilder.add(node, NAME, present);
+    });
+    specification.getDescription().ifPresent(present -> {
+      this.graphBuilder.add(node, DESCRIPTION, present);
+    });
+    specification.getOrder().ifPresent(present -> {
+      this.graphBuilder.add(node, ORDER, present);
+    });
+
+    if (specification.isRequired()) {
+      this.graphBuilder.add(node, MIN_COUNT, 1);
+    }
+    this.graphBuilder.add(node, MAX_COUNT, 1);
   }
 
-  private Resource addIOSpecification(AbstractIOSpecification ioSpec) {
-    Resource ioSpecId = rdf.createBNode();
-    ioSpec.getQualifiedValueShape().ifPresent(shape -> graphBuilder.add(ioSpecId, SHACL.QUALIFIED_VALUE_SHAPE, iri(shape)));
-    ioSpec.getName().ifPresent(name -> graphBuilder.add(ioSpecId, SHACL.NAME, literal(name)));
-    ioSpec.getDescription().ifPresent(desc -> graphBuilder.add(ioSpecId, SHACL.DESCRIPTION, literal(desc)));
-    ioSpec.getMinCount().ifPresent(c -> graphBuilder.add(ioSpecId, SHACL.MIN_COUNT, literal(c)));
-    ioSpec.getMaxCount().ifPresent(c -> graphBuilder.add(ioSpecId, SHACL.MAX_COUNT, literal(c)));
-    ioSpec.getQualifiedMinCount().ifPresent(c -> graphBuilder.add(ioSpecId, SHACL.QUALIFIED_MIN_COUNT, literal(c)));
-    ioSpec.getQualifiedMaxCount().ifPresent(c -> graphBuilder.add(ioSpecId, SHACL.QUALIFIED_MAX_COUNT, literal(c)));
-    ioSpec.getRequiredDataType().ifPresent(c -> graphBuilder.add(ioSpecId, SHACL.DATATYPE, iri(c)));
-    ioSpec.getRequiredProperties().ifPresent(path -> graphBuilder.add(ioSpecId, SHACL.PATH, iri(path)));
-    ioSpec.getOrder().ifPresent(order -> graphBuilder.add(ioSpecId, SHACL.ORDER, literal(order)));
-    ioSpec.getGroup().ifPresent(g -> addGroup(g, ioSpecId));
-    ioSpec.getMinInclusive().ifPresent(m -> graphBuilder.add(ioSpecId, SHACL.MIN_INCLUSIVE, literal(m)));
-    ioSpec.getMaxInclusive().ifPresent(m -> graphBuilder.add(ioSpecId, SHACL.MAX_INCLUSIVE, literal(m)));
-    ioSpec.getDefaultValue().ifPresent(dv -> {
-      if (dv.isRight()) {
-        Resource bNode = rdf.createBNode();
-        graphBuilder.add(bNode, SHACL.NODE, iri(dv.get()));
-        graphBuilder.add(ioSpecId, SHACL.DEFAULT_VALUE, bNode);
-      } else {
-        graphBuilder.add(ioSpecId, SHACL.DEFAULT_VALUE, literal(dv.getLeft()));
-      }
+  private void addBooleanSpecification(BooleanSpecification specification, Resource node) {
+    specification.getValue().ifPresent(present -> {
+      this.graphBuilder.add(node, HAS_VALUE, literal(present));
     });
+    specification.getDefaultValue().ifPresent(present -> {
+      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
+    });
+    addAbstractIOSpecification(specification, node);
+  }
 
-    ioSpec.getQualifiedValueShape().ifPresent(shape -> {
-      graphBuilder.add(iri(shape), RDF.TYPE, SHACL.NODE_SHAPE);
-      ioSpec.getRequiredSemanticTypes().forEach(type -> graphBuilder.add(iri(shape), SHACL.CLASS, iri(type)));
+  private void addDoubleSpecification(DoubleSpecification specification, Resource node) {
+    specification.getValue().ifPresent(present -> {
+      this.graphBuilder.add(node, HAS_VALUE, literal(present));
     });
-    return ioSpecId;
+    specification.getDefaultValue().ifPresent(present -> {
+      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
+    });
+    addAbstractIOSpecification(specification, node);
+  }
+
+  private void addFloatSpecification(FloatSpecification specification, Resource node) {
+    specification.getValue().ifPresent(present -> {
+      this.graphBuilder.add(node, HAS_VALUE, literal(present));
+    });
+    specification.getDefaultValue().ifPresent(present -> {
+      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
+    });
+    addAbstractIOSpecification(specification, node);
+  }
+
+  private void addIntegerSpecification(IntegerSpecification specification, Resource node) {
+    specification.getValue().ifPresent(present -> {
+      this.graphBuilder.add(node, HAS_VALUE, literal(present));
+    });
+    specification.getDefaultValue().ifPresent(present -> {
+      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
+    });
+    addAbstractIOSpecification(specification, node);
+  }
+
+  private void addStringSpecification(StringSpecification specification, Resource node) {
+    specification.getValue().ifPresent(present -> {
+      this.graphBuilder.add(node, HAS_VALUE, literal(present));
+    });
+    specification.getDefaultValue().ifPresent(present -> {
+      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
+    });
+    addAbstractIOSpecification(specification, node);
+  }
+
+  private void addValueSpecification(ValueSpecification specification, Resource node) {
+    specification.getValue().ifPresent(present -> {
+      this.graphBuilder.add(node, HAS_VALUE, present);
+    });
+    specification.getDefaultValue().ifPresent(present -> {
+      this.graphBuilder.add(node, DEFAULT_VALUE, present);
+    });
+    addAbstractIOSpecification(specification, node);
+  }
+
+  private void addQualifiedValueSpecification(QualifiedValueSpecification specification, Resource node) {
+    Resource valueNode = resolveHostableLocation(specification);
+
+    this.graphBuilder.add(node, QUALIFIED_VALUE_SHAPE, valueNode);
+    this.graphBuilder.add(valueNode, RDF.TYPE, SHAPE);
+
+    if (specification.isRequired()) {
+      this.graphBuilder.add(node, QUALIFIED_MIN_COUNT, 1);
+    }
+    this.graphBuilder.add(node, QUALIFIED_MAX_COUNT, 1);
+
+    specification.getRequiredSemanticTypes().forEach(type -> graphBuilder.add(valueNode, CLASS, iri(type)));
+
+    Map<String, IOSpecification> properties = specification.getPropertySpecifications();
+    for (String propertyType : properties.keySet()) {
+      IOSpecification propertySpecification = properties.get(propertyType);
+      Resource propertyNode = addAbstractIOSpecification((AbstractIOSpecification) propertySpecification);
+      this.graphBuilder.add(propertyNode, PATH, iri(propertyType));
+      this.graphBuilder.add(valueNode, PROPERTY, propertyNode);
+    }
+
+    addAbstractIOSpecification(specification, node);
+  }
+
+  private void addAbstractIOSpecification(AbstractIOSpecification specification, Resource node) {
+    addResource(specification, node);
   }
 
   private void addGroup(Group group, Resource propertyId) {
@@ -182,7 +274,6 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     graphBuilder.add(groupNode, RDF.TYPE, group.getType().toIRI());
     group.getOrder().ifPresent(order -> graphBuilder.add(groupNode, SHACL.ORDER, literal(order)));
     group.getLabel().ifPresent(label -> graphBuilder.add(groupNode, RDFS.LABEL, literal(label)));
-    group.getComment().ifPresent(comment -> graphBuilder.add(groupNode, RDFS.COMMENT, literal(comment)));
   }
 
   private void addFormsList(Resource propertyId, List<IRI> formNodes) {
@@ -199,7 +290,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     BNode valueNode = bnode();
 
     graphBuilder.add(node, RDF.FIRST, valueNode);
-    graphBuilder.add(valueNode, SHACL.HAS_VALUE, formNodes.get(0));
+    graphBuilder.add(valueNode, HAS_VALUE, formNodes.get(0));
     graphBuilder.add(node, RDF.REST, createFormsCollection(formNodes.subList(1, formNodes.size())));
 
     return node;

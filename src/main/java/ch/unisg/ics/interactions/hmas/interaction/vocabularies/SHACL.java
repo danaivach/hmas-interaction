@@ -11,6 +11,7 @@ public class SHACL {
   public static final String PREFIX = "sh";
   public static final Namespace NS = Vocabulary.createNamespace(PREFIX, NAMESPACE);
 
+  public static final IRI SHAPE;
   public static final IRI NODE_SHAPE;
   public static final IRI PROPERTY_GROUP;
 
@@ -38,6 +39,7 @@ public class SHACL {
   static {
     SimpleValueFactory rdf = SimpleValueFactory.getInstance();
 
+    SHAPE = rdf.createIRI(NAMESPACE + "Shape");
     NODE_SHAPE = rdf.createIRI(NAMESPACE + "NodeShape");
     PROPERTY_GROUP = rdf.createIRI(NAMESPACE + "PropertyGroup");
 
@@ -64,6 +66,7 @@ public class SHACL {
   }
 
   public enum TERM implements HMAS {
+    SHAPE(SHACL.SHAPE),
     NODE_SHAPE(SHACL.NODE_SHAPE),
     PROPERTY_GROUP(SHACL.PROPERTY_GROUP),
 
