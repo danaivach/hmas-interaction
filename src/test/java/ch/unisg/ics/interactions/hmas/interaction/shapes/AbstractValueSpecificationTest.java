@@ -157,7 +157,8 @@ public class AbstractValueSpecificationTest {
 
     IRI exampleAgentIRI = SimpleValueFactory.getInstance().createIRI("http://example.org/example#me");
 
-    ValueSpecification spec = new ValueSpecification.Builder(CORE.AGENT.stringValue())
+    ValueSpecification spec = new ValueSpecification.Builder()
+            .addRequiredSemanticType(CORE.AGENT.stringValue())
             .setValueAsString("http://example.org/example#me")
             .build();
 
@@ -167,7 +168,7 @@ public class AbstractValueSpecificationTest {
     assertFalse(spec.isRequired());
 
 
-    assertEquals(1, spec.getRequiredSemanticTypes().size());
+    assertEquals(2, spec.getRequiredSemanticTypes().size());
     assertTrue(spec.getRequiredSemanticTypes().contains(CORE.AGENT.stringValue()));
 
     assertTrue(spec.getValue().isPresent());
@@ -178,7 +179,8 @@ public class AbstractValueSpecificationTest {
   @Test
   public void testValueSpecificationNoValue() {
 
-    ValueSpecification spec = new ValueSpecification.Builder(CORE.AGENT.stringValue())
+    ValueSpecification spec = new ValueSpecification.Builder()
+            .addRequiredSemanticType(CORE.AGENT.stringValue())
             .build();
 
     assertFalse(spec.getValue().isPresent());
@@ -343,18 +345,6 @@ public class AbstractValueSpecificationTest {
     assertThrows(IllegalArgumentException.class, () -> {
       stringBuilder.setValue("another-string");
     });
-  }
-
-  @Test
-  public void testValueSpecificationInvalidDataType() {
-
-    Exception ex = assertThrows(IllegalArgumentException.class, () -> {
-      new ValueSpecification.Builder("invalid-iri");
-    });
-
-    String expectedMessage = "IRIs of DataTypes and node values must be valid.";
-    assertTrue(ex.getMessage().contains(expectedMessage));
-
   }
 
   private void testAbstractValueMetadata(AbstractValueSpecification specification) {

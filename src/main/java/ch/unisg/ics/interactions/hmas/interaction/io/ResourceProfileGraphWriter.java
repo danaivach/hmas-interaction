@@ -160,7 +160,9 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     } else if (specification instanceof ValueSpecification) {
       addValueSpecification((ValueSpecification) specification, node);
     }
+
     specification.getRequiredSemanticTypes().forEach(type -> {
+      if (!(specification.getRequiredSemanticTypes().size() > 1 && XSD.ANYURI.stringValue().equals(type)))
       this.graphBuilder.add(node, DATATYPE, iri(type));
     });
     specification.getName().ifPresent(present -> {

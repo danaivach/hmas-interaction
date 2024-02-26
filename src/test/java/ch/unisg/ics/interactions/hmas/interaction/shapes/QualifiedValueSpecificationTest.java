@@ -64,13 +64,16 @@ public class QualifiedValueSpecificationTest {
   @Test
   public void testQualifiedValueSpecificationValueSpecification() {
 
-    ValueSpecification profileSpec = new ValueSpecification.Builder(CORE.RESOURCE_PROFILE.stringValue())
+    ValueSpecification profileSpec = new ValueSpecification.Builder()
+            .addRequiredSemanticType(CORE.RESOURCE_PROFILE.stringValue())
             .build();
 
-    ValueSpecification bodySpec = new ValueSpecification.Builder(CORE.ARTIFACT.stringValue())
+    ValueSpecification bodySpec = new ValueSpecification.Builder()
+            .addRequiredSemanticType(CORE.ARTIFACT.stringValue())
             .build();
 
-    ValueSpecification platformSpec = new ValueSpecification.Builder(CORE.HMAS_PLATFORM.stringValue())
+    ValueSpecification platformSpec = new ValueSpecification.Builder()
+            .addRequiredSemanticType(CORE.HMAS_PLATFORM.stringValue())
             .build();
 
     QualifiedValueSpecification spec = new QualifiedValueSpecification.Builder()

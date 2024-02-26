@@ -291,21 +291,19 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
   }
 
   private AbstractValueSpecification readValueSpecification(Resource node) {
-    ValueSpecification.Builder builder;
+    ValueSpecification.Builder builder = new ValueSpecification.Builder();
 
-    Optional<IRI> datatypeOp = Models.objectIRI(model.filter(node, DATATYPE, null));
+    Set<IRI> datatypes = Models.objectIRIs(model.filter(node, DATATYPE, null));
 
-    if (datatypeOp.isPresent() && !XSD.ANYURI.equals(datatypeOp.get())) {
-      builder = new ValueSpecification.Builder(datatypeOp.get().stringValue());
-    } else {
-      builder = new ValueSpecification.Builder();
+    if (datatypes.size() > 0) {
+      datatypes.forEach(type -> {builder.addRequiredSemanticType(type.stringValue());});
     }
 
     Models.objectIRI(model.filter(node, HAS_VALUE, null))
-            .ifPresent(literal -> builder.setValue(literal));
+            .ifPresent(builder::setValue);
 
     Models.objectIRI(model.filter(node, DEFAULT_VALUE, null))
-            .ifPresent(literal -> builder.setDefaultValue(literal));
+            .ifPresent(builder::setDefaultValue);
 
     return readAbstractValueSpecification(builder, node);
   }

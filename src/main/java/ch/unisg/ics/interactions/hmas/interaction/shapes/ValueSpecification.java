@@ -50,12 +50,6 @@ public class ValueSpecification extends AbstractValueSpecification {
       this.defaultValue = Optional.empty();
     }
 
-    public Builder(String dataType) {
-      super(dataType);
-      this.value = Optional.empty();
-      this.defaultValue = Optional.empty();
-    }
-
     public Builder setValueAsString(String value) {
       validateIRI(value);
       this.defaultValue.ifPresent(defaultVal -> validateNewValue(value, defaultVal));

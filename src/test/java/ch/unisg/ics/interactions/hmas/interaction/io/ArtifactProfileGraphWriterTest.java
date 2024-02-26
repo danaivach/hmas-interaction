@@ -653,7 +653,7 @@ public class ArtifactProfileGraphWriterTest {
             "         ] ;\n" +
             "         sh:property [ a sh:Shape ; \n" +
             "         sh:path hmas:hasOutput;\n" +
-            "         sh:datatype ex:ExampleDatatype ;\n" +
+            "         sh:datatype ex:ExampleDatatype, ex:ExampleDatatype2 ;\n" +
             "         sh:name \"Label\" ;\n" +
             "         sh:description \"Description\" ;\n" +
             "         sh:order \"5\"^^xs:int;\n" +
@@ -674,7 +674,9 @@ public class ArtifactProfileGraphWriterTest {
             .setIRIAsString("http://example.org/httpForm")
             .build();
 
-    ValueSpecification valueSpec = new ValueSpecification.Builder("http://example.org/ExampleDatatype")
+    ValueSpecification valueSpec = new ValueSpecification.Builder()
+            .addRequiredSemanticTypes(Set.of("http://example.org/ExampleDatatype",
+                    "http://example.org/ExampleDatatype2"))
             .setName("Label")
             .setDescription("Description")
             .setOrder(5)
