@@ -42,7 +42,6 @@ public class ArtifactProfileGraphWriterTest {
                   "@prefix hctl: <" + HCTL.NAMESPACE + "> .\n" +
                   "@prefix prs: <http://example.org/prs#> .\n" +
                   "@prefix prov: <" + PROV.NAMESPACE + "> .\n" +
-                  "@prefix urn: <http://example.org/urn#> .\n" +
                   "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
                   "@prefix sh: <" + SHACL.NAMESPACE + ">";
 

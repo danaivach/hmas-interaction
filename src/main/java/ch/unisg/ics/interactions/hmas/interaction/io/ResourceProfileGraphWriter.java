@@ -32,7 +32,6 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
             .setNamespace(SHACL.PREFIX, SHACL.NAMESPACE)
             .setNamespace(PROV.PREFIX, PROV.NAMESPACE)
             .setNamespace(RDFS.PREFIX, RDFS.NAMESPACE)
-            .setNamespace("urn", "http://example.org/urn#")
             .setNamespace("ex", "http://example.org/")
             .setNamespace("xs", "http://www.w3.org/2001/XMLSchema#")
             .addSignifiers();
