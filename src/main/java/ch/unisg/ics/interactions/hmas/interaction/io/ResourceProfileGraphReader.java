@@ -6,10 +6,7 @@ import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
 import io.vavr.control.Either;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.model.util.RDFCollections;
@@ -52,6 +49,11 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
     }
 
     return artifactBuilder.build();
+  }
+
+  public static Model getModelFromString(String representation) {
+    ResourceProfileGraphReader reader = new ResourceProfileGraphReader(RDFFormat.TURTLE, representation);
+    return reader.getModel();
   }
 
   protected final Artifact readOwnerResource() {
@@ -335,5 +337,4 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
 
     return forms;
   }
-
 }
