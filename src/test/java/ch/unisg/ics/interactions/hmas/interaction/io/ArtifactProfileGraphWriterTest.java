@@ -653,7 +653,7 @@ public class ArtifactProfileGraphWriterTest {
             "         ] ;\n" +
             "         sh:property [ a sh:Shape ; \n" +
             "         sh:path hmas:hasOutput;\n" +
-            "         sh:datatype ex:ExampleDatatype, ex:ExampleDatatype2 ;\n" +
+            "         sh:datatype hmas:ResourceProfile, ex:ExampleDatatype ;\n" +
             "         sh:name \"Label\" ;\n" +
             "         sh:description \"Description\" ;\n" +
             "         sh:order \"5\"^^xs:int;\n" +
@@ -675,8 +675,8 @@ public class ArtifactProfileGraphWriterTest {
             .build();
 
     ValueSpecification valueSpec = new ValueSpecification.Builder()
-            .addRequiredSemanticTypes(Set.of("http://example.org/ExampleDatatype",
-                    "http://example.org/ExampleDatatype2"))
+            .addRequiredSemanticType(CORE.TERM.RESOURCE_PROFILE.toString())
+            .addRequiredSemanticType("http://example.org/ExampleDatatype")
             .setName("Label")
             .setDescription("Description")
             .setOrder(5)
