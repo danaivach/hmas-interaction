@@ -31,12 +31,12 @@ public class AbstractIOSpecification extends AbstractResource implements IOSpeci
 
     public S addRequiredSemanticType(final String type) {
       this.requiredSemanticTypes.add(type);
-      return (S) this;
+      return getBuilder();
     }
 
     public S addRequiredSemanticTypes(final Set<String> types) {
       this.requiredSemanticTypes.addAll(types);
-      return (S) this;
+      return getBuilder();
     }
 
     public abstract T build();

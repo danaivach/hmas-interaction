@@ -27,6 +27,11 @@ public class BehavioralSpecification extends AbstractHostable {
 
   public static class Builder extends AbstractBuilder<Builder, BehavioralSpecification> {
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public BehavioralSpecification build() {
       return new BehavioralSpecification(this);
     }
@@ -43,12 +48,12 @@ public class BehavioralSpecification extends AbstractHostable {
 
     public S addEvaluabilitySignifier(Signifier signifier) {
       evaluabilitySignifiers.add(signifier);
-      return (S) this;
+      return getBuilder();
     }
 
     public S addEvaluabilitySignifiers(Set<Signifier> signifiers) {
       evaluabilitySignifiers.addAll(signifiers);
-      return (S) this;
+      return getBuilder();
     }
 
     public abstract T build();

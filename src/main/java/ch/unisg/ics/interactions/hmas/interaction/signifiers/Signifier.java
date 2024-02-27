@@ -49,6 +49,11 @@ public class Signifier extends BaseSignifier {
       super(actionSpecification);
     }
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public Signifier build() {
       return new Signifier(this);
     }
@@ -57,10 +62,10 @@ public class Signifier extends BaseSignifier {
   public abstract static class AbstractBuilder<S extends AbstractBuilder, T extends Signifier>
           extends BaseSignifier.AbstractBuilder<S, T> {
 
-    protected ActionSpecification actionSpecification;
-    protected Set<Ability> recommendedAbilities;
+    protected final ActionSpecification actionSpecification;
+    protected final Set<Ability> recommendedAbilities;
     protected String label;
-    protected Set<Context> recommendedContexts;
+    protected final Set<Context> recommendedContexts;
     protected String comment;
 
     public AbstractBuilder(ActionSpecification actionSpecification) {

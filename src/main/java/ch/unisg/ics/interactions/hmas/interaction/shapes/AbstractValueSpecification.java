@@ -73,53 +73,51 @@ public class AbstractValueSpecification extends AbstractIOSpecification {
     protected static boolean validateIRI(String IRI) {
       try {
         SimpleValueFactory.getInstance().createIRI(IRI);
-        return true;
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("IRIs of DataTypes and node values must be valid.");
       }
+      return true;
     }
 
-    protected static boolean validateNewValue(Object value, Object defaultValue) {
+    protected static void validateNewValue(Object value, Object defaultValue) {
       if (!defaultValue.equals(value)) {
         String valueStr = value.toString();
         String defaultValueStr = defaultValue.toString();
         throw new ValueConflictException(valueStr, defaultValueStr);
       }
-      return true;
     }
 
-    protected static boolean validateNewDefaultValue(Object value, Object defaultValue) {
+    protected static void validateNewDefaultValue(Object value, Object defaultValue) {
       if (!value.equals(defaultValue)) {
         String valueStr = value.toString();
         String defaultValueStr = defaultValue.toString();
         throw new ValueConflictException(valueStr, defaultValueStr);
       }
-      return true;
     }
 
     public S setRequired(Boolean required) {
       this.isRequired = required;
-      return (S) this;
+      return getBuilder();
     }
 
     public S setName(String name) {
       this.name = Optional.of(name);
-      return (S) this;
+      return getBuilder();
     }
 
     public S setDescription(String description) {
       this.description = Optional.of(description);
-      return (S) this;
+      return getBuilder();
     }
 
     public S setGroup(Group group) {
       this.group = Optional.of(group);
-      return (S) this;
+      return getBuilder();
     }
 
     public S setOrder(Integer order) {
       this.order = Optional.of(order);
-      return (S) this;
+      return getBuilder();
     }
 
     @Override

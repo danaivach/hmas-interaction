@@ -43,6 +43,11 @@ public class QualifiedValueSpecification extends AbstractIOSpecification {
     }
 
     @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
+    @Override
     public QualifiedValueSpecification build() {
       return new QualifiedValueSpecification(this);
     }

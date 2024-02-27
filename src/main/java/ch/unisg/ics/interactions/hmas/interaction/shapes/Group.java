@@ -45,6 +45,11 @@ public class Group extends AbstractResource {
     }
 
     @Override
+    protected AbstractBuilder getBuilder() {
+      return this;
+    }
+
+    @Override
     public Group build() {
       return new Group(this.TYPE, this);
     }

@@ -41,6 +41,11 @@ public class ResourceProfile extends BaseResourceProfile {
       super(resource);
     }
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public ResourceProfile build() {
       return new ResourceProfile(this);
     }

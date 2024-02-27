@@ -72,6 +72,11 @@ public class DoubleSpecification extends AbstractValueSpecification {
     }
 
     @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
+    @Override
     public DoubleSpecification build() {
       return new DoubleSpecification(this);
     }

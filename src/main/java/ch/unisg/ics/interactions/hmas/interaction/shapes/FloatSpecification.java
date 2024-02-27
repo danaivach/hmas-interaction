@@ -64,6 +64,11 @@ public class FloatSpecification extends AbstractValueSpecification {
     }
 
     @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
+    @Override
     public FloatSpecification build() {
       return new FloatSpecification(this);
     }

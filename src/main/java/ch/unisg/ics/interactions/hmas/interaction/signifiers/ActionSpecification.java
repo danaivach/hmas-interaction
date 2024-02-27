@@ -79,6 +79,11 @@ public class ActionSpecification extends AbstractResource {
       return this;
     }
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public ActionSpecification build() {
       return new ActionSpecification(this);
     }

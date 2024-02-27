@@ -19,6 +19,11 @@ public class Ability {
 
   public static class Builder extends AbstractBuilder<Builder, Ability> {
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public Ability build() {
       return new Ability(this);
     }
@@ -32,14 +37,16 @@ public class Ability {
       this.semanticTypes = new HashSet<>();
     }
 
+    abstract protected S getBuilder();
+
     public S addSemanticType(final String type) {
       this.semanticTypes.add(type);
-      return (S) this;
+      return getBuilder();
     }
 
     public S addSemanticTypes(final Set<String> types) {
       this.semanticTypes.addAll(types);
-      return (S) this;
+      return getBuilder();
     }
 
     protected abstract T build();

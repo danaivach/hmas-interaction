@@ -22,10 +22,7 @@ public class ValueSpecification extends AbstractValueSpecification {
   }
 
   public Optional<IRI> getValue() {
-    if (this.value.isPresent()) {
-      return Optional.of(SimpleValueFactory.getInstance().createIRI(this.value.get()));
-    }
-    return Optional.empty();
+    return this.value.map(s -> SimpleValueFactory.getInstance().createIRI(s));
   }
 
   public Optional<String> getDefaultValueAsString() {
@@ -33,10 +30,7 @@ public class ValueSpecification extends AbstractValueSpecification {
   }
 
   public Optional<IRI> getDefaultValue() {
-    if (this.defaultValue.isPresent()) {
-      return Optional.of(SimpleValueFactory.getInstance().createIRI(this.defaultValue.get()));
-    }
-    return Optional.empty();
+    return this.defaultValue.map(s -> SimpleValueFactory.getInstance().createIRI(s));
   }
 
   public static class Builder extends AbstractValueSpecification.AbstractBuilder<Builder, ValueSpecification> {
@@ -72,6 +66,11 @@ public class ValueSpecification extends AbstractValueSpecification {
     public Builder setDefaultValue(IRI value) {
       this.value.ifPresent(val -> validateNewDefaultValue(val, value.stringValue()));
       this.defaultValue = Optional.of(value.stringValue());
+      return this;
+    }
+
+    @Override
+    protected Builder getBuilder() {
       return this;
     }
 

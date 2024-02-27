@@ -11,6 +11,11 @@ public class AgentBody extends Artifact {
 
   public static class Builder extends AbstractBuilder<Builder, AgentBody> {
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public AgentBody build() {
       return new AgentBody(this);
     }

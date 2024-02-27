@@ -47,6 +47,11 @@ public class StringSpecification extends AbstractValueSpecification {
     }
 
     @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
+    @Override
     public StringSpecification build() {
       return new StringSpecification(this);
     }

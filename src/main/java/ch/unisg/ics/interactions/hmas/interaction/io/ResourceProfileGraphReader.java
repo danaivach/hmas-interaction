@@ -45,9 +45,7 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
                     .exposeSignifiers(reader.readSignifiers());
 
     Optional<IRI> profileIRI = reader.readProfileIRI();
-    if (profileIRI.isPresent()) {
-      artifactBuilder.setIRI(profileIRI.get());
-    }
+    profileIRI.ifPresent(artifactBuilder::setIRI);
 
     return artifactBuilder.build();
   }
@@ -219,7 +217,7 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
         return readDoubleSpecification(node);
       } else if (XSD.FLOAT.equals(datatype)) {
         return readFloatSpecification(node);
-      } else if (XSD.INT.equals(datatype) || XSD.INT.equals(datatype)) {
+      } else if (XSD.INT.equals(datatype) || XSD.INTEGER.equals(datatype)) {
         return readIntegerSpecification(node);
       } else if (XSD.STRING.equals(datatype)) {
         return readStringSpecification(node);
@@ -296,7 +294,7 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
     Set<IRI> datatypes = Models.objectIRIs(model.filter(node, DATATYPE, null));
 
     if (datatypes.size() > 0) {
-      datatypes.forEach(type -> {builder.addRequiredSemanticType(type.stringValue());});
+      datatypes.forEach(type -> builder.addRequiredSemanticType(type.stringValue()));
     }
 
     Models.objectIRI(model.filter(node, HAS_VALUE, null))
@@ -322,7 +320,7 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
       for (Resource propertyNode : propertyNodes) {
 
         Optional<IRI> pathIRI = Models.objectIRI(model.filter(propertyNode, PATH, null));
-        if (!pathIRI.isPresent()) {
+        if (pathIRI.isEmpty()) {
           throw new InvalidResourceProfileException("Found a property shape without specified path.");
         }
         AbstractIOSpecification propertySpec = readIOSpecification(propertyNode);

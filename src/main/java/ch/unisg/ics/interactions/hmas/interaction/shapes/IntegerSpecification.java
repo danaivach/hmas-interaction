@@ -63,6 +63,11 @@ public class IntegerSpecification extends AbstractValueSpecification {
     }
 
     @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
+    @Override
     public IntegerSpecification build() {
       return new IntegerSpecification(this);
     }

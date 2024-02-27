@@ -165,15 +165,9 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
       if (!(specification.getRequiredSemanticTypes().size() > 1 && XSD.ANYURI.stringValue().equals(type)))
       this.graphBuilder.add(node, DATATYPE, iri(type));
     });
-    specification.getName().ifPresent(present -> {
-      this.graphBuilder.add(node, NAME, present);
-    });
-    specification.getDescription().ifPresent(present -> {
-      this.graphBuilder.add(node, DESCRIPTION, present);
-    });
-    specification.getOrder().ifPresent(present -> {
-      this.graphBuilder.add(node, ORDER, present);
-    });
+    specification.getName().ifPresent(present -> this.graphBuilder.add(node, NAME, present));
+    specification.getDescription().ifPresent(present -> this.graphBuilder.add(node, DESCRIPTION, present));
+    specification.getOrder().ifPresent(present -> this.graphBuilder.add(node, ORDER, present));
 
     if (specification.isRequired()) {
       this.graphBuilder.add(node, MIN_COUNT, 1);
@@ -182,62 +176,38 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   }
 
   private void addBooleanSpecification(BooleanSpecification specification, Resource node) {
-    specification.getValue().ifPresent(present -> {
-      this.graphBuilder.add(node, HAS_VALUE, literal(present));
-    });
-    specification.getDefaultValue().ifPresent(present -> {
-      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
-    });
+    specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, literal(present)));
+    specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, literal(present)));
     addAbstractIOSpecification(specification, node);
   }
 
   private void addDoubleSpecification(DoubleSpecification specification, Resource node) {
-    specification.getValue().ifPresent(present -> {
-      this.graphBuilder.add(node, HAS_VALUE, literal(present));
-    });
-    specification.getDefaultValue().ifPresent(present -> {
-      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
-    });
+    specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, literal(present)));
+    specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, literal(present)));
     addAbstractIOSpecification(specification, node);
   }
 
   private void addFloatSpecification(FloatSpecification specification, Resource node) {
-    specification.getValue().ifPresent(present -> {
-      this.graphBuilder.add(node, HAS_VALUE, literal(present));
-    });
-    specification.getDefaultValue().ifPresent(present -> {
-      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
-    });
+    specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, literal(present)));
+    specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, literal(present)));
     addAbstractIOSpecification(specification, node);
   }
 
   private void addIntegerSpecification(IntegerSpecification specification, Resource node) {
-    specification.getValue().ifPresent(present -> {
-      this.graphBuilder.add(node, HAS_VALUE, literal(present));
-    });
-    specification.getDefaultValue().ifPresent(present -> {
-      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
-    });
+    specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, literal(present)));
+    specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, literal(present)));
     addAbstractIOSpecification(specification, node);
   }
 
   private void addStringSpecification(StringSpecification specification, Resource node) {
-    specification.getValue().ifPresent(present -> {
-      this.graphBuilder.add(node, HAS_VALUE, literal(present));
-    });
-    specification.getDefaultValue().ifPresent(present -> {
-      this.graphBuilder.add(node, DEFAULT_VALUE, literal(present));
-    });
+    specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, literal(present)));
+    specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, literal(present)));
     addAbstractIOSpecification(specification, node);
   }
 
   private void addValueSpecification(ValueSpecification specification, Resource node) {
-    specification.getValue().ifPresent(present -> {
-      this.graphBuilder.add(node, HAS_VALUE, present);
-    });
-    specification.getDefaultValue().ifPresent(present -> {
-      this.graphBuilder.add(node, DEFAULT_VALUE, present);
-    });
+    specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, present));
+    specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, present));
     addAbstractIOSpecification(specification, node);
   }
 

@@ -47,6 +47,11 @@ public class BooleanSpecification extends AbstractValueSpecification {
     }
 
     @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
+    @Override
     public BooleanSpecification build() {
       return new BooleanSpecification(this);
     }
