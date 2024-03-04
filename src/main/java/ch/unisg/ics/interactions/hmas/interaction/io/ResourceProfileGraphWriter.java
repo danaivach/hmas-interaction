@@ -102,7 +102,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     graphBuilder.add(locatedAcSpec, RDF.TYPE, SHACL.NODE_SHAPE);
     graphBuilder.add(locatedAcSpec, SHACL.CLASS, ACTION_EXECUTION);
     specification.getRequiredSemanticTypes()
-            .forEach(type -> graphBuilder.add(locatedAcSpec, SHACL.CLASS, ACTION_EXECUTION));
+            .forEach(type -> graphBuilder.add(locatedAcSpec, SHACL.CLASS, rdf.createIRI(type)));
 
     Resource propertyId = addPropertyNode(locatedAcSpec);
 
