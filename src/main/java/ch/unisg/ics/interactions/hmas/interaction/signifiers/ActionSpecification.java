@@ -1,6 +1,7 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
+import ch.unisg.ics.interactions.hmas.interaction.shapes.IOSpecification;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL;
 import com.google.common.collect.ImmutableSet;
@@ -11,8 +12,8 @@ import java.util.Set;
 
 public class ActionSpecification extends AbstractResource {
   private final Set<Form> forms;
-  private final Optional<InputSpecification> input;
-  private final Optional<OutputSpecification> output;
+  private final Optional<IOSpecification> input;
+  private final Optional<IOSpecification> output;
   private final Set<String> requiredSemanticTypes;
 
   protected ActionSpecification(ActionSpecification.Builder builder) {
@@ -37,18 +38,18 @@ public class ActionSpecification extends AbstractResource {
             .collect(ImmutableSet.toImmutableSet());
   }
 
-  public Optional<InputSpecification> getInputSpecification() {
+  public Optional<IOSpecification> getInputSpecification() {
     return this.input;
   }
 
-  public Optional<OutputSpecification> getOutputSpecification() {
+  public Optional<IOSpecification> getOutputSpecification() {
     return this.output;
   }
 
   public static class Builder extends AbstractResource.AbstractBuilder<Builder, ActionSpecification> {
     private final Set<Form> forms;
-    private Optional<InputSpecification> input;
-    private Optional<OutputSpecification> output;
+    private Optional<IOSpecification> input;
+    private Optional<IOSpecification> output;
     private Set<String> requiredSemanticTypes;
 
     public Builder(Form form) {
@@ -63,18 +64,23 @@ public class ActionSpecification extends AbstractResource {
       this.requiredSemanticTypes = new HashSet<>();
     }
 
-    public Builder setRequiredInput(InputSpecification input) {
+    public Builder setInputSpecification(IOSpecification input) {
       this.input = Optional.of(input);
       return this;
     }
 
-    public Builder setRequiredOutput(OutputSpecification output) {
+    public Builder setOutputSpecification(IOSpecification output) {
       this.output = Optional.of(output);
       return this;
     }
 
     public Builder setRequiredSemanticTypes(Set<String> requiredSemanticTypes) {
       this.requiredSemanticTypes = requiredSemanticTypes;
+      return this;
+    }
+
+    @Override
+    protected Builder getBuilder() {
       return this;
     }
 

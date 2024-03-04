@@ -16,6 +16,11 @@ public class AgentProfile extends ResourceProfile {
       super(agent);
     }
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public AgentProfile build() {
       return new AgentProfile(this);
     }

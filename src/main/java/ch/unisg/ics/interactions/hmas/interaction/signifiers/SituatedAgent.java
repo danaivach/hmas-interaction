@@ -19,6 +19,11 @@ public class SituatedAgent extends CapableAgent {
 
   public static class Builder extends AbstractBuilder<Builder, SituatedAgent> {
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public SituatedAgent build() {
       return new SituatedAgent(this);
     }
@@ -35,12 +40,12 @@ public class SituatedAgent extends CapableAgent {
 
     public S addBody(AgentBody body) {
       this.bodies.add(body);
-      return (S) this;
+      return getBuilder();
     }
 
     public S addBodies(Set<AgentBody> bodies) {
       this.bodies.addAll(bodies);
-      return (S) this;
+      return getBuilder();
     }
 
     public abstract T build();

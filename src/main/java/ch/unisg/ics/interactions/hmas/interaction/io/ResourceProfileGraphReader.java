@@ -3,14 +3,16 @@ package ch.unisg.ics.interactions.hmas.interaction.io;
 import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.io.BaseResourceProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
+import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
-import io.vavr.control.Either;
+
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.RDFFormat;
 
 import java.io.IOException;
@@ -44,9 +46,7 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
                     .exposeSignifiers(reader.readSignifiers());
 
     Optional<IRI> profileIRI = reader.readProfileIRI();
-    if (profileIRI.isPresent()) {
-      artifactBuilder.setIRI(profileIRI.get());
-    }
+    profileIRI.ifPresent(artifactBuilder::setIRI);
 
     return artifactBuilder.build();
   }
@@ -171,8 +171,10 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
 
     ActionSpecification.Builder acSpecBuilder =
             new ActionSpecification.Builder(readForms(readFormResources(propNodeForm)));
-    propNodeInput.ifPresent(input -> acSpecBuilder.setRequiredInput(readInput(input)));
-    propNodeOutput.ifPresent(output -> acSpecBuilder.setRequiredOutput(readOutput(output)));
+
+    propNodeInput.ifPresent(input -> acSpecBuilder.setInputSpecification(readIOSpecification(input)));
+    propNodeOutput.ifPresent(output -> acSpecBuilder.setOutputSpecification(readIOSpecification(output)));
+
     acSpecBuilder.setRequiredSemanticTypes(
             Models.objectIRIs(model.filter(specNode, CLASS, null)).stream()
                     .map(IRI::stringValue)
@@ -197,84 +199,167 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
             "An action specification should have at least one form. ");
   }
 
-  protected InputSpecification readInput(Resource node) {
-    System.out.println("in input");
-    InputSpecification.Builder builder = new InputSpecification.Builder();
-    return (InputSpecification) readIOSpecification(builder, node, "in");
-  }
-
-  protected OutputSpecification readOutput(Resource node) {
-    OutputSpecification.Builder builder = new OutputSpecification.Builder();
-    return (OutputSpecification) readIOSpecification(builder, node, "out");
-  }
-
-  protected AbstractIOSpecification readIOSpecification(AbstractIOSpecification.AbstractBuilder<?, ?> builder, Resource propNode, String io) {
-    if (model.contains(propNode, QUALIFIED_VALUE_SHAPE, null)) {
-      System.out.println("there is a qualified value shape");
-      return readNestedIOSpecification(builder,
-              Models.objectResource(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null)).orElseThrow(() ->
-                      new InvalidResourceProfileException("Invalid action property (input/output) shape. " + propNode.toString())
-              ),
-              propNode,
-              io
-      );
+  protected AbstractIOSpecification readIOSpecification(Resource node) {
+    if (model.contains(node, DATATYPE, null)) {
+      return readAbstractValueSpecification(node);
+    } else if (Models.objectIRI(model.filter(node, QUALIFIED_VALUE_SHAPE, null)).isPresent()) {
+      return readQualifiedValueSpecification(node);
+    } else if (Models.objectIRI(model.filter(node, HAS_VALUE, null)).isPresent()
+            || Models.objectIRI(model.filter(node, DEFAULT_VALUE, null)).isPresent()) {
+      return readValueSpecification(node);
     }
-    return readNestedIOSpecification(builder, null, propNode, io);
+    throw new InvalidResourceProfileException("The shape of an input cannot be recognized; no datatype, " +
+            "qualified value shape, value node, or default value node was found.");
   }
 
-  protected AbstractIOSpecification readNestedIOSpecification(AbstractIOSpecification.AbstractBuilder<?, ?> builder, Resource baseNode, Resource propNode, String io) {
+  private AbstractValueSpecification readAbstractValueSpecification(Resource node) {
 
-    builder.setRequiredSemanticTypes(
-            Models.objectIRIs(model.filter(baseNode, CLASS, null)).stream()
-                    .peek(iri -> System.out.println("IRI stringValue: " + iri.stringValue()))  // Print statement added
-                    .map(IRI::stringValue)
-                    .collect(Collectors.toSet())
-    );
+    Optional<IRI> datatypeOp = Models.objectIRI(model.filter(node, DATATYPE, null));
+    if (datatypeOp.isPresent()) {
+      IRI datatype = datatypeOp.get();
+      if (XSD.BOOLEAN.equals(datatype)) {
+        return readBooleanSpecification(node);
+      } else if (XSD.DOUBLE.equals(datatype)) {
+        return readDoubleSpecification(node);
+      } else if (XSD.FLOAT.equals(datatype)) {
+        return readFloatSpecification(node);
+      } else if (XSD.INT.equals(datatype) || XSD.INTEGER.equals(datatype)) {
+        return readIntegerSpecification(node);
+      } else if (XSD.STRING.equals(datatype)) {
+        return readStringSpecification(node);
+      } else {
+        return readValueSpecification(node);
+      }
+    }
+    throw new InvalidResourceProfileException("The datatype of an input cannot be recognized");
+  }
 
-    Models.objectLiteral(model.filter(baseNode, NAME, null))
+  private AbstractValueSpecification readBooleanSpecification(Resource node) {
+    BooleanSpecification.Builder builder = new BooleanSpecification.Builder();
+
+    Models.objectLiteral(model.filter(node, HAS_VALUE, null))
+            .ifPresent(literal -> builder.setValue(literal.booleanValue()));
+
+    Models.objectLiteral(model.filter(node, DEFAULT_VALUE, null))
+            .ifPresent(literal -> builder.setDefaultValue(literal.booleanValue()));
+
+    return readAbstractValueSpecification(builder, node);
+  }
+
+  private AbstractValueSpecification readDoubleSpecification(Resource node) {
+    DoubleSpecification.Builder builder = new DoubleSpecification.Builder();
+
+    Models.objectLiteral(model.filter(node, HAS_VALUE, null))
+            .ifPresent(literal -> builder.setValue(literal.doubleValue()));
+
+    Models.objectLiteral(model.filter(node, DEFAULT_VALUE, null))
+            .ifPresent(literal -> builder.setDefaultValue(literal.doubleValue()));
+
+    return readAbstractValueSpecification(builder, node);
+  }
+
+  private AbstractValueSpecification readFloatSpecification(Resource node) {
+    FloatSpecification.Builder builder = new FloatSpecification.Builder();
+
+    Models.objectLiteral(model.filter(node, HAS_VALUE, null))
+            .ifPresent(literal -> builder.setValue(literal.floatValue()));
+
+    Models.objectLiteral(model.filter(node, DEFAULT_VALUE, null))
+            .ifPresent(literal -> builder.setDefaultValue(literal.floatValue()));
+
+    return readAbstractValueSpecification(builder, node);
+  }
+
+  private AbstractValueSpecification readIntegerSpecification(Resource node) {
+    IntegerSpecification.Builder builder = new IntegerSpecification.Builder();
+
+    Models.objectLiteral(model.filter(node, HAS_VALUE, null))
+            .ifPresent(literal -> builder.setValue(literal.intValue()));
+
+    Models.objectLiteral(model.filter(node, DEFAULT_VALUE, null))
+            .ifPresent(literal -> builder.setDefaultValue(literal.intValue()));
+
+    return readAbstractValueSpecification(builder, node);
+  }
+
+  private AbstractValueSpecification readStringSpecification(Resource node) {
+    StringSpecification.Builder builder = new StringSpecification.Builder();
+
+    Models.objectLiteral(model.filter(node, HAS_VALUE, null))
+            .ifPresent(literal -> builder.setValue(literal.stringValue()));
+
+    Models.objectLiteral(model.filter(node, DEFAULT_VALUE, null))
+            .ifPresent(literal -> builder.setDefaultValue(literal.stringValue()));
+
+    return readAbstractValueSpecification(builder, node);
+  }
+
+  private AbstractValueSpecification readValueSpecification(Resource node) {
+    ValueSpecification.Builder builder = new ValueSpecification.Builder();
+
+    Set<IRI> datatypes = Models.objectIRIs(model.filter(node, DATATYPE, null));
+
+    if (datatypes.size() > 0) {
+      datatypes.forEach(type -> builder.addRequiredSemanticType(type.stringValue()));
+    }
+
+    Models.objectIRI(model.filter(node, HAS_VALUE, null))
+            .ifPresent(builder::setValue);
+
+    Models.objectIRI(model.filter(node, DEFAULT_VALUE, null))
+            .ifPresent(builder::setDefaultValue);
+
+    return readAbstractValueSpecification(builder, node);
+  }
+
+  private AbstractIOSpecification readQualifiedValueSpecification(Resource node) {
+
+    QualifiedValueSpecification.Builder builder = new QualifiedValueSpecification.Builder();
+
+    Optional<Resource> qualifiedOp = Models.objectResource(model.filter(node, QUALIFIED_VALUE_SHAPE, null));
+
+    if (qualifiedOp.isPresent()) {
+      Resource qualifiedNode = qualifiedOp.get();
+
+      Set<Resource> propertyNodes = Models.objectResources(model.filter(qualifiedNode, PROPERTY,
+              null));
+      for (Resource propertyNode : propertyNodes) {
+
+        Optional<IRI> pathIRI = Models.objectIRI(model.filter(propertyNode, PATH, null));
+        if (pathIRI.isEmpty()) {
+          throw new InvalidResourceProfileException("Found a property shape without specified path.");
+        }
+        AbstractIOSpecification propertySpec = readIOSpecification(propertyNode);
+        builder.addPropertySpecification(pathIRI.get().stringValue(), propertySpec);
+      }
+
+      Set<IRI> requiredSemanticTypes = Models.objectIRIs(model.filter(qualifiedNode, CLASS,
+              null));
+      for (IRI semanticType : requiredSemanticTypes) {
+        builder.addRequiredSemanticType(semanticType.toString());
+      }
+    } else throw new InvalidResourceProfileException("Unrecognized qualified value shape.");
+
+    return (AbstractIOSpecification) readResource(builder, qualifiedOp.get());
+  }
+
+  private AbstractValueSpecification readAbstractValueSpecification(AbstractValueSpecification.AbstractBuilder<?, ?> builder, Resource node) {
+
+    Models.objectLiteral(model.filter(node, NAME, null))
             .ifPresent(literal -> builder.setName(literal.stringValue()));
-    Models.objectLiteral(model.filter(baseNode, DESCRIPTION, null))
-            .ifPresent(literal -> builder.setDescription(literal.stringValue()));
-    Models.objectIRI(model.filter(propNode, PATH, null))
-            .ifPresent(path -> builder.setPath(path.stringValue()));
-    Models.objectLiteral(model.filter(propNode, MIN_COUNT, null))
-            .ifPresent(minCount -> builder.setMinCount(minCount.intValue()));
-    Models.objectLiteral(model.filter(propNode, MAX_COUNT, null))
-            .ifPresent(maxCount -> builder.setMaxCount(maxCount.intValue()));
-    Models.objectLiteral(model.filter(propNode, QUALIFIED_MIN_COUNT, null))
-            .ifPresent(count -> builder.setQualifiedMinCount(count.intValue()));
-    Models.objectLiteral(model.filter(propNode, QUALIFIED_MAX_COUNT, null))
-            .ifPresent(count -> builder.setQualifiedMaxCount(count.intValue()));
-    Models.objectIRI(model.filter(propNode, QUALIFIED_VALUE_SHAPE, null))
-            .ifPresent(qualifiedValueShape -> builder.setQualifiedValueShape(qualifiedValueShape.stringValue()));
-    Models.objectResource(model.filter(propNode, GROUP, null))
-            .ifPresent(groupResource -> builder.setGroup(readGroup(groupResource)));
-    Models.objectLiteral(model.filter(propNode, ORDER, null))
-            .ifPresent(order -> builder.setOrder(order.intValue()));
-    Models.objectIRI(model.filter(propNode, DATATYPE, null))
-            .ifPresent(dataType -> builder.setDataType(dataType.stringValue()));
-    Models.objectLiteral(model.filter(baseNode, MIN_INCLUSIVE, null))
-            .ifPresent(literal -> builder.setMinInclusive(literal.doubleValue()));
-    Models.objectLiteral(model.filter(baseNode, MAX_INCLUSIVE, null))
-            .ifPresent(literal -> builder.setMaxInclusive(literal.doubleValue()));
-    Models.objectLiteral(model.filter(baseNode, DEFAULT_VALUE, null))
-            .ifPresentOrElse(
-                    literal -> builder.setDefaultValue(Either.left(literal.doubleValue())),
-                    () -> Models.objectResource(model.filter(baseNode, DEFAULT_VALUE, null))
-                            .flatMap(resource -> Models.objectIRI(model.filter(resource, NODE, null)))
-                            .ifPresent(iri -> builder.setDefaultValue(Either.right(iri.stringValue())))
-            );
 
-    if ("in".equals(io)) {
-      Models.objectResources(model.filter(Optional.ofNullable(baseNode).orElse(propNode), PROPERTY, null))
-              .forEach(node -> ((InputSpecification.Builder) builder).setInput(readInput(node)));
-    } else if ("out".equals(io)) {
-      Models.objectResources(model.filter(Optional.ofNullable(baseNode).orElse(propNode), PROPERTY, null))
-              .forEach(node -> ((OutputSpecification.Builder) builder).setOutput(readOutput(node)));
+    Models.objectLiteral(model.filter(node, DESCRIPTION, null))
+            .ifPresent(literal -> builder.setDescription(literal.stringValue()));
+
+    Models.objectLiteral(model.filter(node, ORDER, null))
+            .ifPresent(order -> builder.setOrder(order.intValue()));
+
+    Optional<Literal> minCount = Models.objectLiteral(model.filter(node, MIN_COUNT, null));
+    if (minCount.isPresent() && minCount.get().intValue() >= 1) {
+      builder.setRequired(true);
     }
 
-
-    return builder.build();
+    return (AbstractValueSpecification) readResource(builder, node);
   }
 
   private Group readGroup(Resource groupNode) {
@@ -284,8 +369,6 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
     }
     Models.objectLiteral(model.filter(groupNode, RDFS.LABEL, null))
             .ifPresent(literal -> builder.setLabel(literal.stringValue()));
-    Models.objectLiteral(model.filter(groupNode, RDFS.COMMENT, null))
-            .ifPresent(literal -> builder.setComment(literal.stringValue()));
     Models.objectLiteral(model.filter(groupNode, ORDER, null))
             .ifPresent(literal -> builder.setOrder(literal.intValue()));
     return builder.build();

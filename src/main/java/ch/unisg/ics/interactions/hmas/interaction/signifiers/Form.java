@@ -43,11 +43,8 @@ public class Form extends AbstractResource {
 
   public Optional<String> getMethodName(String operationType) {
 
-    if (methodName.isPresent()) {
-      return methodName;
-    }
+    return methodName;
 
-    return Optional.empty();
   }
 
   public String getTarget() {
@@ -84,11 +81,8 @@ public class Form extends AbstractResource {
       throw new IllegalArgumentException("Unknown operation type: " + operationType);
     }
 
-    if (subProtocol.isPresent()) {
-      return subProtocol;
-    }
+    return subProtocol;
 
-    return Optional.empty();
   }
 
   // Package-level access, used for setting affordance-specific default values after instantiation
@@ -148,6 +142,11 @@ public class Form extends AbstractResource {
 
     public Builder addProperty(String key, Object value) {
       this.additionalProperties.put(key, value);
+      return this;
+    }
+
+    @Override
+    protected Builder getBuilder() {
       return this;
     }
 

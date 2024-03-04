@@ -20,6 +20,11 @@ public class CapableAgent extends Agent {
 
   public static class Builder extends AbstractBuilder<Builder, CapableAgent> {
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public CapableAgent build() {
       return new CapableAgent(this);
     }

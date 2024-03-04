@@ -25,21 +25,19 @@ import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTIO
 
 public class AgentProfileGraphReader extends BaseResourceProfileGraphReader {
 
-  protected AgentProfileGraphReader(RDFFormat format, String representation) {
-    super(format, representation);
+  protected AgentProfileGraphReader(String representation) {
+    super(RDFFormat.TURTLE, representation);
   }
 
   public static AgentProfile readFromString(String representation) {
-    AgentProfileGraphReader reader = new AgentProfileGraphReader(RDFFormat.TURTLE, representation);
+    AgentProfileGraphReader reader = new AgentProfileGraphReader(representation);
 
     AgentProfile.Builder agentBuilder =
             new AgentProfile.Builder(reader.readOwnerAgent())
                     .addHMASPlatforms(reader.readHomeHMASPlatforms());
 
     Optional<IRI> profileIRI = reader.readProfileIRI();
-    if (profileIRI.isPresent()) {
-      agentBuilder.setIRI(profileIRI.get());
-    }
+    profileIRI.ifPresent(agentBuilder::setIRI);
 
     return agentBuilder.build();
   }

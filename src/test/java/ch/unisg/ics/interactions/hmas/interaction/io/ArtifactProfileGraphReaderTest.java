@@ -2,17 +2,16 @@ package ch.unisg.ics.interactions.hmas.interaction.io;
 
 import ch.unisg.ics.interactions.hmas.core.hostables.ProfiledResource;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
+import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.HCTL;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.ARTIFACT;
@@ -163,11 +162,50 @@ public class ArtifactProfileGraphReaderTest {
   }
 
   @Test
-  public void testReadArtifactProfileWithInput() {
+  public void testReadActionSpecWithHTTPMethodBlankNode() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            "    hmas:signifies [ a sh:NodeShape ;\n" +
+            "       sh:class hmas:ActionExecution ;\n" +
+            "       sh:property [\n" +
+            "          sh:path prov:used ;\n" +
+            "          sh:minCount 1 ;\n" +
+            "          sh:maxCount 1;\n" +
+            "          sh:hasValue [ a hctl:Form ; hctl:hasTarget <https://example.org/resource> ] ;\n" +
+            "      ]\n" +
+            "   ]\n" +
+            "] .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+
+    ProfiledResource artifact = profile.getResource();
+    assertEquals(ARTIFACT, artifact.getTypeAsIRI());
+    assertFalse(artifact.getIRI().isPresent());
+
+    assertEquals(1, profile.getExposedSignifiers().size());
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    assertEquals(0, signifier.getRecommendedAbilities().size());
+
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Set<Form> forms = actionSpec.getForms();
+    assertEquals(1, forms.size());
+    Form form = new ArrayList<>(forms).get(0);
+    assertEquals("https://example.org/resource", form.getTarget());
+    assertFalse(form.getIRIAsString().isPresent());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithBooleanInput() {
     String expectedProfile = PREFIXES +
             ".\n" +
             "@prefix ex: <http://example.org/> .\n" +
-            "@prefix xs: <https://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
             "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
@@ -186,18 +224,13 @@ public class ArtifactProfileGraphReaderTest {
             "  ] ;\n" +
             "  sh:property [\n" +
             "    sh:path hmas:hasInput;\n" +
-            "    sh:qualifiedValueShape ex:gripperJointShape ;\n" +
-            "    sh:qualifiedMinCount 1 ;\n" +
-            "    sh:qualifiedMaxCount 1 \n" +
-            "  ] .\n" +
-            "\n" +
-            "ex:gripperJointShape a sh:NodeShape ;\n" +
-            "  sh:class ex:GripperJoint ;\n" +
-            "  sh:property [\n" +
-            "    sh:path ex:hasGripperValue ;\n" +
-            "    sh:minCount 1;\n" +
+            "    sh:datatype xs:boolean ;\n" +
+            "    sh:name \"Label\" ;\n" +
+            "    sh:description \"Description\" ;\n" +
+            "    sh:order 5 ;\n" +
             "    sh:maxCount 1 ;\n" +
-            "    sh:datatype xs:integer\n" +
+            "    sh:hasValue true ;\n" +
+            "    sh:defaultValue true ;\n" +
             "  ] .\n" +
             "\n" +
             "ex:httpForm a hctl:Form ;\n" +
@@ -206,50 +239,114 @@ public class ArtifactProfileGraphReaderTest {
             "  htv:methodName \"PUT\" .";
 
     ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
-
-    ProfiledResource artifact = profile.getResource();
-    assertEquals(ARTIFACT, artifact.getTypeAsIRI());
-    assertFalse(artifact.getIRI().isPresent());
-
-    assertEquals(1, profile.getExposedSignifiers().size());
     Set<Signifier> signifiers = profile.getExposedSignifiers();
 
     List<Signifier> signifiersList = new ArrayList<>(signifiers);
     Signifier signifier = signifiersList.get(0);
-    assertEquals(0, signifier.getRecommendedAbilities().size());
-
     ActionSpecification actionSpec = signifier.getActionSpecification();
-    Set<Form> forms = actionSpec.getForms();
-    assertEquals(1, forms.size());
-    Form form = new ArrayList<>(forms).get(0);
-    assertEquals("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper", form.getTarget());
-    assertEquals("http://example.org/httpForm", form.getIRIAsString().get());
-
-    Optional<InputSpecification> i = actionSpec.getInputSpecification();
+    Optional<IOSpecification> i = actionSpec.getInputSpecification();
     assertTrue(i.isPresent());
-    InputSpecification input = i.get();
-    assertEquals(Set.of("http://example.org/GripperJoint"), input.getRequiredSemanticTypes());
-    assertEquals("http://example.org/hasGripperValue",
-            input.getInputs().stream().findFirst().get().getRequiredProperties().get());
-    assertEquals("https://www.w3.org/2001/XMLSchema#integer",
-            input.getInputs().stream().findFirst().get().getRequiredDataType().get());
+
+    BooleanSpecification iSpec = (BooleanSpecification) i.get();
+
+    assertTrue(iSpec.getRequiredSemanticTypes().contains(XSD.BOOLEAN.stringValue()));
+    assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
+
+    assertFalse(iSpec.isRequired());
+    assertTrue(iSpec.getName().isPresent());
+    assertTrue(iSpec.getDescription().isPresent());
+    assertTrue(iSpec.getOrder().isPresent());
+    assertTrue(iSpec.getValue().isPresent());
+    assertTrue(iSpec.getDefaultValue().isPresent());
+
+    assertEquals("Label", iSpec.getName().get());
+    assertEquals("Description", iSpec.getDescription().get());
+    assertEquals(5, iSpec.getOrder().get());
+    assertEquals(true, iSpec.getValue().get());
+    assertEquals(true, iSpec.getDefaultValue().get());
   }
 
   @Test
-  public void testReadArtifactProfileWithOutput() {
+  public void testReadArtifactProfileWithDoubleInput() {
     String expectedProfile = PREFIXES +
             ".\n" +
             "@prefix ex: <http://example.org/> .\n" +
-            "@prefix xs: <https://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
             "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
             "  hmas:exposesSignifier ex:signifier .\n" +
             "\n" +
             "ex:signifier a hmas:Signifier ;\n" +
-            "  hmas:signifies ex:readGripperSpecification .\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
             "\n" +
-            "ex:readGripperSpecification a sh:NodeShape;\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property [\n" +
+            "    sh:path hmas:hasInput;\n" +
+            "    sh:datatype xs:double ;\n" +
+            "    sh:name \"Label\" ;\n" +
+            "    sh:description \"Description\" ;\n" +
+            "    sh:order 5 ;\n" +
+            "    sh:hasValue 10.5 ;\n" +
+            "    sh:defaultValue 10.5 ;\n" +
+            "  ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"PUT\" .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Optional<IOSpecification> i = actionSpec.getInputSpecification();
+    assertTrue(i.isPresent());
+
+    DoubleSpecification iSpec = (DoubleSpecification) i.get();
+    assertFalse(iSpec.getIRI().isPresent());
+
+    assertTrue(iSpec.getRequiredSemanticTypes().contains(XSD.DOUBLE.stringValue()));
+    assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
+
+    assertFalse(iSpec.isRequired());
+    assertTrue(iSpec.getName().isPresent());
+    assertTrue(iSpec.getDescription().isPresent());
+    assertTrue(iSpec.getOrder().isPresent());
+    assertTrue(iSpec.getValue().isPresent());
+    assertTrue(iSpec.getDefaultValue().isPresent());
+
+    assertEquals("Label", iSpec.getName().get());
+    assertEquals("Description", iSpec.getDescription().get());
+    assertEquals(5, iSpec.getOrder().get());
+    assertEquals(10.5, iSpec.getValue().get());
+    assertEquals(10.5, iSpec.getDefaultValue().get());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithFloatOutput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
             "  sh:class hmas:ActionExecution ;\n" +
             "  sh:property [\n" +
             "    sh:path prov:used ;\n" +
@@ -259,18 +356,443 @@ public class ArtifactProfileGraphReaderTest {
             "  ] ;\n" +
             "  sh:property [\n" +
             "    sh:path hmas:hasOutput;\n" +
+            "    sh:datatype xs:float ;\n" +
+            "    sh:name \"Label\" ;\n" +
+            "    sh:description \"Description\" ;\n" +
+            "    sh:minCount 1 ;\n" +
+            "    sh:order 5 ;\n" +
+            "    sh:hasValue 10.5 ;\n" +
+            "    sh:defaultValue 10.5 ;\n" +
+            "  ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"PUT\" .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Optional<IOSpecification> i = actionSpec.getOutputSpecification();
+    assertTrue(i.isPresent());
+
+    FloatSpecification iSpec = (FloatSpecification) i.get();
+    assertFalse(iSpec.getIRI().isPresent());
+
+    assertTrue(iSpec.getRequiredSemanticTypes().contains(XSD.FLOAT.stringValue()));
+    assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
+
+    assertTrue(iSpec.isRequired());
+    assertTrue(iSpec.getName().isPresent());
+    assertTrue(iSpec.getDescription().isPresent());
+    assertTrue(iSpec.getOrder().isPresent());
+    assertTrue(iSpec.getValue().isPresent());
+    assertTrue(iSpec.getDefaultValue().isPresent());
+
+    assertEquals("Label", iSpec.getName().get());
+    assertEquals("Description", iSpec.getDescription().get());
+    assertEquals(5, iSpec.getOrder().get());
+    assertEquals(10.5f, iSpec.getValue().get());
+    assertEquals(10.5f, iSpec.getDefaultValue().get());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithIntegerInput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property [\n" +
+            "    sh:path hmas:hasInput;\n" +
+            "    sh:datatype xs:int ;\n" +
+            "    sh:name \"Label\" ;\n" +
+            "    sh:description \"Description\" ;\n" +
+            "    sh:minCount 1 ;\n" +
+            "    sh:order 5 ;\n" +
+            "    sh:hasValue 10 ;\n" +
+            "    sh:defaultValue 10 ;\n" +
+            "  ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"PUT\" .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Optional<IOSpecification> i = actionSpec.getInputSpecification();
+    assertTrue(i.isPresent());
+
+    IntegerSpecification iSpec = (IntegerSpecification) i.get();
+    assertFalse(iSpec.getIRI().isPresent());
+
+    assertTrue(iSpec.getRequiredSemanticTypes().contains(XSD.INT.stringValue()));
+    assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
+
+    assertTrue(iSpec.isRequired());
+    assertTrue(iSpec.getName().isPresent());
+    assertTrue(iSpec.getDescription().isPresent());
+    assertTrue(iSpec.getOrder().isPresent());
+    assertTrue(iSpec.getValue().isPresent());
+    assertTrue(iSpec.getDefaultValue().isPresent());
+
+    assertEquals("Label", iSpec.getName().get());
+    assertEquals("Description", iSpec.getDescription().get());
+    assertEquals(5, iSpec.getOrder().get());
+    assertEquals(10, iSpec.getValue().get());
+    assertEquals(10, iSpec.getDefaultValue().get());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithStringOutput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property <urn:input-spec> .\n" +
+            " <urn:input-spec> \n" +
+            "    sh:path hmas:hasOutput;\n" +
+            "    sh:datatype xs:string ;\n" +
+            "    sh:name \"Label\" ;\n" +
+            "    sh:description \"Description\" ;\n" +
+            "    sh:minCount 1 ;\n" +
+            "    sh:order 5 ;\n" +
+            "    sh:hasValue \"10\" ;\n" +
+            "    sh:defaultValue \"10\" ;\n" +
+            " .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"PUT\" .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Optional<IOSpecification> i = actionSpec.getOutputSpecification();
+    assertTrue(i.isPresent());
+
+    StringSpecification iSpec = (StringSpecification) i.get();
+    assertTrue(iSpec.getIRI().isPresent());
+    assertEquals("urn:input-spec", iSpec.getIRIAsString().get());
+
+    assertTrue(iSpec.getRequiredSemanticTypes().contains(XSD.STRING.stringValue()));
+    assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
+
+    assertTrue(iSpec.isRequired());
+    assertTrue(iSpec.getName().isPresent());
+    assertTrue(iSpec.getDescription().isPresent());
+    assertTrue(iSpec.getOrder().isPresent());
+    assertTrue(iSpec.getValue().isPresent());
+    assertTrue(iSpec.getDefaultValue().isPresent());
+
+    assertEquals("Label", iSpec.getName().get());
+    assertEquals("Description", iSpec.getDescription().get());
+    assertEquals(5, iSpec.getOrder().get());
+    assertEquals("10", iSpec.getValue().get());
+    assertEquals("10", iSpec.getDefaultValue().get());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithDataTypeInput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property <urn:input-spec> .\n" +
+            " <urn:input-spec> \n" +
+            "    sh:path hmas:hasInput;\n" +
+            "    sh:datatype hmas:ResourceProfile ;\n" +
+            "    sh:name \"Label\" ;\n" +
+            "    sh:description \"Description\" ;\n" +
+            "    sh:minCount 1 ;\n" +
+            "    sh:order 5 ;\n" +
+            "    sh:hasValue ex:myResourceProfile ;\n" +
+            "    sh:defaultValue ex:myResourceProfile ;\n" +
+            " .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"PUT\" .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Optional<IOSpecification> i = actionSpec.getInputSpecification();
+    assertTrue(i.isPresent());
+
+    ValueSpecification iSpec = (ValueSpecification) i.get();
+    assertTrue(iSpec.getIRI().isPresent());
+    assertEquals("urn:input-spec", iSpec.getIRIAsString().get());
+
+    assertTrue(iSpec.getRequiredSemanticTypes().contains(CORE.TERM.RESOURCE_PROFILE.toString()));
+    assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
+
+    assertTrue(iSpec.isRequired());
+    assertTrue(iSpec.getName().isPresent());
+    assertTrue(iSpec.getDescription().isPresent());
+    assertTrue(iSpec.getOrder().isPresent());
+    assertTrue(iSpec.getDefaultValue().isPresent());
+    assertTrue(iSpec.getValue().isPresent());
+
+
+    assertEquals("Label", iSpec.getName().get());
+    assertEquals("Description", iSpec.getDescription().get());
+    assertEquals(5, iSpec.getOrder().get());
+    assertEquals("http://example.org/myResourceProfile", iSpec.getValueAsString().get());
+    assertEquals("http://example.org/myResourceProfile", iSpec.getDefaultValueAsString().get());
+
+    IRI myResourceProfileIRI = SimpleValueFactory.getInstance().createIRI("http://example.org/myResourceProfile");
+    assertEquals(myResourceProfileIRI, iSpec.getValue().get());
+    assertEquals(myResourceProfileIRI, iSpec.getDefaultValue().get());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithAnyURIUnspecifiedInput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property <urn:input-spec> .\n" +
+            " <urn:input-spec> \n" +
+            "    sh:path hmas:hasInput;\n" +
+            "    sh:name \"Label\" ;\n" +
+            "    sh:description \"Description\" ;\n" +
+            "    sh:minCount 1 ;\n" +
+            "    sh:order 5 ;\n" +
+            "    sh:hasValue ex:myResourceProfile ;\n" +
+            "    sh:defaultValue ex:myResourceProfile ;\n" +
+            " .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"PUT\" .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Optional<IOSpecification> i = actionSpec.getInputSpecification();
+    assertTrue(i.isPresent());
+
+    ValueSpecification iSpec = (ValueSpecification) i.get();
+    assertTrue(iSpec.getIRI().isPresent());
+    assertEquals("urn:input-spec", iSpec.getIRIAsString().get());
+
+    assertTrue(iSpec.getRequiredSemanticTypes().contains(XSD.ANYURI.stringValue()));
+    assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
+
+    assertTrue(iSpec.isRequired());
+    assertTrue(iSpec.getName().isPresent());
+    assertTrue(iSpec.getDescription().isPresent());
+    assertTrue(iSpec.getOrder().isPresent());
+    assertTrue(iSpec.getDefaultValue().isPresent());
+    assertTrue(iSpec.getValue().isPresent());
+
+
+    assertEquals("Label", iSpec.getName().get());
+    assertEquals("Description", iSpec.getDescription().get());
+    assertEquals(5, iSpec.getOrder().get());
+    assertEquals("http://example.org/myResourceProfile", iSpec.getValueAsString().get());
+    assertEquals("http://example.org/myResourceProfile", iSpec.getDefaultValueAsString().get());
+
+    IRI myResourceProfileIRI = SimpleValueFactory.getInstance().createIRI("http://example.org/myResourceProfile");
+    assertEquals(myResourceProfileIRI, iSpec.getValue().get());
+    assertEquals(myResourceProfileIRI, iSpec.getDefaultValue().get());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithAnyURIInput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property <urn:input-spec> .\n" +
+            " <urn:input-spec> \n" +
+            "    sh:path hmas:hasInput;\n" +
+            "    sh:name \"Label\" ;\n" +
+            "    sh:datatype xs:anyURI;\n" +
+            "    sh:description \"Description\" ;\n" +
+            "    sh:minCount 1 ;\n" +
+            "    sh:order 5 ;\n" +
+            " .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"PUT\" .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Optional<IOSpecification> i = actionSpec.getInputSpecification();
+    assertTrue(i.isPresent());
+
+    ValueSpecification iSpec = (ValueSpecification) i.get();
+    assertTrue(iSpec.getIRI().isPresent());
+    assertEquals("urn:input-spec", iSpec.getIRIAsString().get());
+
+    assertTrue(iSpec.getRequiredSemanticTypes().contains(XSD.ANYURI.stringValue()));
+    assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
+
+    assertTrue(iSpec.isRequired());
+    assertTrue(iSpec.getName().isPresent());
+    assertTrue(iSpec.getDescription().isPresent());
+    assertTrue(iSpec.getOrder().isPresent());
+    assertFalse(iSpec.getDefaultValue().isPresent());
+    assertFalse(iSpec.getValue().isPresent());
+
+
+    assertEquals("Label", iSpec.getName().get());
+    assertEquals("Description", iSpec.getDescription().get());
+    assertEquals(5, iSpec.getOrder().get());
+  }
+
+  @Test
+  public void testReadArtifactProfileWithQualifiedOutput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix saref: <https://saref.etsi.org/core/> .\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier ;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property <urn:input-spec>.\n" +
+            "" +
+            "<urn:input-spec> \n" +
+            "    sh:path hmas:hasOutput;\n" +
             "    sh:qualifiedValueShape ex:gripperJointShape ;\n" +
             "    sh:qualifiedMinCount 1 ;\n" +
             "    sh:qualifiedMaxCount 1 \n" +
-            "  ] .\n" +
+            " .\n" +
             "\n" +
             "ex:gripperJointShape a sh:NodeShape ;\n" +
-            "  sh:class ex:GripperJoint ;\n" +
+            "  sh:class ex:GripperJoint, saref:State ;\n" +
             "  sh:property [\n" +
             "    sh:path ex:hasGripperValue ;\n" +
             "    sh:minCount 1;\n" +
             "    sh:maxCount 1 ;\n" +
-            "    sh:datatype xs:integer\n" +
+            "    sh:name \"Gripper\" ;\n" +
+            "    sh:datatype xs:int\n" +
+            "  ] ;\n" +
+            "  sh:property [\n" +
+            "    sh:path ex:hasSpeedValue ;\n" +
+            "    sh:name \"Speed\" ;\n" +
+            "    sh:datatype xs:double\n" +
             "  ] .\n" +
             "\n" +
             "ex:httpForm a hctl:Form ;\n" +
@@ -289,26 +811,34 @@ public class ArtifactProfileGraphReaderTest {
 
     List<Signifier> signifiersList = new ArrayList<>(signifiers);
     Signifier signifier = signifiersList.get(0);
-    assertEquals(0, signifier.getRecommendedAbilities().size());
-
     ActionSpecification actionSpec = signifier.getActionSpecification();
-    Set<Form> forms = actionSpec.getForms();
-    assertEquals(1, forms.size());
-    Form form = new ArrayList<>(forms).get(0);
-    assertEquals("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper", form.getTarget());
-    assertEquals("http://example.org/httpForm", form.getIRIAsString().get());
 
+    Optional<IOSpecification> i = actionSpec.getOutputSpecification();
+    assertTrue(i.isPresent());
+    QualifiedValueSpecification input = (QualifiedValueSpecification) i.get();
 
-    Optional<OutputSpecification> out = actionSpec.getOutputSpecification();
-    assertTrue(out.isPresent());
+    assertTrue(input.getIRIAsString().isPresent());
+    assertEquals("http://example.org/gripperJointShape", input.getIRIAsString().get());
 
-    OutputSpecification output = out.get();
-    assertEquals(Set.of("http://example.org/GripperJoint"), output.getRequiredSemanticTypes());
-    assertEquals("http://example.org/hasGripperValue",
-            output.getOutputs().stream().findFirst().get().getRequiredProperties().get());
-    assertEquals("https://www.w3.org/2001/XMLSchema#integer",
-            output.getOutputs().stream().findFirst().get().getRequiredDataType().get());
+    assertEquals(2, input.getRequiredSemanticTypes().size());
+    assertTrue(input.getRequiredSemanticTypes().contains("http://example.org/GripperJoint"));
+    assertTrue(input.getRequiredSemanticTypes().contains("https://saref.etsi.org/core/State"));
 
+    Map<String, IOSpecification> properties = input.getPropertySpecifications();
+    assertEquals(2, properties.size());
+    assertTrue(properties.containsKey("http://example.org/hasGripperValue"));
+    assertTrue(properties.containsKey("http://example.org/hasSpeedValue"));
+
+    IntegerSpecification gripperValueSpec = (IntegerSpecification) properties.get("http://example.org/hasGripperValue");
+    DoubleSpecification speedValueSpec = (DoubleSpecification) properties.get("http://example.org/hasSpeedValue");
+
+    assertTrue(gripperValueSpec.isRequired());
+    assertTrue(gripperValueSpec.getName().isPresent());
+    assertEquals("Gripper", gripperValueSpec.getName().get());
+
+    assertFalse(speedValueSpec.isRequired());
+    assertTrue(speedValueSpec.getName().isPresent());
+    assertEquals("Speed", speedValueSpec.getName().get());
   }
 
   @Test
@@ -463,19 +993,6 @@ public class ArtifactProfileGraphReaderTest {
     Set<String> actionTypes = actionSpec.getRequiredSemanticTypes();
     assertEquals(1, actionTypes.size());
     actionTypes.contains("https://saref.etsi.org/core/ToggleCommand");
-
-    Optional<InputSpecification> inputSpec = actionSpec.getInputSpecification();
-    assertTrue(inputSpec.isPresent());
-    InputSpecification comInputSpec = inputSpec.get();
-
-    Set<String> inputTypes = comInputSpec.getRequiredSemanticTypes(); //defined as a `Set` since there can be more than one objects for the property `sh:class`
-    assertEquals(1, inputTypes.size());
-    actionTypes.contains("https://saref.etsi.org/core/OnOffState");
-
-    assertEquals("https://saref.etsi.org/core/hasValue",
-            comInputSpec.getInputs().stream().findFirst().get().getRequiredProperties().get());
-    assertEquals("https://www.w3.org/2001/XMLSchema#integer",
-            comInputSpec.getInputs().stream().findFirst().get().getRequiredDataType().get());
-
   }
+
 }

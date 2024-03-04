@@ -42,6 +42,11 @@ public class Context extends AbstractResource {
       return this;
     }
 
+    @Override
+    protected Builder getBuilder() {
+      return this;
+    }
+
     public Context build() {
       return new Context(this);
     }
