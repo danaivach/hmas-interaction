@@ -5,7 +5,10 @@ import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
-import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.BNode;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 
@@ -109,16 +112,17 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
 
     Set<Form> forms = specification.getForms();
 
+    List<Resource> formNodes = new ArrayList<>();
+    for (Form form : forms) {
+      Resource formNode = resolveHostableLocation(form);
+      createFormNode(form, formNode);
+      formNodes.add(formNode);
+    }
     if (forms.size() == 1) {
-      Form form = forms.iterator().next();
-      createFormNode(form);
-      graphBuilder.add(propertyId, HAS_VALUE, form.getIRI().get());
+      graphBuilder.add(propertyId, HAS_VALUE, formNodes.get(0));
+    } else {
+      addFormsList(propertyId, formNodes);
     }
-    if (forms.size() > 1) {
-      addFormsList(propertyId, forms.stream().map(f -> f.getIRI().get()).toList());
-      forms.forEach(this::createFormNode);
-    }
-
 
     specification.getInputSpecification().ifPresent(input -> {
       Resource inputNode = addAbstractIOSpecification((AbstractIOSpecification) input);
@@ -164,7 +168,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
 
     specification.getRequiredSemanticTypes().forEach(type -> {
       if (!(specification.getRequiredSemanticTypes().size() > 1 && XSD.ANYURI.stringValue().equals(type)))
-      this.graphBuilder.add(node, DATATYPE, iri(type));
+        this.graphBuilder.add(node, DATATYPE, iri(type));
     });
     specification.getName().ifPresent(present -> this.graphBuilder.add(node, NAME, present));
     specification.getDescription().ifPresent(present -> this.graphBuilder.add(node, DESCRIPTION, present));
@@ -248,12 +252,12 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     group.getLabel().ifPresent(label -> graphBuilder.add(groupNode, RDFS.LABEL, literal(label)));
   }
 
-  private void addFormsList(Resource propertyId, List<IRI> formNodes) {
+  private void addFormsList(Resource propertyId, List<Resource> formNodes) {
     Resource collectionNode = createFormsCollection(formNodes);
     graphBuilder.add(propertyId, SHACL.OR, collectionNode);
   }
 
-  private Resource createFormsCollection(List<IRI> formNodes) {
+  private Resource createFormsCollection(List<Resource> formNodes) {
     if (formNodes.isEmpty()) {
       return RDF.NIL;
     }
@@ -279,10 +283,10 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     return propertyId;
   }
 
-  private void createFormNode(Form form) {
-    graphBuilder.add(form.getIRI().get(), RDF.TYPE, HCTL.FORM);
-    graphBuilder.add(form.getIRI().get(), HCTL.HAS_TARGET, iri(form.getTarget()));
-    form.getMethodName().ifPresent(m -> graphBuilder.add(form.getIRI().get(), HTV.METHOD_NAME, literal(m)));
-    graphBuilder.add(form.getIRI().get(), HCTL.FOR_CONTENT_TYPE, literal(form.getContentType()));
+  private void createFormNode(Form form, Resource formNode) {
+    graphBuilder.add(formNode, RDF.TYPE, HCTL.FORM);
+    graphBuilder.add(formNode, HCTL.HAS_TARGET, iri(form.getTarget()));
+    form.getMethodName().ifPresent(m -> graphBuilder.add(formNode, HTV.METHOD_NAME, literal(m)));
+    graphBuilder.add(formNode, HCTL.FOR_CONTENT_TYPE, literal(form.getContentType()));
   }
 }

@@ -116,6 +116,47 @@ public class ArtifactProfileGraphReaderTest {
   }
 
   @Test
+  public void testReadActionSpecWithFromBNode() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            "    hmas:signifies [ a sh:NodeShape ;\n" +
+            "       sh:class hmas:ActionExecution ;\n" +
+            "       sh:property [\n" +
+            "          sh:path prov:used ;\n" +
+            "          sh:minCount 1 ;\n" +
+            "          sh:maxCount 1;\n" +
+            "          sh:hasValue [ a hctl:Form ; \n" +
+            "            hctl:hasTarget <https://example.org/resource> ] ] ] ] .";
+
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+
+    ProfiledResource artifact = profile.getResource();
+    assertEquals(ARTIFACT, artifact.getTypeAsIRI());
+    assertFalse(artifact.getIRI().isPresent());
+
+    assertEquals(1, profile.getExposedSignifiers().size());
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    assertEquals(0, signifier.getRecommendedAbilities().size());
+
+    assertEquals(1, signifier.getSemanticTypes().size());
+    assertTrue(signifier.getSemanticTypes().contains(CORE.TERM.SIGNIFIER.toString()));
+
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+    Set<Form> forms = actionSpec.getForms();
+    assertEquals(1, forms.size());
+    Form form = new ArrayList<>(forms).get(0);
+    assertEquals("https://example.org/resource", form.getTarget());
+    assertFalse(form.getIRI().isPresent());
+  }
+
+  @Test
   public void testReadArtifactProfileMultipleForms() {
     String expectedProfile = PREFIXES +
             ".\n" +

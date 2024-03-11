@@ -36,8 +36,6 @@ public class ArtifactProfileGraphWriterTest {
 
   private final static Logger LOGGER = Logger.getLogger(ArtifactProfileGraphWriterTest.class.getCanonicalName());
 
-  private static final String HMAS_PREFIX = "@prefix hmas: <" + CORE.NAMESPACE + ">";
-
   private static final String PREFIXES =
           "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +
                   "@prefix hctl: <" + HCTL.NAMESPACE + "> .\n" +
@@ -50,7 +48,7 @@ public class ArtifactProfileGraphWriterTest {
   private static final String SECOND_FORM_IRI = "<urn:x7aym3hn>";
   private static final String TARGET = "https://example.org/resource";
   private static final Form BASIC_FORM = new Form.Builder(TARGET)
-          .setIRIAsString(FORM_IRI).build();
+          .setIRIAsString("urn:3g6lpq9v").build();
   private static final String BASE_URI = "http://example.org/";
 
   private static Model readModelFromString(String profile, String baseURI)
@@ -123,7 +121,41 @@ public class ArtifactProfileGraphWriterTest {
                     .exposeSignifier(signifier)
                     .build();
 
-    assertEquals(4,signifier.getSemanticTypes().size());
+    assertEquals(4, signifier.getSemanticTypes().size());
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteArtifactProfileWithFormBNode() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            "    hmas:signifies [ a sh:NodeShape ;\n" +
+            "       sh:class hmas:ActionExecution ;\n" +
+            "       sh:property [\n" +
+            "          sh:path prov:used ;\n" +
+            "          sh:minCount \"1\"^^xs:int;\n" +
+            "          sh:maxCount \"1\"^^xs:int;\n" +
+            "          sh:hasValue [ a hctl:Form ; \n" +
+            "             hctl:forContentType \"application/json\" ;\n" +
+            "             hctl:hasTarget <https://example.org/resource> ] ] ] ].";
+
+    Form form = new Form.Builder(TARGET).build();
+    ActionSpecification actionSpec = new ActionSpecification.Builder(form).build();
+
+    Signifier signifier = new Signifier.Builder(actionSpec)
+            .build();
+
+    ResourceProfile profile =
+            new ResourceProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(signifier)
+                    .build();
+
+    assertEquals(1, signifier.getSemanticTypes().size());
 
     assertIsomorphicGraphs(expectedProfile, profile);
   }
@@ -266,6 +298,47 @@ public class ArtifactProfileGraphWriterTest {
 
     Form coapForm = new Form.Builder("coaps://example.org/resource")
             .setIRIAsString(SECOND_FORM_IRI).build();
+
+    Set<Form> forms = new HashSet<>(Arrays.asList(coapForm, BASIC_FORM));
+
+    ActionSpecification actionSpec = new ActionSpecification.Builder(forms).build();
+
+    ResourceProfile profile =
+            new ResourceProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(new Signifier.Builder(actionSpec).build())
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteArtifactProfileMultipleFormsBNode() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            "    hmas:signifies [ a sh:NodeShape ;\n" +
+            "       sh:class hmas:ActionExecution ;\n" +
+            "       sh:property [\n" +
+            "          sh:path prov:used ;\n" +
+            "          sh:minCount \"1\"^^xs:int;\n" +
+            "          sh:maxCount \"1\"^^xs:int;\n" +
+            "          sh:or (\n" +
+            "             [ sh:hasValue " + FORM_IRI + " ]\n" +
+            "             [ sh:hasValue [ a hctl:Form ; \n" +
+            "                 hctl:forContentType \"application/json\" ;\n" +
+            "                 hctl:hasTarget <coaps://example.org/resource> ] ]\n" +
+            "         ) \n" +
+            "      ]\n" +
+            "   ]\n" +
+            "] .\n" +
+            FORM_IRI + " a hctl:Form ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "   hctl:hasTarget <https://example.org/resource> .";
+
+    Form coapForm = new Form.Builder("coaps://example.org/resource").build();
 
     Set<Form> forms = new HashSet<>(Arrays.asList(coapForm, BASIC_FORM));
 
