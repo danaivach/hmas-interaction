@@ -108,6 +108,10 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     specification.getRequiredSemanticTypes()
             .forEach(type -> graphBuilder.add(locatedAcSpec, SHACL.CLASS, rdf.createIRI(type)));
 
+    specification.getSemanticTypes().forEach(type -> {
+        graphBuilder.add(locatedAcSpec, RDF.TYPE, rdf.createIRI(type));
+    });
+
     Resource propertyId = addPropertyNode(locatedAcSpec);
 
     Set<Form> forms = specification.getForms();
@@ -213,6 +217,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   private void addValueSpecification(ValueSpecification specification, Resource node) {
     specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, present));
     specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, present));
+
     addAbstractIOSpecification(specification, node);
   }
 
@@ -237,7 +242,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
       this.graphBuilder.add(valueNode, PROPERTY, propertyNode);
     }
 
-    addAbstractIOSpecification(specification, node);
+    addAbstractIOSpecification(specification, valueNode);
   }
 
   private void addAbstractIOSpecification(AbstractIOSpecification specification, Resource node) {

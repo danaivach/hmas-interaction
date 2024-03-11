@@ -26,8 +26,6 @@ public class INTERACTION {
 
   public static final IRI ACTION_EXECUTION;
 
-  public static final IRI ACTION_SPECIFICATION;
-
   public static final IRI AGENT_BODY;
 
   /* Object Properties */
@@ -55,7 +53,6 @@ public class INTERACTION {
     BEHAVIOR = rdf.createIRI(NAMESPACE + "Behavior");
     BEHAVIORAL_SPECIFICATION = rdf.createIRI(NAMESPACE + "BehavioralSpecification");
     ACTION_EXECUTION = rdf.createIRI(NAMESPACE + "ActionExecution");
-    ACTION_SPECIFICATION = rdf.createIRI(NAMESPACE + "ActionSpecification");
     AGENT_BODY = rdf.createIRI(NAMESPACE + "AgentBody");
 
     SIGNIFIES = rdf.createIRI(NAMESPACE + "signifies");
@@ -76,7 +73,6 @@ public class INTERACTION {
     BEHAVIOR(INTERACTION.BEHAVIOR),
     BEHAVIORAL_SPECIFICATION(INTERACTION.BEHAVIORAL_SPECIFICATION),
     ACTION_EXECUTION(INTERACTION.ACTION_EXECUTION),
-    ACTION_SPECIFICATION(INTERACTION.ACTION_SPECIFICATION),
     AGENT_BODY(INTERACTION.AGENT_BODY),
 
     /* Object Properties */

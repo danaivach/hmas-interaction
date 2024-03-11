@@ -6,7 +6,6 @@ import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
-
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.Models;
@@ -175,7 +174,13 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
     propNodeInput.ifPresent(input -> acSpecBuilder.setInputSpecification(readIOSpecification(input)));
     propNodeOutput.ifPresent(output -> acSpecBuilder.setOutputSpecification(readIOSpecification(output)));
 
-    acSpecBuilder.setRequiredSemanticTypes(
+    acSpecBuilder.addSemanticTypes(
+            Models.objectIRIs(model.filter(specNode, RDF.TYPE, null)).stream()
+                    .map(IRI::stringValue)
+                    .collect(Collectors.toSet())
+    );
+
+    acSpecBuilder.addRequiredSemanticTypes(
             Models.objectIRIs(model.filter(specNode, CLASS, null)).stream()
                     .map(IRI::stringValue)
                     .collect(Collectors.toSet())

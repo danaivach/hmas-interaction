@@ -50,14 +50,14 @@ public class ActionSpecification extends AbstractResource {
     private final Set<Form> forms;
     private Optional<IOSpecification> input;
     private Optional<IOSpecification> output;
-    private Set<String> requiredSemanticTypes;
+    private final Set<String> requiredSemanticTypes;
 
     public Builder(Form form) {
       this(Set.of(form));
     }
 
     public Builder(Set<Form> forms) {
-      super(INTERACTION.TERM.ACTION_SPECIFICATION);
+      super(SHACL.TERM.NODE_SHAPE);
       this.forms = forms;
       this.input = Optional.empty();
       this.output = Optional.empty();
@@ -74,8 +74,13 @@ public class ActionSpecification extends AbstractResource {
       return this;
     }
 
-    public Builder setRequiredSemanticTypes(Set<String> requiredSemanticTypes) {
-      this.requiredSemanticTypes = requiredSemanticTypes;
+    public Builder addRequiredSemanticTypes(Set<String> requiredSemanticTypes) {
+      this.requiredSemanticTypes.addAll(requiredSemanticTypes);
+      return this;
+    }
+
+    public Builder addRequiredSemanticType(String requiredSemanticType) {
+      this.requiredSemanticTypes.add(requiredSemanticType);
       return this;
     }
 

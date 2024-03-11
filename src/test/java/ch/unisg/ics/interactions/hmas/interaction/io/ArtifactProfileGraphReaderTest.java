@@ -538,6 +538,7 @@ public class ArtifactProfileGraphReaderTest {
             "  ] ;\n" +
             "  sh:property <urn:input-spec> .\n" +
             " <urn:input-spec> \n" +
+            "    a ex:ExampleIOSpecification ;\n" +
             "    sh:path hmas:hasOutput;\n" +
             "    sh:datatype xs:string ;\n" +
             "    sh:name \"Label\" ;\n" +
@@ -565,7 +566,7 @@ public class ArtifactProfileGraphReaderTest {
     StringSpecification iSpec = (StringSpecification) i.get();
     assertTrue(iSpec.getIRI().isPresent());
     assertEquals("urn:input-spec", iSpec.getIRIAsString().get());
-
+    assertTrue(iSpec.getSemanticTypes().contains("http://example.org/ExampleIOSpecification"));
     assertTrue(iSpec.getRequiredSemanticTypes().contains(XSD.STRING.stringValue()));
     assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
 
@@ -808,11 +809,11 @@ public class ArtifactProfileGraphReaderTest {
             "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
             "  hmas:exposesSignifier ex:signifier .\n" +
             "\n" +
-            "ex:signifier a hmas:Signifier ;\n" +
+            "ex:signifier a hmas:Signifier, ex:ExampleSignifier ;\n" +
             "  hmas:signifies ex:moveGripperSpecification .\n" +
             "\n" +
-            "ex:moveGripperSpecification a sh:NodeShape;\n" +
-            "  sh:class hmas:ActionExecution ;\n" +
+            "ex:moveGripperSpecification a sh:NodeShape, ex:ExampleActionSpecification ;\n" +
+            "  sh:class hmas:ActionExecution, ex:ExampleActionExecution ;\n" +
             "  sh:property [\n" +
             "    sh:path prov:used ;\n" +
             "    sh:minCount 1;\n" +
@@ -828,16 +829,16 @@ public class ArtifactProfileGraphReaderTest {
             "    sh:qualifiedMaxCount 1 \n" +
             " .\n" +
             "\n" +
-            "ex:gripperJointShape a sh:NodeShape ;\n" +
+            "ex:gripperJointShape a sh:NodeShape, ex:ExampleQualifiedValueSpecification ;\n" +
             "  sh:class ex:GripperJoint, saref:State ;\n" +
-            "  sh:property [\n" +
+            "  sh:property [ a ex:ExampleIntSpecification ;\n" +
             "    sh:path ex:hasGripperValue ;\n" +
             "    sh:minCount 1;\n" +
             "    sh:maxCount 1 ;\n" +
             "    sh:name \"Gripper\" ;\n" +
             "    sh:datatype xs:int\n" +
             "  ] ;\n" +
-            "  sh:property [\n" +
+            "  sh:property [ a ex:ExampleDoubleSpecification ;\n" +
             "    sh:path ex:hasSpeedValue ;\n" +
             "    sh:name \"Speed\" ;\n" +
             "    sh:datatype xs:double\n" +
@@ -859,7 +860,13 @@ public class ArtifactProfileGraphReaderTest {
 
     List<Signifier> signifiersList = new ArrayList<>(signifiers);
     Signifier signifier = signifiersList.get(0);
+    assertTrue(signifier.getSemanticTypes().contains("http://example.org/ExampleSignifier"));
+    assertTrue(signifier.getSemanticTypes().contains(CORE.TERM.SIGNIFIER.toString()));
     ActionSpecification actionSpec = signifier.getActionSpecification();
+
+    assertEquals(2, actionSpec.getSemanticTypes().size());
+    assertTrue(actionSpec.getSemanticTypes().contains("http://example.org/ExampleActionSpecification"));
+    assertTrue(actionSpec.getRequiredSemanticTypes().contains("http://example.org/ExampleActionExecution"));
 
     Optional<IOSpecification> i = actionSpec.getOutputSpecification();
     assertTrue(i.isPresent());
@@ -868,6 +875,7 @@ public class ArtifactProfileGraphReaderTest {
     assertTrue(input.getIRIAsString().isPresent());
     assertEquals("http://example.org/gripperJointShape", input.getIRIAsString().get());
 
+    assertTrue(input.getSemanticTypes().contains("http://example.org/ExampleQualifiedValueSpecification"));
     assertEquals(2, input.getRequiredSemanticTypes().size());
     assertTrue(input.getRequiredSemanticTypes().contains("http://example.org/GripperJoint"));
     assertTrue(input.getRequiredSemanticTypes().contains("https://saref.etsi.org/core/State"));
@@ -880,10 +888,12 @@ public class ArtifactProfileGraphReaderTest {
     IntegerSpecification gripperValueSpec = (IntegerSpecification) properties.get("http://example.org/hasGripperValue");
     DoubleSpecification speedValueSpec = (DoubleSpecification) properties.get("http://example.org/hasSpeedValue");
 
+    assertTrue(gripperValueSpec.getSemanticTypes().contains("http://example.org/ExampleIntSpecification"));
     assertTrue(gripperValueSpec.isRequired());
     assertTrue(gripperValueSpec.getName().isPresent());
     assertEquals("Gripper", gripperValueSpec.getName().get());
 
+    assertTrue(speedValueSpec.getSemanticTypes().contains("http://example.org/ExampleDoubleSpecification"));
     assertFalse(speedValueSpec.isRequired());
     assertTrue(speedValueSpec.getName().isPresent());
     assertEquals("Speed", speedValueSpec.getName().get());

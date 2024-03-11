@@ -374,7 +374,7 @@ public class ArtifactProfileGraphWriterTest {
             "             sh:maxCount \"1\"^^xs:int ;\n" +
             "             sh:hasValue ex:httpForm\n" +
             "         ] ;\n" +
-            "         sh:property [ a sh:Shape ; \n" +
+            "         sh:property [ a sh:Shape, ex:ExampleIOSpecification ; \n" +
             "         sh:path hmas:hasInput;\n" +
             "         sh:datatype xs:boolean ;\n" +
             "         sh:name \"Label\" ;\n" +
@@ -399,6 +399,7 @@ public class ArtifactProfileGraphWriterTest {
             .build();
 
     BooleanSpecification booleanSpec = new BooleanSpecification.Builder()
+            .addSemanticType("http://example.org/ExampleIOSpecification")
             .setName("Label")
             .setDescription("Description")
             .setOrder(5)
@@ -797,32 +798,32 @@ public class ArtifactProfileGraphWriterTest {
             "              hmas:isProfileOf [ a hmas:Artifact ] ;\n" +
             "              hmas:exposesSignifier ex:signifier .\n" +
             "\n" +
-            "ex:signifier a hmas:Signifier ;\n" +
+            "ex:signifier a hmas:Signifier, ex:ExampleSignifier ;\n" +
             "             hmas:signifies ex:moveGripperSpecification .\n" +
             "\n" +
-            "ex:moveGripperSpecification a sh:NodeShape ;\n" +
-            "         sh:class hmas:ActionExecution ;\n" +
-            "         sh:property [\n" +
+            "ex:moveGripperSpecification a sh:NodeShape, ex:ExampleSpecification ;\n" +
+            "         sh:class hmas:ActionExecution, ex:ExampleActionExecution ;\n" +
+            "         sh:property [ \n" +
             "             sh:path prov:used ;\n" +
             "             sh:minCount \"1\"^^xs:int;\n" +
             "             sh:maxCount \"1\"^^xs:int ;\n" +
             "             sh:hasValue ex:httpForm\n" +
             "         ] ;\n" +
-            "         sh:property [ a sh:Shape ; \n" +
+            "         sh:property [  \n" +
             "             sh:path hmas:hasInput;\n" +
             "             sh:qualifiedValueShape ex:gripperJointShape ;\n" +
             "             sh:qualifiedMinCount \"1\"^^xs:int ;\n" +
             "             sh:qualifiedMaxCount \"1\"^^xs:int\n" +
             "         ] ." +
             "\n" +
-            "ex:httpForm a hctl:Form ;\n" +
+            "ex:httpForm a hctl:Form, ex:ExampleForm ;\n" +
             "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
             "  hctl:forContentType \"application/json\" ;\n" +
             "  htv:methodName \"PUT\" ." +
             "\n" +
-            "ex:gripperJointShape a sh:Shape ;\n" +
+            "ex:gripperJointShape a sh:Shape, <http://example.org/ExampleQualifiedValueSpecification>   ;\n" +
             "  sh:class ex:GripperJoint, saref:State ;\n" +
-            "  sh:property [ a sh:Shape ; \n" +
+            "  sh:property [ a sh:Shape, <http://example.org/ExampleValueSpecification> ; \n" +
             "    sh:path ex:hasGripperValue ;\n" +
             "    sh:minCount \"1\"^^xs:int;\n" +
             "    sh:maxCount \"1\"^^xs:int;\n" +
@@ -831,6 +832,7 @@ public class ArtifactProfileGraphWriterTest {
             "  ] .\n";
 
     Form httpForm = new Form.Builder("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper")
+            .addSemanticType("http://example.org/ExampleForm")
             .setMethodName("PUT")
             .setContentType("application/json")
             .setIRIAsString("http://example.org/httpForm")
@@ -838,18 +840,22 @@ public class ArtifactProfileGraphWriterTest {
 
 
     QualifiedValueSpecification gripperJointInput = new QualifiedValueSpecification.Builder()
+            .addSemanticType("http://example.org/ExampleQualifiedValueSpecification")
             .addRequiredSemanticType("http://example.org/GripperJoint")
             .addRequiredSemanticType("https://saref.etsi.org/core/v3.1.1/State")
             .setIRIAsString("http://example.org/gripperJointShape")
             .setRequired(true)
             .addPropertySpecification("http://example.org/hasGripperValue",
                     new IntegerSpecification.Builder()
+                            .addSemanticType("http://example.org/ExampleValueSpecification")
                             .setRequired(true)
                             .setValue(1)
                             .build())
             .build();
 
     ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
+            .addSemanticType("http://example.org/ExampleSpecification")
+            .addRequiredSemanticTypes(Set.of("http://example.org/ExampleActionExecution"))
             .setInputSpecification(gripperJointInput)
             .setIRIAsString("http://example.org/moveGripperSpecification")
             .build();
@@ -859,6 +865,7 @@ public class ArtifactProfileGraphWriterTest {
                     .setIRIAsString("urn:profile")
                     .exposeSignifier(
                             new Signifier.Builder(moveGripperSpec)
+                                    .addSemanticType("http://example.org/ExampleSignifier")
                                     .setIRIAsString("http://example.org/signifier")
                                     .build()
                     )
