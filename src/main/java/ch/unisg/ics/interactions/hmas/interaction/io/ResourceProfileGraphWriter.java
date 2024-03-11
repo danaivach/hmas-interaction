@@ -284,7 +284,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   }
 
   private void createFormNode(Form form, Resource formNode) {
-    graphBuilder.add(formNode, RDF.TYPE, HCTL.FORM);
+    addResource(form, formNode);
     graphBuilder.add(formNode, HCTL.HAS_TARGET, iri(form.getTarget()));
     form.getMethodName().ifPresent(m -> graphBuilder.add(formNode, HTV.METHOD_NAME, literal(m)));
     graphBuilder.add(formNode, HCTL.FOR_CONTENT_TYPE, literal(form.getContentType()));
