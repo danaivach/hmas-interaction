@@ -78,22 +78,22 @@ public class Signifier extends BaseSignifier {
 
     public S setLabel(String label) {
       this.label = label;
-      return (S) this;
+      return getBuilder();
     }
 
     public S setComment(String comment) {
       this.comment = comment;
-      return (S) this;
+      return getBuilder();
     }
 
     public S addRecommendedAbility(Ability ability) {
       this.recommendedAbilities.add(ability);
-      return (S) this;
+      return getBuilder();
     }
 
     public S addRecommendedContext(Context context) {
       this.recommendedContexts.add(context);
-      return (S) this;
+      return getBuilder();
     }
 
     public abstract T build();

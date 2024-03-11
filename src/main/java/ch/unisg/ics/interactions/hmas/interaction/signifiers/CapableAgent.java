@@ -41,12 +41,12 @@ public class CapableAgent extends Agent {
 
     public S addAbility(Ability ability) {
       this.abilities.add(ability);
-      return (S) this;
+      return getBuilder();
     }
 
     public S addAbilities(Set<Ability> abilities) {
       this.abilities.addAll(abilities);
-      return (S) this;
+      return getBuilder();
     }
 
     public abstract T build();

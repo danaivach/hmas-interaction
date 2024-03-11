@@ -63,12 +63,12 @@ public class ResourceProfile extends BaseResourceProfile {
 
     public S exposeSignifier(Signifier signifier) {
       this.signifiers.add(signifier);
-      return (S) this;
+      return getBuilder();
     }
 
     public S exposeSignifiers(Set<Signifier> signifiers) {
       this.signifiers.addAll(signifiers);
-      return (S) this;
+      return getBuilder();
     }
 
     public abstract T build();
