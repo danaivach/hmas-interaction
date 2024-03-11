@@ -18,7 +18,7 @@ public class Form extends AbstractResource {
 
   private Form(String href, Optional<String> methodName, String mediaType, Set<String> operationTypes,
                Optional<String> subProtocol, Builder builder) {
-    super(null, builder);
+    super(HCTL.TERM.FORM, builder);
     this.methodName = methodName;
     this.target = href;
     this.contentType = mediaType;
