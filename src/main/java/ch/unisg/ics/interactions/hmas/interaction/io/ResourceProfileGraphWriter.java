@@ -54,6 +54,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
 
       graphBuilder.add(profileIRI, EXPOSES_SIGNIFIER, locatedSignifier);
       graphBuilder.add(locatedSignifier, RDF.TYPE, SIGNIFIER);
+      addResource(signifier, locatedSignifier);
 
       signifier.getLabel().ifPresent(label -> graphBuilder.add(locatedSignifier, RDFS.LABEL, label));
       signifier.getComment().ifPresent(comment -> graphBuilder.add(locatedSignifier, RDFS.COMMENT, comment));

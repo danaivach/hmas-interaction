@@ -73,7 +73,8 @@ public class ArtifactProfileGraphReaderTest {
             ".\n" +
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
-            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier , <http://example.org/signifier-type-1> ,\n" +
+            "    <http://example.org/signifier-type-2> , <http://example.org/signifier-type-3> ;\n" +
             "    hmas:signifies [ a sh:NodeShape ;\n" +
             "       sh:class hmas:ActionExecution ;\n" +
             "       sh:property [\n" +
@@ -99,6 +100,12 @@ public class ArtifactProfileGraphReaderTest {
     List<Signifier> signifiersList = new ArrayList<>(signifiers);
     Signifier signifier = signifiersList.get(0);
     assertEquals(0, signifier.getRecommendedAbilities().size());
+
+    assertEquals(4, signifier.getSemanticTypes().size());
+    assertTrue(signifier.getSemanticTypes().contains("http://example.org/signifier-type-1"));
+    assertTrue(signifier.getSemanticTypes().contains("http://example.org/signifier-type-2"));
+    assertTrue(signifier.getSemanticTypes().contains("http://example.org/signifier-type-3"));
+    assertTrue(signifier.getSemanticTypes().contains(CORE.TERM.SIGNIFIER.toString()));
 
     ActionSpecification actionSpec = signifier.getActionSpecification();
     Set<Form> forms = actionSpec.getForms();

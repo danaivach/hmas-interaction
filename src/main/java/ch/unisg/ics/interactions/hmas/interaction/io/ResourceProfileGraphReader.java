@@ -118,7 +118,7 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
         if (signifierNode.isIRI()) {
           builder.setIRI(SimpleValueFactory.getInstance().createIRI(signifierNode.stringValue()));
         }
-        signifiers.add(builder.build());
+        signifiers.add((Signifier) readResource(builder, signifierNode));
       } else {
         throw new InvalidResourceProfileException("Signifiers with behavioral specifications were expected. ");
       }

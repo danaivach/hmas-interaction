@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ArtifactProfileGraphWriterTest {
@@ -92,7 +93,8 @@ public class ArtifactProfileGraphWriterTest {
             ".\n" +
             "<urn:profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf [ a hmas:Artifact ];\n" +
-            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier, <http://example.org/signifier-type-1> ,\n" +
+            "    <http://example.org/signifier-type-2> , <http://example.org/signifier-type-3> ;\n" +
             "    hmas:signifies [ a sh:NodeShape ;\n" +
             "       sh:class hmas:ActionExecution ;\n" +
             "       sh:property [\n" +
@@ -109,11 +111,19 @@ public class ArtifactProfileGraphWriterTest {
 
     ActionSpecification actionSpec = new ActionSpecification.Builder(BASIC_FORM).build();
 
+    Signifier signifier = new Signifier.Builder(actionSpec)
+            .addSemanticType("http://example.org/signifier-type-1")
+            .addSemanticTypes(Set.of("http://example.org/signifier-type-2",
+                    "http://example.org/signifier-type-3"))
+            .build();
+
     ResourceProfile profile =
             new ResourceProfile.Builder(new Artifact.Builder().build())
                     .setIRIAsString("urn:profile")
-                    .exposeSignifier(new Signifier.Builder(actionSpec).build())
+                    .exposeSignifier(signifier)
                     .build();
+
+    assertEquals(4,signifier.getSemanticTypes().size());
 
     assertIsomorphicGraphs(expectedProfile, profile);
   }
@@ -215,7 +225,7 @@ public class ArtifactProfileGraphWriterTest {
             ".\n" +
             "<http://example.org/profile> a hmas:ResourceProfile ;\n" +
             " hmas:isProfileOf <http://example.org/profile#agent-body>.\n" +
-            "<http://example.org/profile#agent-body> a hmas:AgentBody.";
+            "<http://example.org/profile#agent-body> a hmas:Artifact.";
 
     AgentBody body = new AgentBody.Builder().setIRIAsString("http://example.org/profile#agent-body").build();
 

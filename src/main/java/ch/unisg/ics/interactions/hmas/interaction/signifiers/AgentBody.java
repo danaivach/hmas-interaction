@@ -6,7 +6,7 @@ import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 public class AgentBody extends Artifact {
 
   protected AgentBody(AbstractBuilder builder) {
-    super(INTERACTION.TERM.AGENT_BODY, builder);
+    super(builder);
   }
 
   public static class Builder extends AbstractBuilder<Builder, AgentBody> {

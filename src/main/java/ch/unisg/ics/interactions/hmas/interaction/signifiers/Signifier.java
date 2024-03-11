@@ -69,6 +69,7 @@ public class Signifier extends BaseSignifier {
     protected String comment;
 
     public AbstractBuilder(ActionSpecification actionSpecification) {
+      super();
       this.actionSpecification = actionSpecification;
       this.recommendedAbilities = new HashSet<>();
       this.recommendedContexts = new HashSet<>();
