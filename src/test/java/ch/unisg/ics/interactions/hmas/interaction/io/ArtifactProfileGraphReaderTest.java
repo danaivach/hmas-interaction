@@ -900,6 +900,130 @@ public class ArtifactProfileGraphReaderTest {
   }
 
   @Test
+  public void testReadArtifactProfileWithQualifiedListInput() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix saref: <https://saref.etsi.org/core/> .\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact ];\n" +
+            "  hmas:exposesSignifier ex:signifier .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier, ex:ExampleSignifier ;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape, ex:ExampleActionSpecification ;\n" +
+            "  sh:class hmas:ActionExecution, ex:ExampleActionExecution ;\n" +
+            "  sh:property [\n" +
+            "    sh:path prov:used ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:hasValue ex:httpForm ;\n" +
+            "  ] ;\n" +
+            "  sh:property <urn:input-spec>.\n" +
+            "" +
+            "<urn:input-spec> \n" +
+            "    sh:path hmas:hasInput;\n" +
+            "    sh:qualifiedValueShape ex:listShape ;\n" +
+            "    sh:qualifiedMinCount 1 ;\n" +
+            "    sh:qualifiedMaxCount 1 \n" +
+            " .\n" +
+            "\n" +
+            "ex:listShape a sh:NodeShape, ex:ExampleListSpecification ;\n" +
+            "  sh:class rdf:List, saref:State ;\n" +
+            "  sh:property [ a ex:ExampleFirstSpecification ;\n" +
+            "    sh:path rdf:first ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:datatype xs:int\n" +
+            "  ] ;\n" +
+            "  sh:property [ a ex:ExampleRestSpecification ;\n" +
+            "    sh:path rdf:rest ;\n" +
+            "    sh:qualifiedValueShape ex:restListShape ;\n" +
+            "    sh:qualifiedMinCount 1 ;\n" +
+            "    sh:qualifiedMaxCount 1 \n" +
+            "  ] .\n" +
+            "\n" +
+            "ex:restListShape a sh:NodeShape, ex:ExampleListSpecification ;\n" +
+            "  sh:class rdf:List, saref:State ;\n" +
+            "  sh:property [ a ex:ExampleFirstSpecification ;\n" +
+            "    sh:path rdf:first ;\n" +
+            "    sh:minCount 1;\n" +
+            "    sh:maxCount 1 ;\n" +
+            "    sh:datatype xs:int\n" +
+            "  ] ;\n" +
+            "  sh:property [ a ex:ExampleRestSpecification ;\n" +
+            "    sh:path rdf:rest ;\n" +
+            "    sh:hasValue rdf:nil\n" +
+            "  ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form ;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;\n" +
+            "  hctl:forContentType \"application/json\" ;\n" +
+            "  htv:methodName \"GET\" .";
+
+    ResourceProfile profile = ResourceProfileGraphReader.readFromString(expectedProfile);
+
+    ProfiledResource artifact = profile.getResource();
+    assertEquals(ARTIFACT, artifact.getTypeAsIRI());
+    assertFalse(artifact.getIRI().isPresent());
+
+    assertEquals(1, profile.getExposedSignifiers().size());
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
+    assertTrue(signifier.getSemanticTypes().contains("http://example.org/ExampleSignifier"));
+    assertTrue(signifier.getSemanticTypes().contains(CORE.TERM.SIGNIFIER.toString()));
+    ActionSpecification actionSpec = signifier.getActionSpecification();
+
+    Optional<IOSpecification> i = actionSpec.getInputSpecification();
+    assertTrue(i.isPresent());
+    QualifiedValueSpecification input = (QualifiedValueSpecification) i.get();
+
+    assertTrue(input.getIRIAsString().isPresent());
+    assertEquals("http://example.org/listShape", input.getIRIAsString().get());
+
+    assertTrue(input.getSemanticTypes().contains("http://example.org/ExampleListSpecification"));
+    assertEquals(2, input.getRequiredSemanticTypes().size());
+    assertTrue(input.getRequiredSemanticTypes().contains("http://www.w3.org/1999/02/22-rdf-syntax-ns#List"));
+    assertTrue(input.getRequiredSemanticTypes().contains("https://saref.etsi.org/core/State"));
+
+    Map<String, IOSpecification> properties = input.getPropertySpecifications();
+    assertEquals(2, properties.size());
+    assertTrue(properties.containsKey("http://www.w3.org/1999/02/22-rdf-syntax-ns#first"));
+    assertTrue(properties.containsKey("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest"));
+
+    IntegerSpecification memberSpec = (IntegerSpecification) properties
+            .get("http://www.w3.org/1999/02/22-rdf-syntax-ns#first");
+    QualifiedValueSpecification restSpec = (QualifiedValueSpecification) properties
+            .get("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest");
+
+    assertTrue(memberSpec.getSemanticTypes().contains("http://example.org/ExampleFirstSpecification"));
+    assertTrue(memberSpec.isRequired());
+
+    assertTrue(restSpec.getSemanticTypes().contains("http://example.org/ExampleListSpecification"));
+    assertEquals(2, restSpec.getRequiredSemanticTypes().size());
+    assertTrue(restSpec.getRequiredSemanticTypes().contains("http://www.w3.org/1999/02/22-rdf-syntax-ns#List"));
+    assertTrue(restSpec.getRequiredSemanticTypes().contains("https://saref.etsi.org/core/State"));
+
+    Map<String, IOSpecification> remainingProperties = restSpec.getPropertySpecifications();
+    assertEquals(2, remainingProperties.size());
+    assertTrue(remainingProperties.containsKey("http://www.w3.org/1999/02/22-rdf-syntax-ns#first"));
+    assertTrue(remainingProperties.containsKey("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest"));
+
+    IntegerSpecification secondMemberSpec = (IntegerSpecification) remainingProperties
+            .get("http://www.w3.org/1999/02/22-rdf-syntax-ns#first");
+    ValueSpecification nilSpec = (ValueSpecification) remainingProperties
+            .get("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest");
+    assertTrue(nilSpec.getValueAsString().isPresent());
+    assertEquals("http://www.w3.org/1999/02/22-rdf-syntax-ns#nil", nilSpec
+            .getValueAsString().get());
+  }
+
+  @Test
   public void testReadArtifactProfileWithContext() {
     String expectedProfile = PREFIXES +
             ".\n" +
