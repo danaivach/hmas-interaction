@@ -41,13 +41,11 @@ public class IntegerSpecification extends AbstractValueSpecification {
     }
 
     public Builder setValue(Integer value) {
-      this.defaultValue.ifPresent(defaultVal -> validateNewValue(value, defaultVal));
       this.value = Optional.of(value);
       return this;
     }
 
     public Builder setDefaultValue(Integer value) {
-      this.value.ifPresent(val -> validateNewDefaultValue(val, value));
       this.defaultValue = Optional.of(value);
       return this;
     }

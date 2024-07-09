@@ -35,13 +35,11 @@ public class StringSpecification extends AbstractValueSpecification {
     }
 
     public Builder setValue(String value) {
-      this.defaultValue.ifPresent(defaultVal -> validateNewValue(value, defaultVal));
       this.value = Optional.of(value);
       return this;
     }
 
     public Builder setDefaultValue(String value) {
-      this.value.ifPresent(val -> validateNewDefaultValue(val, value));
       this.defaultValue = Optional.of(value);
       return this;
     }

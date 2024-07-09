@@ -35,13 +35,11 @@ public class BooleanSpecification extends AbstractValueSpecification {
     }
 
     public Builder setValue(Boolean value) {
-      this.defaultValue.ifPresent(defaultVal -> validateNewValue(value, defaultVal));
       this.value = Optional.of(value);
       return this;
     }
 
     public Builder setDefaultValue(Boolean value) {
-      this.value.ifPresent(val -> validateNewDefaultValue(val, value));
       this.defaultValue = Optional.of(value);
       return this;
     }

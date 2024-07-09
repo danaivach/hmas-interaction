@@ -66,25 +66,9 @@ public class AbstractValueSpecification extends AbstractIOSpecification {
       try {
         SimpleValueFactory.getInstance().createIRI(IRI);
       } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("IRIs of DataTypes and node values must be valid.");
+        throw new IllegalArgumentException("IRIs of DataTypes, Classes and node values must be valid.");
       }
       return true;
-    }
-
-    protected static void validateNewValue(Object value, Object defaultValue) {
-      if (!defaultValue.equals(value)) {
-        String valueStr = value.toString();
-        String defaultValueStr = defaultValue.toString();
-        throw new ValueConflictException(valueStr, defaultValueStr);
-      }
-    }
-
-    protected static void validateNewDefaultValue(Object value, Object defaultValue) {
-      if (!value.equals(defaultValue)) {
-        String valueStr = value.toString();
-        String defaultValueStr = defaultValue.toString();
-        throw new ValueConflictException(valueStr, defaultValueStr);
-      }
     }
 
     public S setName(String name) {
