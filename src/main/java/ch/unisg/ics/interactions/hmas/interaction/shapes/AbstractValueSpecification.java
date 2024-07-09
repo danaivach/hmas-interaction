@@ -8,7 +8,6 @@ import java.util.Set;
 
 public class AbstractValueSpecification extends AbstractIOSpecification {
 
-  private final Boolean isRequired;
   private final Optional<String> name;
   private final Optional<String> description;
   private final Optional<Group> group;
@@ -16,15 +15,10 @@ public class AbstractValueSpecification extends AbstractIOSpecification {
 
   protected AbstractValueSpecification(AbstractBuilder builder) {
     super(builder);
-    this.isRequired = builder.isRequired;
     this.name = builder.name;
     this.description = builder.description;
     this.group = builder.group;
     this.order = builder.order;
-  }
-
-  public Boolean isRequired() {
-    return isRequired;
   }
 
   public Optional<String> getName() {
@@ -47,7 +41,6 @@ public class AbstractValueSpecification extends AbstractIOSpecification {
   public abstract static class AbstractBuilder<S extends AbstractBuilder, T extends AbstractValueSpecification>
           extends AbstractIOSpecification.AbstractBuilder<S, T> {
 
-    protected Boolean isRequired;
     protected Optional<String> name;
     protected Optional<String> description;
     protected Optional<Group> group;
@@ -63,7 +56,6 @@ public class AbstractValueSpecification extends AbstractIOSpecification {
         validateIRI(dataType);
       }
       addRequiredSemanticTypes(dataTypes);
-      this.isRequired = false;
       this.name = Optional.empty();
       this.description = Optional.empty();
       this.group = Optional.empty();
@@ -93,11 +85,6 @@ public class AbstractValueSpecification extends AbstractIOSpecification {
         String defaultValueStr = defaultValue.toString();
         throw new ValueConflictException(valueStr, defaultValueStr);
       }
-    }
-
-    public S setRequired(Boolean required) {
-      this.isRequired = required;
-      return getBuilder();
     }
 
     public S setName(String name) {
