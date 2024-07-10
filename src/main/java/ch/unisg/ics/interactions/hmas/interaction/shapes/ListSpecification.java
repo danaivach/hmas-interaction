@@ -2,10 +2,7 @@ package ch.unisg.ics.interactions.hmas.interaction.shapes;
 
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ListSpecification extends ValueSpecification {
 
@@ -13,7 +10,11 @@ public class ListSpecification extends ValueSpecification {
 
   protected ListSpecification(Builder builder) {
     super(builder);
-    this.memberSpecifications = builder.memberSpecifications;
+    this.memberSpecifications = Collections.unmodifiableList(builder.memberSpecifications);
+  }
+
+  public List<IOSpecification> getMemberSpecifications() {
+    return this.memberSpecifications;
   }
 
   public static class Builder extends ValueSpecification.AbstractBuilder<Builder, ListSpecification> {
@@ -23,6 +24,16 @@ public class ListSpecification extends ValueSpecification {
     public Builder() {
       super(RDF.LIST.stringValue());
       this.memberSpecifications = new ArrayList<>();
+    }
+
+    public Builder addMemberSpecification(IOSpecification specification) {
+      this.memberSpecifications.add(specification);
+      return this;
+    }
+
+    public Builder addMemberSpecifications(List<IOSpecification> specifications) {
+      this.memberSpecifications.addAll(specifications);
+      return this;
     }
 
     @Override

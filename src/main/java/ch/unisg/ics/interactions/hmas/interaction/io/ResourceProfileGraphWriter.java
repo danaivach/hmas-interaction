@@ -145,8 +145,14 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     Resource node;
 
     if (specification instanceof AbstractValueSpecification) {
-      node = resolveHostableLocation(specification);
-      addAbstractValueSpecification((AbstractValueSpecification) specification, node);
+        if (specification instanceof ListSpecification && ((ListSpecification) specification)
+                .getMemberSpecifications().size() > 0) {
+          node = rdf.createBNode();
+          addQualifiedValueSpecification(getListSpecification((ListSpecification) specification), node);
+        } else {
+          node = resolveHostableLocation(specification);
+          addAbstractValueSpecification((AbstractValueSpecification) specification, node);
+        }
     } else if (specification instanceof QualifiedValueSpecification) {
       node = rdf.createBNode();
       addQualifiedValueSpecification((QualifiedValueSpecification) specification, node);
@@ -166,6 +172,8 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
       addIntegerSpecification((IntegerSpecification) specification, node);
     } else if (specification.getRequiredSemanticTypes().contains(XSD.STRING.stringValue())) {
       addStringSpecification((StringSpecification) specification, node);
+    } else if (specification.getRequiredSemanticTypes().contains(RDF.LIST.stringValue())) {
+      addSimpleListSpecification((ListSpecification) specification, node);
     } else if (specification instanceof ValueSpecification) {
       addValueSpecification((ValueSpecification) specification, node);
     }
@@ -214,25 +222,55 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     addAbstractIOSpecification(specification, node);
   }
 
+  private void addSimpleListSpecification(ListSpecification specification, Resource node) {
+    specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, present));
+    specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, present));
+    addAbstractIOSpecification(specification, node);
+  }
+
+  private QualifiedValueSpecification getListSpecification(ListSpecification specification) {
+
+    List<IOSpecification> memberSpecifications = specification.getMemberSpecifications();
+
+    //Create the specification of the RDF nil value as a Value Specification
+    ValueSpecification nilSpecification = new ValueSpecification.Builder()
+            .setValue(RDF.NIL)
+            .setRequired(true)
+            .build();
+
+    // Create the specification of last sublist as a Qualified Value Specification
+    QualifiedValueSpecification subListSpecification =
+            prepareSublistSpecificationBuilder(specification,
+                    (AbstractIOSpecification) memberSpecifications.get(memberSpecifications.size()-1),
+                    nilSpecification)
+                    .build();
+
+    // Recursively create the specification of sublists as Qualified Value Specifications
+    for (int i = memberSpecifications.size() - 2; i >= 0 ; i--) {
+      QualifiedValueSpecification.Builder subListSpecificationBuilder =
+              prepareSublistSpecificationBuilder(specification, (AbstractIOSpecification) memberSpecifications.get(i),
+                      subListSpecification);
+
+
+      if (i == 0 && specification.getIRI().isPresent()) {
+        subListSpecificationBuilder.setIRI(specification.getIRI().get());
+      }
+
+      subListSpecification = subListSpecificationBuilder.build();
+    }
+
+    return subListSpecification;
+  }
+
   private void addValueSpecification(ValueSpecification specification, Resource node) {
     specification.getValue().ifPresent(present -> this.graphBuilder.add(node, HAS_VALUE, present));
     specification.getDefaultValue().ifPresent(present -> this.graphBuilder.add(node, DEFAULT_VALUE, present));
-
     addAbstractIOSpecification(specification, node);
   }
 
   private void addQualifiedValueSpecification(QualifiedValueSpecification specification, Resource node) {
     Resource valueNode = resolveHostableLocation(specification);
-
-    this.graphBuilder.add(node, QUALIFIED_VALUE_SHAPE, valueNode);
-    this.graphBuilder.add(valueNode, RDF.TYPE, SHAPE);
-
-    if (specification.isRequired()) {
-      this.graphBuilder.add(node, QUALIFIED_MIN_COUNT, 1);
-    }
-    this.graphBuilder.add(node, QUALIFIED_MAX_COUNT, 1);
-
-    specification.getRequiredSemanticTypes().forEach(type -> graphBuilder.add(valueNode, CLASS, iri(type)));
+    prepareQualifiedValueSpecification(specification, node, valueNode);
 
     Map<String, IOSpecification> properties = specification.getPropertySpecifications();
     for (String propertyType : properties.keySet()) {
@@ -247,6 +285,30 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
 
   private void addAbstractIOSpecification(AbstractIOSpecification specification, Resource node) {
     addResource(specification, node);
+  }
+
+  private void prepareQualifiedValueSpecification(AbstractIOSpecification specification, Resource node, Resource valueNode) {
+
+    this.graphBuilder.add(node, QUALIFIED_VALUE_SHAPE, valueNode);
+    this.graphBuilder.add(valueNode, RDF.TYPE, SHAPE);
+
+    if (specification.isRequired()) {
+      this.graphBuilder.add(node, QUALIFIED_MIN_COUNT, 1);
+    }
+    this.graphBuilder.add(node, QUALIFIED_MAX_COUNT, 1);
+
+    specification.getRequiredSemanticTypes().forEach(type -> graphBuilder.add(valueNode, CLASS, iri(type)));
+  }
+
+  private QualifiedValueSpecification.Builder prepareSublistSpecificationBuilder(ListSpecification specification,
+                                                                                 AbstractIOSpecification firstMember,
+                                                                                 AbstractIOSpecification restMember) {
+    return new QualifiedValueSpecification.Builder()
+            .addSemanticTypes(specification.getSemanticTypes())
+            .addRequiredSemanticTypes(specification.getRequiredSemanticTypes())
+            .setRequired(specification.isRequired())
+            .addPropertySpecification(RDF.FIRST.stringValue(), firstMember)
+            .addPropertySpecification(RDF.REST.stringValue(), restMember);
   }
 
   private void addGroup(Group group, Resource propertyId) {

@@ -7,6 +7,9 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AbstractValueSpecificationTest {
@@ -128,6 +131,16 @@ public class AbstractValueSpecificationTest {
   @Test
   public void testListSpecification() {
 
+    IntegerSpecification member1Spec = new IntegerSpecification.Builder()
+            .build();
+
+    ValueSpecification member2Spec = new ValueSpecification.Builder()
+            .build();
+
+    ListSpecification member3Spec = new ListSpecification.Builder()
+            .addMemberSpecifications(Arrays.asList(member1Spec, member2Spec))
+            .build();
+
     ListSpecification spec = new ListSpecification.Builder()
             .setName("Label")
             .setDescription("Label explanation")
@@ -135,6 +148,9 @@ public class AbstractValueSpecificationTest {
             .setRequired(true)
             .setValueAsString("http://example.org/list")
             .setDefaultValueAsString("http://example.org/default-list")
+            .addMemberSpecification(member1Spec)
+            .addMemberSpecifications(Arrays.asList(member2Spec))
+            .addMemberSpecification(member3Spec)
             .build();
 
     testAbstractValueMetadata(spec);
@@ -149,6 +165,17 @@ public class AbstractValueSpecificationTest {
     assertTrue(spec.getDefaultValue().isPresent());
     IRI defaultListIRI = SimpleValueFactory.getInstance().createIRI("http://example.org/default-list");
     assertEquals(defaultListIRI, spec.getDefaultValue().get());
+
+    List<IOSpecification> memberSpecifications = spec.getMemberSpecifications();
+    assertEquals(3, memberSpecifications.size());
+    assertTrue(memberSpecifications.contains(member1Spec));
+    assertTrue(memberSpecifications.contains(member2Spec));
+    assertTrue(memberSpecifications.contains(member3Spec));
+
+    List<IOSpecification> nestedMemberSpecifications = member3Spec.getMemberSpecifications();
+    assertEquals(2, nestedMemberSpecifications.size());
+    assertTrue(nestedMemberSpecifications.contains(member1Spec));
+    assertTrue(nestedMemberSpecifications.contains(member2Spec));
   }
 
   @Test
