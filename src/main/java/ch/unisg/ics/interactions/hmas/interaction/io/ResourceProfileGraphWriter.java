@@ -9,6 +9,7 @@ import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 
@@ -161,6 +162,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   }
 
   private void addAbstractValueSpecification(AbstractValueSpecification specification, Resource node) {
+    this.graphBuilder.subject("sjhd");
     if (specification.getRequiredSemanticTypes().contains(XSD.BOOLEAN.stringValue())) {
       addBooleanSpecification((BooleanSpecification) specification, node);
     } else if (specification.getRequiredSemanticTypes().contains(XSD.DOUBLE.stringValue())) {
@@ -231,8 +233,8 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   private QualifiedValueSpecification getListSpecification(ListSpecification specification) {
 
     List<IOSpecification> memberSpecifications = specification.getMemberSpecifications();
-
-    //Create the specification of the RDF nil value as a Value Specification
+    System.out.println(memberSpecifications.size());
+    // Create the specification of the RDF nil value as a Value Specification
     ValueSpecification nilSpecification = new ValueSpecification.Builder()
             .setValue(RDF.NIL)
             .setRequired(true)
@@ -253,6 +255,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
 
 
       if (i == 0 && specification.getIRI().isPresent()) {
+        System.out.println(specification.getIRI().get());
         subListSpecificationBuilder.setIRI(specification.getIRI().get());
       }
 
