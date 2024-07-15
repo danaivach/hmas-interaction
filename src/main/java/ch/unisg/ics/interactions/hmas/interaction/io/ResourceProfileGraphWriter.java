@@ -5,11 +5,7 @@ import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
-import org.eclipse.rdf4j.model.BNode;
-import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.util.Models;
+import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 
@@ -23,6 +19,7 @@ import static org.eclipse.rdf4j.model.util.Values.*;
 
 public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<ResourceProfile> {
   private final Map<Resource, Set<AbstractIOSpecification>> addedContexts = new HashMap<>();
+  private final Map<Resource, AbstractIOSpecification> addedIOShapes = new HashMap<>();
 
   public ResourceProfileGraphWriter(ResourceProfile profile) {
     super(profile);
@@ -110,7 +107,7 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
             .forEach(type -> graphBuilder.add(locatedAcSpec, SHACL.CLASS, rdf.createIRI(type)));
 
     specification.getSemanticTypes().forEach(type -> {
-        graphBuilder.add(locatedAcSpec, RDF.TYPE, rdf.createIRI(type));
+      graphBuilder.add(locatedAcSpec, RDF.TYPE, rdf.createIRI(type));
     });
 
     Resource propertyId = addPropertyNode(locatedAcSpec);
@@ -146,14 +143,14 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     Resource node;
 
     if (specification instanceof AbstractValueSpecification) {
-        if (specification instanceof ListSpecification && ((ListSpecification) specification)
-                .getMemberSpecifications().size() > 0) {
-          node = rdf.createBNode();
-          addQualifiedValueSpecification(getListSpecification((ListSpecification) specification), node);
-        } else {
-          node = resolveHostableLocation(specification);
-          addAbstractValueSpecification((AbstractValueSpecification) specification, node);
-        }
+      if (specification instanceof ListSpecification && ((ListSpecification) specification)
+              .getMemberSpecifications().size() > 0) {
+        node = rdf.createBNode();
+        addQualifiedValueSpecification(getListSpecification((ListSpecification) specification), node);
+      } else {
+        node = resolveHostableLocation(specification);
+        addAbstractValueSpecification((AbstractValueSpecification) specification, node);
+      }
     } else if (specification instanceof QualifiedValueSpecification) {
       node = rdf.createBNode();
       addQualifiedValueSpecification((QualifiedValueSpecification) specification, node);
@@ -162,7 +159,6 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   }
 
   private void addAbstractValueSpecification(AbstractValueSpecification specification, Resource node) {
-    this.graphBuilder.subject("sjhd");
     if (specification.getRequiredSemanticTypes().contains(XSD.BOOLEAN.stringValue())) {
       addBooleanSpecification((BooleanSpecification) specification, node);
     } else if (specification.getRequiredSemanticTypes().contains(XSD.DOUBLE.stringValue())) {
@@ -231,32 +227,30 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   }
 
   private QualifiedValueSpecification getListSpecification(ListSpecification specification) {
-
     List<IOSpecification> memberSpecifications = specification.getMemberSpecifications();
-    System.out.println(memberSpecifications.size());
+
     // Create the specification of the RDF nil value as a Value Specification
     ValueSpecification nilSpecification = new ValueSpecification.Builder()
             .setValue(RDF.NIL)
             .setRequired(true)
             .build();
 
-    // Create the specification of last sublist as a Qualified Value Specification
+    // Create the last sublist specification
     QualifiedValueSpecification subListSpecification =
             prepareSublistSpecificationBuilder(specification,
-                    (AbstractIOSpecification) memberSpecifications.get(memberSpecifications.size()-1),
+                    (AbstractIOSpecification) memberSpecifications.get(memberSpecifications.size() - 1),
                     nilSpecification)
                     .build();
 
     // Recursively create the specification of sublists as Qualified Value Specifications
-    for (int i = memberSpecifications.size() - 2; i >= 0 ; i--) {
+    for (int i = memberSpecifications.size() - 2; i >= 0; i--) {
       QualifiedValueSpecification.Builder subListSpecificationBuilder =
               prepareSublistSpecificationBuilder(specification, (AbstractIOSpecification) memberSpecifications.get(i),
                       subListSpecification);
 
-
       if (i == 0 && specification.getIRI().isPresent()) {
-        System.out.println(specification.getIRI().get());
         subListSpecificationBuilder.setIRI(specification.getIRI().get());
+
       }
 
       subListSpecification = subListSpecificationBuilder.build();
@@ -272,21 +266,31 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   }
 
   private void addQualifiedValueSpecification(QualifiedValueSpecification specification, Resource node) {
-    Resource valueNode = resolveHostableLocation(specification);
+    Resource valueNode;
+
+    if (specification.getIRI().isPresent() && addedIOShapes.containsKey(specification.getIRI().get())) {
+      valueNode = specification.getIRI().get();
+      prepareQualifiedValueSpecification(specification, node, valueNode);
+      return;
+    } else {
+      valueNode = resolveHostableLocation(specification);
+    }
+
     prepareQualifiedValueSpecification(specification, node, valueNode);
 
     Map<String, IOSpecification> properties = specification.getPropertySpecifications();
-    for (String propertyType : properties.keySet()) {
+    for (String propertyType : specification.getPropertySpecifications().keySet()) {
       IOSpecification propertySpecification = properties.get(propertyType);
       Resource propertyNode = addAbstractIOSpecification((AbstractIOSpecification) propertySpecification);
-      this.graphBuilder.add(propertyNode, PATH, iri(propertyType));
-      this.graphBuilder.add(valueNode, PROPERTY, propertyNode);
+      this.graphBuilder.add(propertyNode, SHACL.PATH, iri(propertyType));
+      this.graphBuilder.add(valueNode, SHACL.PROPERTY, propertyNode);
     }
 
     addAbstractIOSpecification(specification, valueNode);
   }
 
   private void addAbstractIOSpecification(AbstractIOSpecification specification, Resource node) {
+    addedIOShapes.put(node, specification);
     addResource(specification, node);
   }
 
