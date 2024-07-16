@@ -748,7 +748,7 @@ public class ArtifactProfileGraphReaderTest {
     assertTrue(iSpec.getRequiredSemanticTypes().contains(RDF.LIST.stringValue()));
     assertTrue(iSpec.getRequiredSemanticTypes().contains("https://saref.etsi.org/core/State"));
     assertEquals(SHACL.SHAPE, iSpec.getTypeAsIRI());
-    assertFalse(iSpec.isRequired());
+    assertTrue(iSpec.isRequired());
     assertEquals(3, iSpec.getMemberSpecifications().size());
 
     List<IOSpecification> memberSpecs = iSpec.getMemberSpecifications();
