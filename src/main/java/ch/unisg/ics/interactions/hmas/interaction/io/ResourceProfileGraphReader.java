@@ -205,37 +205,63 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
   }
 
   protected AbstractIOSpecification readIOSpecification(Resource node) {
-    if (model.contains(node, DATATYPE, null)) {
+    if (model.contains(node, DATATYPE, null) || model.contains(node, CLASS, null)) {
       return readAbstractValueSpecification(node);
-    } else if (Models.objectIRI(model.filter(node, QUALIFIED_VALUE_SHAPE, null)).isPresent()) {
-      return readQualifiedValueSpecification(node);
-    } else if (Models.objectIRI(model.filter(node, HAS_VALUE, null)).isPresent()
-            || Models.objectIRI(model.filter(node, DEFAULT_VALUE, null)).isPresent()) {
-      return readValueSpecification(node);
     }
+
+    Optional<IRI> qualifiedValueShapeOpt = Models.objectIRI(model.filter(node, QUALIFIED_VALUE_SHAPE, null));
+    if (qualifiedValueShapeOpt.isPresent()) {
+      Set<IRI> ioTypeSet = Models.objectIRIs(model.filter(qualifiedValueShapeOpt.get(), CLASS, null));
+
+      if (ioTypeSet.contains(RDF.LIST)) {
+        return readListSpecification(node);
+      } else {
+        return readQualifiedValueSpecification(node);
+      }
+    }
+
+    if (Models.objectIRI(model.filter(node, HAS_VALUE, null)).isPresent()
+            || Models.objectIRI(model.filter(node, DEFAULT_VALUE, null)).isPresent()) {
+      return readValueSpecification(new ValueSpecification.Builder(), node);
+    }
+
     throw new InvalidResourceProfileException("The shape of an input cannot be recognized; no datatype, " +
             "qualified value shape, value node, or default value node was found.");
   }
 
   private AbstractValueSpecification readAbstractValueSpecification(Resource node) {
 
-    Optional<IRI> datatypeOp = Models.objectIRI(model.filter(node, DATATYPE, null));
-    if (datatypeOp.isPresent()) {
-      IRI datatype = datatypeOp.get();
-      if (XSD.BOOLEAN.equals(datatype)) {
+    Set<IRI> datatypeSet = Models.objectIRIs(model.filter(node, DATATYPE, null));
+    Set<IRI> classSet = Models.objectIRIs(model.filter(node, CLASS, null));
+
+    // Check for specific datatypes
+    for (IRI ioDatatype : datatypeSet) {
+      if (XSD.BOOLEAN.equals(ioDatatype)) {
         return readBooleanSpecification(node);
-      } else if (XSD.DOUBLE.equals(datatype)) {
+      } else if (XSD.DOUBLE.equals(ioDatatype)) {
         return readDoubleSpecification(node);
-      } else if (XSD.FLOAT.equals(datatype)) {
+      } else if (XSD.FLOAT.equals(ioDatatype)) {
         return readFloatSpecification(node);
-      } else if (XSD.INT.equals(datatype) || XSD.INTEGER.equals(datatype)) {
+      } else if (XSD.INT.equals(ioDatatype) || XSD.INTEGER.equals(ioDatatype)) {
         return readIntegerSpecification(node);
-      } else if (XSD.STRING.equals(datatype)) {
+      } else if (XSD.STRING.equals(ioDatatype)) {
         return readStringSpecification(node);
-      } else {
-        return readValueSpecification(node);
       }
     }
+
+    // Check for specific classes
+    for (IRI ioClass : classSet) {
+      if (RDF.LIST.equals(ioClass)) {
+        return readListValueSpecification(node);
+      }
+    }
+
+    // If any datatype or class is present, but not matched above, return generic value specification
+    if (!datatypeSet.isEmpty() || !classSet.isEmpty()) {
+      return readValueSpecification(new ValueSpecification.Builder(), node);
+    }
+
+    // If neither datatype nor class is recognized, throw an exception
     throw new InvalidResourceProfileException("The datatype of an input cannot be recognized");
   }
 
@@ -299,10 +325,64 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
     return readAbstractValueSpecification(builder, node);
   }
 
-  private AbstractValueSpecification readValueSpecification(Resource node) {
-    ValueSpecification.Builder builder = new ValueSpecification.Builder();
+  private AbstractValueSpecification readListValueSpecification(Resource node) {
+    ListSpecification.Builder builder = new ListSpecification.Builder();
 
-    Set<IRI> datatypes = Models.objectIRIs(model.filter(node, DATATYPE, null));
+    return readValueSpecification(builder, node);
+  }
+
+  private AbstractIOSpecification readListSpecification(Resource node) {
+    ListSpecification.Builder builder = new ListSpecification.Builder();
+
+    Optional<Literal> minCount = Models.objectLiteral(model.filter(node, QUALIFIED_MIN_COUNT, null));
+    if (minCount.isPresent() && minCount.get().intValue() >= 1) {
+      builder.setRequired(true);
+    }
+
+    Resource baseNode;
+    Optional<Resource> qualifiedOp = Models.objectResource(model.filter(node, QUALIFIED_VALUE_SHAPE, null));
+
+    if (qualifiedOp.isPresent()) {
+      Resource qualifiedNode = qualifiedOp.get();
+      baseNode = qualifiedOp.get();
+
+      // Add required semantic types only for the initial qualified node
+      Set<IRI> requiredSemanticTypes = Models.objectIRIs(model.filter(qualifiedNode, CLASS, null));
+      for (IRI semanticType : requiredSemanticTypes) {
+        builder.addRequiredSemanticType(semanticType.toString());
+      }
+
+      while (qualifiedOp.isPresent()) {
+        qualifiedNode = qualifiedOp.get();
+
+        // Process property nodes
+        Set<Resource> propertyNodes = Models.objectResources(model.filter(qualifiedNode, PROPERTY, null));
+        for (Resource propertyNode : propertyNodes) {
+          Optional<IRI> pathIRI = Models.objectIRI(model.filter(propertyNode, PATH, null));
+          if (pathIRI.isPresent() && RDF.FIRST.equals(pathIRI.get())) {
+            AbstractIOSpecification memberSpec = readIOSpecification(propertyNode);
+            builder.addMemberSpecification(memberSpec);
+          }
+
+          if (pathIRI.isPresent() && RDF.REST.equals(pathIRI.get())) {
+            Optional<IRI> valueIRI = Models.objectIRI(model.filter(propertyNode, HAS_VALUE, null));
+            if (valueIRI.isPresent() && RDF.NIL.equals(valueIRI.get())) {
+              qualifiedOp = Optional.empty(); // Exit loop if RDF.NIL found
+            } else {
+              qualifiedOp = Models.objectResource(model.filter(propertyNode, QUALIFIED_VALUE_SHAPE, null));
+            }
+          }
+        }
+      }
+    } else throw new InvalidResourceProfileException("Unrecognized qualified value shape.");
+
+    return (AbstractIOSpecification) readResource(builder, baseNode);
+  }
+
+
+  private AbstractValueSpecification readValueSpecification(ValueSpecification.AbstractBuilder<?, ?> builder, Resource node) {
+
+    Set<IRI> datatypes = Models.objectIRIs(model.filter(node, CLASS, null));
 
     if (datatypes.size() > 0) {
       datatypes.forEach(type -> builder.addRequiredSemanticType(type.stringValue()));
@@ -320,6 +400,11 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
   private AbstractIOSpecification readQualifiedValueSpecification(Resource node) {
 
     QualifiedValueSpecification.Builder builder = new QualifiedValueSpecification.Builder();
+
+    Optional<Literal> minCount = Models.objectLiteral(model.filter(node, QUALIFIED_MIN_COUNT, null));
+    if (minCount.isPresent() && minCount.get().intValue() >= 1) {
+      builder.setRequired(true);
+    }
 
     Optional<Resource> qualifiedOp = Models.objectResource(model.filter(node, QUALIFIED_VALUE_SHAPE, null));
 

@@ -875,6 +875,119 @@ public class ArtifactProfileGraphWriterTest {
   }
 
   @Test
+  public void testWriteArtifactProfileWithDuplicateQualifiedValueInput() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "@prefix saref: <https://saref.etsi.org/core/v3.1.1/> .\n" +
+            "<urn:profile> a hmas:ResourceProfile;\n" +
+            "  hmas:exposesSignifier ex:signifier;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier, ex:ExampleSignifier;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape, ex:ExampleSpecification;\n" +
+            "  sh:class hmas:ActionExecution, ex:ExampleActionExecution;\n" +
+            "  sh:property [\n" +
+            "      sh:path prov:used;\n" +
+            "      sh:minCount \"1\"^^xs:int;\n" +
+            "      sh:maxCount \"1\"^^xs:int;\n" +
+            "      sh:hasValue ex:httpForm\n" +
+            "    ], [\n" +
+            "      sh:qualifiedValueShape ex:gripperJointShapeOuter;\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path hmas:hasInput\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form, ex:ExampleForm;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper>;\n" +
+            "  htv:methodName \"PUT\";\n" +
+            "  hctl:forContentType \"application/json\" .\n" +
+            "\n" +
+            "ex:gripperJointShapeOuter a sh:Shape, ex:ExampleQualifiedValueSpecification;\n" +
+            "  sh:class <https://saref.etsi.org/core/v3.1.1/State>, ex:GripperJointOuter;\n" +
+            "  sh:property [\n" +
+            "      sh:qualifiedValueShape ex:gripperJointShape;\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path ex:hasGripperValue\n" +
+            "    ], [\n" +
+            "      sh:qualifiedValueShape ex:gripperJointShape;\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path ex:hasGripperValue2\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:gripperJointShape a sh:Shape, ex:ExampleQualifiedValueSpecification;\n" +
+            "  sh:class <https://saref.etsi.org/core/v3.1.1/State>, ex:GripperJoint;\n" +
+            "  sh:property [ a sh:Shape, ex:ExampleValueSpecification;\n" +
+            "      sh:hasValue \"1\"^^xs:int;\n" +
+            "      sh:datatype xs:int;\n" +
+            "      sh:minCount \"1\"^^xs:int;\n" +
+            "      sh:maxCount \"1\"^^xs:int;\n" +
+            "      sh:path ex:hasGripperValue\n" +
+            "    ] .";
+
+    Form httpForm = new Form.Builder("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper")
+            .addSemanticType("http://example.org/ExampleForm")
+            .setMethodName("PUT")
+            .setContentType("application/json")
+            .setIRIAsString("http://example.org/httpForm")
+            .build();
+
+
+    QualifiedValueSpecification gripperJointInput = new QualifiedValueSpecification.Builder()
+            .addSemanticType("http://example.org/ExampleQualifiedValueSpecification")
+            .addRequiredSemanticType("http://example.org/GripperJoint")
+            .addRequiredSemanticType("https://saref.etsi.org/core/v3.1.1/State")
+            .setIRIAsString("http://example.org/gripperJointShape")
+            .setRequired(true)
+            .addPropertySpecification("http://example.org/hasGripperValue",
+                    new IntegerSpecification.Builder()
+                            .addSemanticType("http://example.org/ExampleValueSpecification")
+                            .setRequired(true)
+                            .setValue(1)
+                            .build())
+            .build();
+
+    QualifiedValueSpecification outerGripperJointInput = new QualifiedValueSpecification.Builder()
+            .addSemanticType("http://example.org/ExampleQualifiedValueSpecification")
+            .addRequiredSemanticType("http://example.org/GripperJointOuter")
+            .addRequiredSemanticType("https://saref.etsi.org/core/v3.1.1/State")
+            .setIRIAsString("http://example.org/gripperJointShapeOuter")
+            .setRequired(true)
+            .addPropertySpecification("http://example.org/hasGripperValue", gripperJointInput)
+            .addPropertySpecification("http://example.org/hasGripperValue2", gripperJointInput)
+            .build();
+
+    ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
+            .addSemanticType("http://example.org/ExampleSpecification")
+            .addRequiredSemanticTypes(Set.of("http://example.org/ExampleActionExecution"))
+            .setInputSpecification(outerGripperJointInput)
+            .setIRIAsString("http://example.org/moveGripperSpecification")
+            .build();
+
+    ResourceProfile profile =
+            new ResourceProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(
+                            new Signifier.Builder(moveGripperSpec)
+                                    .addSemanticType("http://example.org/ExampleSignifier")
+                                    .setIRIAsString("http://example.org/signifier")
+                                    .build()
+                    )
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+
+  }
+
+
+  @Test
   public void testWriteArtifactProfileWithListQualifiedValueOutput() throws IOException {
     String expectedProfile = PREFIXES +
             ".\n" +
@@ -966,7 +1079,7 @@ public class ArtifactProfileGraphWriterTest {
             .addPropertySpecification("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest", nilSpec)
             .build();
 
-    QualifiedValueSpecification listSpec =  new QualifiedValueSpecification.Builder()
+    QualifiedValueSpecification listSpec = new QualifiedValueSpecification.Builder()
             .setIRIAsString("http://example.org/listShape")
             .addSemanticType("http://example.org/ExampleListSpecification")
             .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
@@ -974,6 +1087,464 @@ public class ArtifactProfileGraphWriterTest {
             .setRequired(true)
             .addPropertySpecification("http://www.w3.org/1999/02/22-rdf-syntax-ns#first", memberSpec)
             .addPropertySpecification("http://www.w3.org/1999/02/22-rdf-syntax-ns#rest", listSpecLast)
+            .build();
+
+    ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
+            .addRequiredSemanticTypes(Set.of("http://example.org/ExampleActionExecution"))
+            .setOutputSpecification(listSpec)
+            .setIRIAsString("http://example.org/moveGripperSpecification")
+            .build();
+
+    ResourceProfile profile =
+            new ResourceProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(
+                            new Signifier.Builder(moveGripperSpec)
+                                    .addSemanticType("http://example.org/ExampleSignifier")
+                                    .setIRIAsString("http://example.org/signifier")
+                                    .build()
+                    )
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteArtifactProfileWithListValueOutput() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix saref: <https://saref.etsi.org/core/> .\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile;\n" +
+            "  hmas:exposesSignifier [ a hmas:Signifier, ex:ExampleSignifier;\n" +
+            "      hmas:signifies [ a sh:NodeShape;\n" +
+            "          sh:class hmas:ActionExecution;\n" +
+            "          sh:property [\n" +
+            "              sh:path prov:used;\n" +
+            "              sh:minCount \"1\"^^xs:int;\n" +
+            "              sh:maxCount \"1\"^^xs:int;\n" +
+            "              sh:hasValue ex:httpForm\n" +
+            "            ], [ a sh:Shape;\n" +
+            "              sh:defaultValue ex:example-list;\n" +
+            "              sh:datatype saref:State, rdf:List;\n" +
+            "              sh:maxCount \"1\"^^xs:int;\n" +
+            "              sh:path hmas:hasOutput\n" +
+            "            ]\n" +
+            "        ]\n" +
+            "    ];\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper>;\n" +
+            "  htv:methodName \"GET\";\n" +
+            "  hctl:forContentType \"application/json\" .\n" +
+            "\n" +
+            "ex:example-list a rdf:List;\n" +
+            "  rdf:first \"first member\";\n" +
+            "  rdf:rest ex:example-nested-list .\n" +
+            "\n" +
+            "ex:example-nested-list rdf:first \"second member\";\n" +
+            "  rdf:rest rdf:nil .";
+
+    SimpleValueFactory rdfFactory = SimpleValueFactory.getInstance();
+    IRI listIRI = rdfFactory.createIRI("http://example.org/example-list");
+    IRI nestedListIRI = rdfFactory.createIRI("http://example.org/example-nested-list");
+
+    ListSpecification listSpec = new ListSpecification.Builder()
+            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
+            .addRequiredSemanticType("https://saref.etsi.org/core/State")
+            .setRequired(false)
+            .setDefaultValue(listIRI)
+            .addTriple(listIRI, RDF.TYPE, RDF.LIST)
+            .addTriple(listIRI, RDF.FIRST, Values.literal("first member"))
+            .addTriple(listIRI, RDF.REST, nestedListIRI)
+            .addTriple(nestedListIRI, RDF.FIRST, Values.literal("second member"))
+            .addTriple(nestedListIRI, RDF.REST, RDF.NIL)
+            .build();
+
+    Form httpForm = new Form.Builder("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper")
+            .setMethodName("GET")
+            .setContentType("application/json")
+            .setIRIAsString("http://example.org/httpForm")
+            .build();
+
+    ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
+            .setOutputSpecification(listSpec)
+            .build();
+
+    ResourceProfile profile =
+            new ResourceProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(
+                            new Signifier.Builder(moveGripperSpec)
+                                    .addSemanticType("http://example.org/ExampleSignifier")
+                                    .build()
+                    )
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteArtifactProfileWithListOutput() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix saref: <https://saref.etsi.org/core/> .\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile;\n" +
+            "  hmas:exposesSignifier ex:signifier;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact\n" +
+            "    ] .\n\n" +
+            "ex:signifier a hmas:Signifier, ex:ExampleSignifier;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution, ex:ExampleActionExecution;\n" +
+            "  sh:property [\n" +
+            "      sh:path prov:used;\n" +
+            "      sh:minCount \"1\"^^xs:int;\n" +
+            "      sh:maxCount \"1\"^^xs:int;\n" +
+            "      sh:hasValue ex:httpForm\n" +
+            "    ], [\n" +
+            "      sh:qualifiedValueShape ex:listShape;\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path hmas:hasOutput\n" +
+            "    ] .\n\n" +
+            "ex:httpForm a hctl:Form;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper>;\n" +
+            "  htv:methodName \"GET\";\n" +
+            "  hctl:forContentType \"application/json\" .\n\n" +
+            "ex:listShape a sh:Shape, ex:ExampleListSpecification;\n" +
+            "  sh:class saref:State, rdf:List;\n" +
+            "  sh:property [\n" +
+            "      sh:qualifiedValueShape [ a sh:Shape, ex:ExampleListSpecification;\n" +
+            "          sh:class saref:State, rdf:List;\n" +
+            "          sh:property [\n" +
+            "              sh:qualifiedValueShape [ a sh:Shape, ex:ExampleListSpecification;\n" +
+            "                  sh:class saref:State, rdf:List;\n" +
+            "                  sh:property [ a sh:Shape;\n" +
+            "                      sh:hasValue rdf:nil;\n" +
+            "                      sh:datatype xs:anyURI;\n" +
+            "                      sh:minCount \"1\"^^xs:int;\n" +
+            "                      sh:maxCount \"1\"^^xs:int;\n" +
+            "                      sh:path rdf:rest\n" +
+            "                    ], [ a sh:Shape, ex:ExampleFirstSpecification;\n" +
+            "                      sh:datatype xs:int;\n" +
+            "                      sh:minCount \"1\"^^xs:int;\n" +
+            "                      sh:maxCount \"1\"^^xs:int;\n" +
+            "                      sh:path rdf:first\n" +
+            "                    ]\n" +
+            "                ];\n" +
+            "              sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "              sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "              sh:path rdf:rest\n" +
+            "            ], [ a sh:Shape, ex:ExampleFirstSpecification;\n" +
+            "              sh:datatype xs:int;\n" +
+            "              sh:minCount \"1\"^^xs:int;\n" +
+            "              sh:maxCount \"1\"^^xs:int;\n" +
+            "              sh:path rdf:first\n" +
+            "            ]\n" +
+            "        ];\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path rdf:rest\n" +
+            "    ], [ a sh:Shape, ex:ExampleFirstSpecification;\n" +
+            "      sh:datatype xs:int;\n" +
+            "      sh:minCount \"1\"^^xs:int;\n" +
+            "      sh:maxCount \"1\"^^xs:int;\n" +
+            "      sh:path rdf:first\n" +
+            "    ] .";
+
+    Form httpForm = new Form.Builder("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper")
+            .setMethodName("GET")
+            .setContentType("application/json")
+            .setIRIAsString("http://example.org/httpForm")
+            .build();
+
+    IntegerSpecification memberSpec = new IntegerSpecification.Builder()
+            .addSemanticType("http://example.org/ExampleFirstSpecification")
+            .setRequired(true)
+            .build();
+
+    ListSpecification listSpec = new ListSpecification.Builder()
+            .setIRIAsString("http://example.org/listShape")
+            .addSemanticType("http://example.org/ExampleListSpecification")
+            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
+            .addRequiredSemanticType("https://saref.etsi.org/core/State")
+            .setRequired(true)
+            .addMemberSpecification(memberSpec)
+            .addMemberSpecification(memberSpec)
+            .addMemberSpecification(memberSpec)
+            .build();
+
+    ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
+            .addRequiredSemanticTypes(Set.of("http://example.org/ExampleActionExecution"))
+            .setOutputSpecification(listSpec)
+            .setIRIAsString("http://example.org/moveGripperSpecification")
+            .build();
+
+    ResourceProfile profile =
+            new ResourceProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(
+                            new Signifier.Builder(moveGripperSpec)
+                                    .addSemanticType("http://example.org/ExampleSignifier")
+                                    .setIRIAsString("http://example.org/signifier")
+                                    .build()
+                    )
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteArtifactProfileWithNestedListInput() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix saref: <https://saref.etsi.org/core/> .\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile;\n" +
+            "  hmas:exposesSignifier ex:signifier;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier, ex:ExampleSignifier;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution, ex:ExampleActionExecution;\n" +
+            "  sh:property [\n" +
+            "      sh:path prov:used;\n" +
+            "      sh:minCount \"1\"^^xs:int;\n" +
+            "      sh:maxCount \"1\"^^xs:int;\n" +
+            "      sh:hasValue ex:httpForm\n" +
+            "    ], [\n" +
+            "      sh:qualifiedValueShape ex:listShape;\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path hmas:hasOutput\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper>;\n" +
+            "  htv:methodName \"GET\";\n" +
+            "  hctl:forContentType \"application/json\" .\n" +
+            "\n" +
+            "ex:listShape a sh:Shape, ex:ExampleListSpecification;\n" +
+            "  sh:class saref:State, rdf:List;\n" +
+            "  sh:property [\n" +
+            "      sh:qualifiedValueShape [ a sh:Shape, ex:ExampleListSpecification;\n" +
+            "          sh:class saref:State, rdf:List;\n" +
+            "          sh:property [ a sh:Shape;\n" +
+            "              sh:hasValue rdf:nil;\n" +
+            "              sh:datatype xs:anyURI;\n" +
+            "              sh:minCount \"1\"^^xs:int;\n" +
+            "              sh:maxCount \"1\"^^xs:int;\n" +
+            "              sh:path rdf:rest\n" +
+            "            ], [\n" +
+            "              sh:qualifiedValueShape ex:nestedListShape;\n" +
+            "              sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "              sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "              sh:path rdf:first\n" +
+            "            ]\n" +
+            "        ];\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path rdf:rest\n" +
+            "    ], [\n" +
+            "      sh:qualifiedValueShape ex:nestedListShape;\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path rdf:first\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:nestedListShape a sh:Shape, ex:ExampleNestedListSpecification;\n" +
+            "  sh:class rdf:List;\n" +
+            "  sh:property [\n" +
+            "      sh:qualifiedValueShape [ a sh:Shape, ex:ExampleNestedListSpecification;\n" +
+            "          sh:class rdf:List;\n" +
+            "          sh:property [ a sh:Shape;\n" +
+            "              sh:hasValue rdf:nil;\n" +
+            "              sh:datatype xs:anyURI;\n" +
+            "              sh:minCount \"1\"^^xs:int;\n" +
+            "              sh:maxCount \"1\"^^xs:int;\n" +
+            "              sh:path rdf:rest\n" +
+            "            ], ex:integer-member-spec\n" +
+            "        ];\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path rdf:rest\n" +
+            "    ], ex:integer-member-spec .\n" +
+            "\n" +
+            "ex:integer-member-spec a sh:Shape, ex:ExampleFirstSpecification;\n" +
+            "  sh:datatype xs:int;\n" +
+            "  sh:minCount \"1\"^^xs:int;\n" +
+            "  sh:maxCount \"1\"^^xs:int;\n" +
+            "  sh:path rdf:first .";
+
+    Form httpForm = new Form.Builder("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper")
+            .setMethodName("GET")
+            .setContentType("application/json")
+            .setIRIAsString("http://example.org/httpForm")
+            .build();
+
+    IntegerSpecification memberSpec = new IntegerSpecification.Builder()
+            .addSemanticType("http://example.org/ExampleFirstSpecification")
+            .setRequired(true)
+            .setIRIAsString("http://example.org/integer-member-spec")
+            .build();
+
+    ListSpecification nestedListSpec = new ListSpecification.Builder()
+            .setIRIAsString("http://example.org/nestedListShape")
+            .addSemanticType("http://example.org/ExampleNestedListSpecification")
+            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
+            .setRequired(true)
+            .addMemberSpecification(memberSpec)
+            .addMemberSpecification(memberSpec)
+            .build();
+
+    System.out.println("Nested:" + nestedListSpec);
+
+    ListSpecification listSpec = new ListSpecification.Builder()
+            .setIRIAsString("http://example.org/listShape")
+            .addSemanticType("http://example.org/ExampleListSpecification")
+            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
+            .addRequiredSemanticType("https://saref.etsi.org/core/State")
+            .setRequired(true)
+            .addMemberSpecification(nestedListSpec)
+            .addMemberSpecification(nestedListSpec)
+            .build();
+
+    ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)
+            .addRequiredSemanticTypes(Set.of("http://example.org/ExampleActionExecution"))
+            .setOutputSpecification(listSpec)
+            .setIRIAsString("http://example.org/moveGripperSpecification")
+            .build();
+
+    ResourceProfile profile =
+            new ResourceProfile.Builder(new Artifact.Builder().build())
+                    .setIRIAsString("urn:profile")
+                    .exposeSignifier(
+                            new Signifier.Builder(moveGripperSpec)
+                                    .addSemanticType("http://example.org/ExampleSignifier")
+                                    .setIRIAsString("http://example.org/signifier")
+                                    .build()
+                    )
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteArtifactProfileWithQualifiedValueMembersInput() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "@prefix saref: <https://saref.etsi.org/core/> .\n" +
+            "@prefix ex: <http://example.org/> .\n" +
+            "@prefix xs: <http://www.w3.org/2001/XMLSchema#> .\n" +
+            "@prefix htv: <http://www.w3.org/2011/http#> .\n" +
+            "<urn:profile> a hmas:ResourceProfile;\n" +
+            "  hmas:exposesSignifier ex:signifier;\n" +
+            "  hmas:isProfileOf [ a hmas:Artifact\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:signifier a hmas:Signifier, ex:ExampleSignifier;\n" +
+            "  hmas:signifies ex:moveGripperSpecification .\n" +
+            "\n" +
+            "ex:moveGripperSpecification a sh:NodeShape;\n" +
+            "  sh:class hmas:ActionExecution, ex:ExampleActionExecution;\n" +
+            "  sh:property [\n" +
+            "      sh:path prov:used;\n" +
+            "      sh:minCount \"1\"^^xs:int;\n" +
+            "      sh:maxCount \"1\"^^xs:int;\n" +
+            "      sh:hasValue ex:httpForm\n" +
+            "    ], [\n" +
+            "      sh:qualifiedValueShape ex:listShape;\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path hmas:hasOutput\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:httpForm a hctl:Form;\n" +
+            "  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper>;\n" +
+            "  htv:methodName \"GET\";\n" +
+            "  hctl:forContentType \"application/json\" .\n" +
+            "\n" +
+            "ex:listShape a sh:Shape, ex:ExampleListSpecification;\n" +
+            "  sh:class saref:State, rdf:List;\n" +
+            "  sh:property [\n" +
+            "      sh:qualifiedValueShape [ a sh:Shape, ex:ExampleListSpecification;\n" +
+            "          sh:class saref:State, rdf:List;\n" +
+            "          sh:property [ a sh:Shape;\n" +
+            "              sh:hasValue rdf:nil;\n" +
+            "              sh:datatype xs:anyURI;\n" +
+            "              sh:minCount \"1\"^^xs:int;\n" +
+            "              sh:maxCount \"1\"^^xs:int;\n" +
+            "              sh:path rdf:rest\n" +
+            "            ], [\n" +
+            "              sh:qualifiedValueShape ex:gripperJointShape;\n" +
+            "              sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "              sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "              sh:path rdf:first\n" +
+            "            ]\n" +
+            "        ];\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path rdf:rest\n" +
+            "    ], [\n" +
+            "      sh:qualifiedValueShape ex:gripperJointShape;\n" +
+            "      sh:qualifiedMinCount \"1\"^^xs:int;\n" +
+            "      sh:qualifiedMaxCount \"1\"^^xs:int;\n" +
+            "      sh:path rdf:first\n" +
+            "    ] .\n" +
+            "\n" +
+            "ex:gripperJointShape a sh:Shape, ex:ExampleQualifiedValueSpecification;\n" +
+            "  sh:class <https://saref.etsi.org/core/v3.1.1/State>, ex:GripperJoint;\n" +
+            "  sh:property ex:integer-member-spec .\n" +
+            "\n" +
+            "ex:integer-member-spec a sh:Shape, ex:ExampleFirstSpecification;\n" +
+            "  sh:datatype xs:int;\n" +
+            "  sh:minCount \"1\"^^xs:int;\n" +
+            "  sh:maxCount \"1\"^^xs:int;\n" +
+            "  sh:path ex:hasGripperValue .";
+
+    Form httpForm = new Form.Builder("https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper")
+            .setMethodName("GET")
+            .setContentType("application/json")
+            .setIRIAsString("http://example.org/httpForm")
+            .build();
+
+    IntegerSpecification intSpec = new IntegerSpecification.Builder()
+            .addSemanticType("http://example.org/ExampleFirstSpecification")
+            .setRequired(true)
+            .setIRIAsString("http://example.org/integer-member-spec")
+            .build();
+
+    QualifiedValueSpecification gripperJointSpec = new QualifiedValueSpecification.Builder()
+            .addSemanticType("http://example.org/ExampleQualifiedValueSpecification")
+            .addRequiredSemanticType("http://example.org/GripperJoint")
+            .addRequiredSemanticType("https://saref.etsi.org/core/v3.1.1/State")
+            .setIRIAsString("http://example.org/gripperJointShape")
+            .setRequired(true)
+            .addPropertySpecification("http://example.org/hasGripperValue", intSpec)
+            .build();
+
+
+    ListSpecification listSpec = new ListSpecification.Builder()
+            .setIRIAsString("http://example.org/listShape")
+            .addSemanticType("http://example.org/ExampleListSpecification")
+            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
+            .addRequiredSemanticType("https://saref.etsi.org/core/State")
+            .setRequired(true)
+            .addMemberSpecification(gripperJointSpec)
+            .addMemberSpecification(gripperJointSpec)
             .build();
 
     ActionSpecification moveGripperSpec = new ActionSpecification.Builder(httpForm)

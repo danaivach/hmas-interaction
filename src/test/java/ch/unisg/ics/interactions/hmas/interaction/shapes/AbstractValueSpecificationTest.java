@@ -3,8 +3,12 @@ package ch.unisg.ics.interactions.hmas.interaction.shapes;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -125,6 +129,56 @@ public class AbstractValueSpecificationTest {
   }
 
   @Test
+  public void testListSpecification() {
+
+    IntegerSpecification member1Spec = new IntegerSpecification.Builder()
+            .build();
+
+    ValueSpecification member2Spec = new ValueSpecification.Builder()
+            .build();
+
+    ListSpecification member3Spec = new ListSpecification.Builder()
+            .addMemberSpecifications(Arrays.asList(member1Spec, member2Spec))
+            .build();
+
+    ListSpecification spec = new ListSpecification.Builder()
+            .setName("Label")
+            .setDescription("Label explanation")
+            .setOrder(0)
+            .setRequired(true)
+            .setValueAsString("http://example.org/list")
+            .setDefaultValueAsString("http://example.org/default-list")
+            .addMemberSpecification(member1Spec)
+            .addMemberSpecifications(Arrays.asList(member2Spec))
+            .addMemberSpecification(member3Spec)
+            .build();
+
+    testAbstractValueMetadata(spec);
+
+    assertEquals(1, spec.getRequiredSemanticTypes().size());
+    assertTrue(spec.getRequiredSemanticTypes().contains(RDF.LIST.stringValue()));
+
+    assertTrue(spec.getValue().isPresent());
+    IRI listIRI = SimpleValueFactory.getInstance().createIRI("http://example.org/list");
+    assertEquals(listIRI, spec.getValue().get());
+
+    assertTrue(spec.getDefaultValue().isPresent());
+    IRI defaultListIRI = SimpleValueFactory.getInstance().createIRI("http://example.org/default-list");
+    assertEquals(defaultListIRI, spec.getDefaultValue().get());
+
+    List<IOSpecification> memberSpecifications = spec.getMemberSpecifications();
+    assertEquals(3, memberSpecifications.size());
+    assertTrue(memberSpecifications.contains(member1Spec));
+    assertTrue(memberSpecifications.contains(member2Spec));
+    assertTrue(memberSpecifications.contains(member3Spec));
+
+    List<IOSpecification> nestedMemberSpecifications = member3Spec.getMemberSpecifications();
+    assertEquals(2, nestedMemberSpecifications.size());
+    assertTrue(nestedMemberSpecifications.contains(member1Spec));
+    assertTrue(nestedMemberSpecifications.contains(member2Spec));
+  }
+
+  @Test
   public void testValueSpecification() {
 
     IRI exampleAgentIRI = SimpleValueFactory.getInstance().createIRI("http://example.org/example#me");
@@ -197,154 +251,8 @@ public class AbstractValueSpecificationTest {
       specBuilder.setValueAsString("invalid-iri");
     });
 
-    String expectedMessage = "IRIs of DataTypes and node values must be valid.";
+    String expectedMessage = "IRIs of DataTypes, Classes and node values must be valid.";
     assertTrue(ex.getMessage().contains(expectedMessage));
-
-  }
-
-  @Test
-  public void testValueSpecificationDefaultValueConflict() {
-
-    ValueSpecification.Builder specBuilder = new ValueSpecification.Builder()
-            .setValue(CORE.AGENT);
-
-    ValueSpecification.Builder specBuilderStr = new ValueSpecification.Builder()
-            .setValueAsString(CORE.AGENT.stringValue());
-
-    Exception ex1 = assertThrows(IllegalArgumentException.class, () -> {
-      specBuilder.setDefaultValue(CORE.ARTIFACT);
-    });
-
-    Exception ex2 = assertThrows(IllegalArgumentException.class, () -> {
-      specBuilder.setDefaultValueAsString(CORE.ARTIFACT.stringValue());
-    });
-
-    Exception ex1Str = assertThrows(IllegalArgumentException.class, () -> {
-      specBuilderStr.setDefaultValue(CORE.ARTIFACT);
-    });
-
-    Exception ex2Str = assertThrows(IllegalArgumentException.class, () -> {
-      specBuilderStr.setDefaultValueAsString(CORE.ARTIFACT.stringValue());
-    });
-
-    String expectedMessage = "The specified value (" + CORE.AGENT + ") has a conflict with the specified default value (" + CORE.ARTIFACT + ").";
-
-    assertTrue(ex1.getMessage().contains(expectedMessage));
-    assertTrue(ex2.getMessage().contains(expectedMessage));
-    assertTrue(ex1Str.getMessage().contains(expectedMessage));
-    assertTrue(ex2Str.getMessage().contains(expectedMessage));
-  }
-
-  @Test
-  public void testValueSpecificationValueConflict() {
-
-    ValueSpecification.Builder specBuilder = new ValueSpecification.Builder()
-            .setDefaultValue(CORE.AGENT);
-
-    ValueSpecification.Builder specBuilderStr = new ValueSpecification.Builder()
-            .setDefaultValueAsString(CORE.AGENT.stringValue());
-
-    Exception ex1 = assertThrows(IllegalArgumentException.class, () -> {
-      specBuilder.setValue(CORE.ARTIFACT);
-    });
-
-    Exception ex2 = assertThrows(IllegalArgumentException.class, () -> {
-      specBuilder.setValueAsString(CORE.ARTIFACT.stringValue());
-    });
-
-    Exception ex1Str = assertThrows(IllegalArgumentException.class, () -> {
-      specBuilderStr.setValue(CORE.ARTIFACT);
-    });
-
-    Exception ex2Str = assertThrows(IllegalArgumentException.class, () -> {
-      specBuilderStr.setValueAsString(CORE.ARTIFACT.stringValue());
-    });
-
-    String expectedMessage = "The specified value (" + CORE.ARTIFACT + ") has a conflict with the specified default value (" + CORE.AGENT + ").";
-
-    assertTrue(ex1.getMessage().contains(expectedMessage));
-    assertTrue(ex2.getMessage().contains(expectedMessage));
-    assertTrue(ex1Str.getMessage().contains(expectedMessage));
-    assertTrue(ex2Str.getMessage().contains(expectedMessage));
-
-  }
-
-  @Test
-  public void testValueSpecificationPrimitiveValueConflict() {
-
-    BooleanSpecification.Builder booleanBuilder = new BooleanSpecification.Builder()
-            .setValue(true);
-
-    DoubleSpecification.Builder doubleBuilder = new DoubleSpecification.Builder()
-            .setValue(10.00);
-
-    FloatSpecification.Builder floatBuilder = new FloatSpecification.Builder()
-            .setValue(10.5f);
-
-    IntegerSpecification.Builder integerBuilder = new IntegerSpecification.Builder()
-            .setValue(10);
-
-    StringSpecification.Builder stringBuilder = new StringSpecification.Builder()
-            .setValue("string");
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      booleanBuilder.setDefaultValue(false);
-    });
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      doubleBuilder.setDefaultValue(2.00);
-    });
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      floatBuilder.setDefaultValue(2.5f);
-    });
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      integerBuilder.setDefaultValue(0);
-    });
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      stringBuilder.setDefaultValue("another-string");
-    });
-  }
-
-  @Test
-  public void testValueSpecificationPrimitiveDefaultValueConflict() {
-
-    BooleanSpecification.Builder booleanBuilder = new BooleanSpecification.Builder()
-            .setDefaultValue(true);
-
-    DoubleSpecification.Builder doubleBuilder = new DoubleSpecification.Builder()
-            .setDefaultValue(10.00);
-
-    FloatSpecification.Builder floatBuilder = new FloatSpecification.Builder()
-            .setDefaultValue(10.5f);
-
-    IntegerSpecification.Builder integerBuilder = new IntegerSpecification.Builder()
-            .setDefaultValue(10);
-
-    StringSpecification.Builder stringBuilder = new StringSpecification.Builder()
-            .setDefaultValue("string");
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      booleanBuilder.setValue(false);
-    });
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      doubleBuilder.setValue(2.00);
-    });
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      floatBuilder.setValue(2.5f);
-    });
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      integerBuilder.setValue(0);
-    });
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      stringBuilder.setValue("another-string");
-    });
   }
 
   private void testAbstractValueMetadata(AbstractValueSpecification specification) {

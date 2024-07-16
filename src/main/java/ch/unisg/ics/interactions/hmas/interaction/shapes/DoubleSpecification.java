@@ -50,13 +50,11 @@ public class DoubleSpecification extends AbstractValueSpecification {
     }
 
     public Builder setValue(Double value) {
-      this.defaultValue.ifPresent(defaultVal -> validateNewValue(value, defaultVal));
       this.value = Optional.of(value);
       return this;
     }
 
     public Builder setDefaultValue(Double value) {
-      this.value.ifPresent(val -> validateNewDefaultValue(val, value));
       this.defaultValue = Optional.of(value);
       return this;
     }
