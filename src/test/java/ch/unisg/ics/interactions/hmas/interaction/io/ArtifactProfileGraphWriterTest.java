@@ -737,7 +737,7 @@ public class ArtifactProfileGraphWriterTest {
             "         ] ;\n" +
             "         sh:property [ a sh:Shape ; \n" +
             "         sh:path hmas:hasOutput;\n" +
-            "         sh:datatype hmas:ResourceProfile, ex:ExampleDatatype ;\n" +
+            "         sh:class hmas:ResourceProfile, ex:ExampleDatatype ;\n" +
             "         sh:name \"Label\" ;\n" +
             "         sh:description \"Description\" ;\n" +
             "         sh:order \"5\"^^xs:int;\n" +
@@ -1128,7 +1128,7 @@ public class ArtifactProfileGraphWriterTest {
             "              sh:hasValue ex:httpForm\n" +
             "            ], [ a sh:Shape;\n" +
             "              sh:defaultValue ex:example-list;\n" +
-            "              sh:datatype saref:State, rdf:List;\n" +
+            "              sh:class saref:State, rdf:List;\n" +
             "              sh:maxCount \"1\"^^xs:int;\n" +
             "              sh:path hmas:hasOutput\n" +
             "            ]\n" +
@@ -1154,7 +1154,6 @@ public class ArtifactProfileGraphWriterTest {
     IRI nestedListIRI = rdfFactory.createIRI("http://example.org/example-nested-list");
 
     ListSpecification listSpec = new ListSpecification.Builder()
-            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
             .addRequiredSemanticType("https://saref.etsi.org/core/State")
             .setRequired(false)
             .setDefaultValue(listIRI)
@@ -1274,7 +1273,6 @@ public class ArtifactProfileGraphWriterTest {
     ListSpecification listSpec = new ListSpecification.Builder()
             .setIRIAsString("http://example.org/listShape")
             .addSemanticType("http://example.org/ExampleListSpecification")
-            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
             .addRequiredSemanticType("https://saref.etsi.org/core/State")
             .setRequired(true)
             .addMemberSpecification(memberSpec)
@@ -1404,18 +1402,14 @@ public class ArtifactProfileGraphWriterTest {
     ListSpecification nestedListSpec = new ListSpecification.Builder()
             .setIRIAsString("http://example.org/nestedListShape")
             .addSemanticType("http://example.org/ExampleNestedListSpecification")
-            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
             .setRequired(true)
             .addMemberSpecification(memberSpec)
             .addMemberSpecification(memberSpec)
             .build();
 
-    System.out.println("Nested:" + nestedListSpec);
-
     ListSpecification listSpec = new ListSpecification.Builder()
             .setIRIAsString("http://example.org/listShape")
             .addSemanticType("http://example.org/ExampleListSpecification")
-            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
             .addRequiredSemanticType("https://saref.etsi.org/core/State")
             .setRequired(true)
             .addMemberSpecification(nestedListSpec)
@@ -1540,7 +1534,6 @@ public class ArtifactProfileGraphWriterTest {
     ListSpecification listSpec = new ListSpecification.Builder()
             .setIRIAsString("http://example.org/listShape")
             .addSemanticType("http://example.org/ExampleListSpecification")
-            .addRequiredSemanticType("http://www.w3.org/1999/02/22-rdf-syntax-ns#List")
             .addRequiredSemanticType("https://saref.etsi.org/core/State")
             .setRequired(true)
             .addMemberSpecification(gripperJointSpec)

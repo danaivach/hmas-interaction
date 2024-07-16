@@ -5,7 +5,10 @@ import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
-import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.BNode;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 
@@ -177,8 +180,13 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
     }
 
     specification.getRequiredSemanticTypes().forEach(type -> {
-      if (!(specification.getRequiredSemanticTypes().size() > 1 && XSD.ANYURI.stringValue().equals(type)))
-        this.graphBuilder.add(node, DATATYPE, iri(type));
+      if (!(specification.getRequiredSemanticTypes().size() > 1 && XSD.ANYURI.stringValue().equals(type))) {
+        if (type.startsWith(XSD.NAMESPACE)) {
+          this.graphBuilder.add(node, DATATYPE, iri(type));
+        } else {
+          this.graphBuilder.add(node, CLASS, iri(type));
+        }
+      }
     });
     specification.getName().ifPresent(present -> this.graphBuilder.add(node, NAME, present));
     specification.getDescription().ifPresent(present -> this.graphBuilder.add(node, DESCRIPTION, present));
