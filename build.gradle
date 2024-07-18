@@ -1,5 +1,11 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
+}
+
+allprojects {
+    version = '1.0-SNAPSHOT'
+    group = 'ch.unisg.ics.interactions.hmas'
 }
 
 repositories {
@@ -22,4 +28,15 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId project.group
+            artifactId project.name
+	        version project.version
+	        from components.java
+	    }
+    }
 }
