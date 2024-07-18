@@ -6,6 +6,7 @@ import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.*;
+import org.apache.hc.client5.http.fluent.Request;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.Models;
@@ -28,6 +29,11 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
 
   protected ResourceProfileGraphReader(RDFFormat format, String representation) {
     super(format, representation);
+  }
+
+  public static ResourceProfile readFromURL(String url) throws IOException {
+    String representation = Request.get(url).execute().returnContent().asString();
+    return readFromString(representation);
   }
 
   public static ResourceProfile readFromFile(String path) throws IOException {

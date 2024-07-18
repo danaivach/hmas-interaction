@@ -27,6 +27,10 @@ dependencies {
     implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-sail-memory', version: '5.0.1'
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-shacl
     implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-shacl', version: '5.0.1'
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
+    implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.3.1'
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5-fluent
+    implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5-fluent', version: '5.3.1'
 
 
     // https://mvnrepository.com/artifact/com.google.guava/guava
