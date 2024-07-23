@@ -1,0 +1,88 @@
+@prefix jacamo: <https://purl.org/hmas/jacamo/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix websub: <http://www.example.org/websub#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ex: <http://example.org/> .
+@prefix xs: <http://www.w3.org/2001/XMLSchema#> .
+@prefix hmas: <https://purl.org/hmas/> .
+
+<http://localhost:8080/workspaces/test/artifacts/a0/> a hmas:ResourceProfile;
+  hmas:exposesSignifier <http://localhost:8080/workspaces/test/artifacts/a0/#add-Signifier>;
+  hmas:isProfileOf <http://localhost:8080/workspaces/test/artifacts/a0/#artifact> .
+
+<http://localhost:8080/workspaces/test/artifacts/a0/#add-Signifier> a hmas:Signifier;
+  hmas:signifies [ a sh:NodeShape, ex:Adder;
+      sh:class hmas:ActionExecution, ex:Adder;
+      sh:property [
+          sh:path prov:used;
+          sh:minCount "1"^^xs:int;
+          sh:maxCount "1"^^xs:int;
+          sh:hasValue <http://localhost:8080/workspaces/test/artifacts/a0/#add>
+        ], [
+          sh:qualifiedValueShape ex:addends;
+          sh:qualifiedMinCount "1"^^xs:int;
+          sh:qualifiedMaxCount "1"^^xs:int;
+          sh:path hmas:hasInput
+        ], [
+          sh:qualifiedValueShape [ a sh:Shape;
+              sh:class rdf:List;
+              sh:property [ a sh:Shape;
+                  sh:hasValue rdf:nil;
+                  sh:datatype xs:anyURI;
+                  sh:minCount "1"^^xs:int;
+                  sh:maxCount "1"^^xs:int;
+                  sh:path rdf:rest
+                ], [ a sh:Shape;
+                  sh:datatype xs:int;
+                  sh:name "Result";
+                  sh:minCount "1"^^xs:int;
+                  sh:maxCount "1"^^xs:int;
+                  sh:path rdf:first
+                ]
+            ];
+          sh:qualifiedMinCount "1"^^xs:int;
+          sh:qualifiedMaxCount "1"^^xs:int;
+          sh:path hmas:hasOutput
+        ]
+    ] .
+
+<http://localhost:8080/workspaces/test/artifacts/a0/#add> a hctl:Form;
+  hctl:hasTarget <http://localhost:8080/workspaces/test/artifacts/a0/add>;
+  htv:methodName "add";
+  hctl:forContentType "application/json" .
+
+ex:addends a sh:Shape;
+  sh:class rdf:List;
+  sh:property [
+      sh:qualifiedValueShape [ a sh:Shape;
+          sh:class rdf:List;
+          sh:property [ a sh:Shape;
+              sh:hasValue rdf:nil;
+              sh:datatype xs:anyURI;
+              sh:minCount "1"^^xs:int;
+              sh:maxCount "1"^^xs:int;
+              sh:path rdf:rest
+            ], [ a sh:Shape;
+              sh:datatype xs:int;
+              sh:name "2nd Parameter";
+              sh:minCount "1"^^xs:int;
+              sh:maxCount "1"^^xs:int;
+              sh:path rdf:first
+            ]
+        ];
+      sh:qualifiedMinCount "1"^^xs:int;
+      sh:qualifiedMaxCount "1"^^xs:int;
+      sh:path rdf:rest
+    ], [ a sh:Shape;
+      sh:datatype xs:int;
+      sh:name "1st Parameter";
+      sh:minCount "1"^^xs:int;
+      sh:maxCount "1"^^xs:int;
+      sh:path rdf:first
+    ] .
+
+<http://localhost:8080/workspaces/test/artifacts/a0/#artifact> a hmas:Artifact, ex:Adder .
