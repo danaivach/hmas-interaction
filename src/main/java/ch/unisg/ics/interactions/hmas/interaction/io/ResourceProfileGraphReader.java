@@ -1,6 +1,5 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
-import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.io.BaseResourceProfileGraphReader;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
@@ -21,7 +20,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.*;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.EXPOSES_SIGNIFIER;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION.*;
 import static ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL.*;
 
@@ -59,25 +58,6 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
   public static Model getModelFromString(String representation) {
     ResourceProfileGraphReader reader = new ResourceProfileGraphReader(RDFFormat.TURTLE, representation);
     return reader.getModel();
-  }
-
-  protected final Artifact readOwnerResource() {
-    Optional<Resource> node = Models.objectResource(model.filter(profileIRI, IS_PROFILE_OF, null));
-    if (node.isPresent()) {
-      return readResource(node.get());
-    }
-    throw new InvalidResourceProfileException("An artifact profile must describe an artifact.");
-  }
-
-  protected final Artifact readResource(Resource node) {
-
-    Set<IRI> types = Models.objectIRIs(model.filter(node, RDF.TYPE, null));
-
-    if (types.contains(ARTIFACT) || types.contains(AGENT_BODY)) {
-      return readArtifact(node);
-    }
-    throw new InvalidResourceProfileException("Unknown type of profiled resource. " +
-            "Supported resource types: Artifact, AgentBody.");
   }
 
   protected Set<Signifier> readSignifiers() {

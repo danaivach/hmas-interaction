@@ -32,9 +32,9 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ArtifactProfileGraphWriterTest {
+public class ResourceProfileGraphWriterTest {
 
-  private final static Logger LOGGER = Logger.getLogger(ArtifactProfileGraphWriterTest.class.getCanonicalName());
+  private final static Logger LOGGER = Logger.getLogger(ResourceProfileGraphWriterTest.class.getCanonicalName());
 
   private static final String PREFIXES =
           "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +

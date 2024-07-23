@@ -1,6 +1,9 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractHostable;
+import ch.unisg.ics.interactions.hmas.core.hostables.Artifact;
 import ch.unisg.ics.interactions.hmas.core.hostables.ProfiledResource;
+import ch.unisg.ics.interactions.hmas.core.hostables.Workspace;
 import ch.unisg.ics.interactions.hmas.core.vocabularies.CORE;
 import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
 import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
@@ -16,9 +19,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.ARTIFACT;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.WORKSPACE;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ArtifactProfileGraphReaderTest {
+public class ResourceProfileGraphReaderTest {
 
   private static final String PREFIXES =
           "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +
@@ -66,6 +70,49 @@ public class ArtifactProfileGraphReaderTest {
     Ability ability = abilitiesList.get(0);
     assertEquals(2, ability.getSemanticTypes().size());
 
+  }
+
+  @Test
+  public void testReadWorkspaceProfile() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Workspace ; \n" +
+            "    hmas:contains [ a hmas:Artifact ] \n" +
+            " ];\n" +
+            " hmas:exposesSignifier [ a hmas:Signifier ;\n" +
+            "    hmas:signifies [ a sh:NodeShape ;\n" +
+            "       sh:class hmas:ActionExecution ;\n" +
+            "       sh:property [\n" +
+            "          sh:path prov:used ;\n" +
+            "          sh:minCount 1 ;\n" +
+            "          sh:maxCount 1;\n" +
+            "          sh:hasValue [ a hctl:Form ;\n" +
+            "             hctl:hasTarget <https://example.org/resource> \n" +
+            "          ]\n" +
+            "      ]\n" +
+            "   ];\n" +
+            " ].";
+
+    ResourceProfile profile =
+            ResourceProfileGraphReader.readFromString(expectedProfile);
+
+    Workspace workspace = (Workspace) profile.getResource();
+    assertEquals(WORKSPACE, workspace.getTypeAsIRI());
+    assertFalse(workspace.getIRI().isPresent());
+
+    Set<AbstractHostable> containedResources = workspace.getContainedResources();
+    assertEquals(1, containedResources.size());
+
+    List<AbstractHostable> containedResourcesList = new ArrayList<>(containedResources);
+    Artifact containedArtifact = (Artifact) containedResourcesList.get(0);
+    assertEquals(ARTIFACT, containedArtifact.getTypeAsIRI());
+
+    assertEquals(1, profile.getExposedSignifiers().size());
+    Set<Signifier> signifiers = profile.getExposedSignifiers();
+
+    List<Signifier> signifiersList = new ArrayList<>(signifiers);
+    Signifier signifier = signifiersList.get(0);
   }
 
   @Test
