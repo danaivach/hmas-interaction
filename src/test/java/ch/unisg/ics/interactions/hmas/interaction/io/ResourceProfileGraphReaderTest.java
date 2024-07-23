@@ -15,6 +15,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -804,7 +805,90 @@ public class ResourceProfileGraphReaderTest {
       assertTrue(intSpec.getSemanticTypes().contains("http://example.org/ExampleFirstSpecification"));
       assertTrue(intSpec.getRequiredSemanticTypes().contains(XSD.INT.stringValue()));
       assertTrue(intSpec.isRequired());
+
     }
+  }
+
+  @Test
+  public void testCreateArtifactWithListInputOutput() {
+    final String baseUri = "http://localhost:8080/workspaces/test/artifacts/a0/";
+
+    final Artifact artifact = new Artifact.Builder()
+            .addSemanticType("http://example.org/Adder")
+            .setIRIAsString(baseUri + "#artifact") //  #artifact
+            .build();
+
+    final ResourceProfile.Builder resourceProfileBuilder = new ResourceProfile.Builder(artifact)
+            .setIRIAsString(baseUri);
+
+    var input = new ListSpecification.Builder()
+            .setIRIAsString("http://example.org/addends")
+            .setRequired(true)
+            .addMemberSpecification(
+                    new IntegerSpecification.Builder()
+                            .setRequired(true)
+                            .setName("1st Parameter")
+                            .build()
+            )
+            .addMemberSpecification(
+                    new IntegerSpecification.Builder()
+                            .setRequired(true)
+                            .setName("2nd Parameter")
+                            .build()
+            )
+            .build();
+
+    var output = new ListSpecification.Builder()
+            .setIRIAsString("http://example.org/result")
+            .setRequired(true)
+            .addMemberSpecification(
+                    new IntegerSpecification.Builder()
+                            .setRequired(true)
+                            .setName("Result")
+                            .build()
+            )
+            .addMemberSpecification(
+                    new IntegerSpecification.Builder()
+                            .setRequired(true)
+                            .setName("Result")
+                            .build()
+            )
+            .build();
+
+    final var form = new Form.Builder(baseUri + "add")
+            .setIRIAsString(baseUri + "#" + "add")
+            .setMethodName("add")
+            .setContentType("application/json")
+            .build();
+
+    final var actionSpecification = new ActionSpecification.Builder(form)
+            .addRequiredSemanticType("http://example.org/Adder");
+
+    actionSpecification.setInputSpecification(input);
+    actionSpecification.setOutputSpecification(output);
+
+    final var signifier = new Signifier.Builder(actionSpecification.build())
+            .setIRIAsString(baseUri + "#" + "add" + "-Signifier")
+            .build();
+
+    resourceProfileBuilder.exposeSignifier(signifier);
+    var profile = resourceProfileBuilder.build();
+
+    var test = new ResourceProfileGraphWriter(profile)
+            .setNamespace("hmas", "https://purl.org/hmas/")
+            .setNamespace("jacamo", "https://purl.org/hmas/jacamo/")
+            .setNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+            .setNamespace("websub", "http://www.example.org/websub#")
+            .write();
+
+    ResourceProfileGraphReader.readFromString(test);
+  }
+
+  @Test
+  public void testReadFromFile() throws IOException {
+    // read in the file from the resources folder
+    ResourceProfileGraphReader.readFromFile("src/test/resources/artifact-profile-adder-valid.ttl");
+    ResourceProfileGraphReader.readFromFile("src/test/resources/artifact-profile-adder.ttl");
   }
 
   @Test
@@ -1166,7 +1250,6 @@ public class ResourceProfileGraphReaderTest {
             "    sh:hasValue ex:httpForm ;\n" +
             "  ] ;\n" +
             "  sh:property <urn:input-spec>.\n" +
-            "" +
             "<urn:input-spec> \n" +
             "    sh:path hmas:hasOutput;\n" +
             "    sh:qualifiedValueShape ex:gripperJointShape ;\n" +
@@ -1268,7 +1351,6 @@ public class ResourceProfileGraphReaderTest {
             "    sh:hasValue ex:httpForm ;\n" +
             "  ] ;\n" +
             "  sh:property <urn:input-spec>.\n" +
-            "" +
             "<urn:input-spec> \n" +
             "    sh:path hmas:hasInput;\n" +
             "    sh:qualifiedValueShape ex:listShape ;\n" +

@@ -195,7 +195,7 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
       return readAbstractValueSpecification(node);
     }
 
-    Optional<IRI> qualifiedValueShapeOpt = Models.objectIRI(model.filter(node, QUALIFIED_VALUE_SHAPE, null));
+    Optional<Resource> qualifiedValueShapeOpt = Models.objectResource(model.filter(node, QUALIFIED_VALUE_SHAPE, null));
     if (qualifiedValueShapeOpt.isPresent()) {
       Set<IRI> ioTypeSet = Models.objectIRIs(model.filter(qualifiedValueShapeOpt.get(), CLASS, null));
 
