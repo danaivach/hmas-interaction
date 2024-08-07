@@ -47,7 +47,8 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
             new ResourceProfile.Builder(reader.readOwnerResource())
                     .addHMASPlatforms(reader.readHomeHMASPlatforms())
                     .addSemanticTypes(reader.readSemanticTypes())
-                    .exposeSignifiers(reader.readSignifiers());
+                    .exposeSignifiers(reader.readSignifiers())
+                    .addGraph(reader.getModel());
 
     Optional<IRI> profileIRI = reader.readProfileIRI();
     profileIRI.ifPresent(artifactBuilder::setIRI);

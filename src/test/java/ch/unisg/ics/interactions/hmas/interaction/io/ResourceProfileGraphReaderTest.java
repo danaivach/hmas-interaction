@@ -887,8 +887,13 @@ public class ResourceProfileGraphReaderTest {
   @Test
   public void testReadFromFile() throws IOException {
     // read in the file from the resources folder
-    ResourceProfileGraphReader.readFromFile("src/test/resources/artifact-profile-adder-valid.ttl");
-    ResourceProfileGraphReader.readFromFile("src/test/resources/artifact-profile-adder.ttl");
+    ResourceProfile profile1 = ResourceProfileGraphReader.readFromFile("src/test/resources/artifact-profile-adder-valid.ttl");
+    assertTrue(profile1.getGraph().isPresent());
+    assertEquals(222, profile1.getGraph().get().size());
+
+    ResourceProfile profile2 = ResourceProfileGraphReader.readFromFile("src/test/resources/artifact-profile-adder.ttl");
+    assertTrue(profile2.getGraph().isPresent());
+    assertEquals(222, profile2.getGraph().get().size());
   }
 
   @Test
