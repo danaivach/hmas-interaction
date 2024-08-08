@@ -25,13 +25,13 @@ public class ResourceProfile extends BaseResourceProfile {
   public Set<Signifier> getExposedSignifiers(String actionSemanticType) {
 
     return this.signifiers.stream()
-            .filter(sig -> sig.getActionSpecification().getSemanticTypes().contains(actionSemanticType))
+            .filter(sig -> sig.getActionSpecification().getRequiredSemanticTypes().contains(actionSemanticType))
             .collect(Collectors.toSet());
   }
 
   public Optional<Signifier> getFirstExposedSignifier(String actionSemanticType) {
     return this.signifiers.stream()
-            .filter(sig -> sig.getActionSpecification().getSemanticTypes().contains(actionSemanticType))
+            .filter(sig -> sig.getActionSpecification().getRequiredSemanticTypes().contains(actionSemanticType))
             .findFirst();
   }
 

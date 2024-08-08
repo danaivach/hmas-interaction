@@ -17,12 +17,12 @@ public class SignifierTest {
   public void testGetSignifiersByActionType() {
 
     ActionSpecification toggleCommandSpec1 = new ActionSpecification.Builder(BASIC_FORM)
-            .addSemanticType("https://saref.etsi.org/core/ToggleCommand")
-            .addSemanticType("https://saref.etsi.org/core/SetLevelCommand").build();
+            .addRequiredSemanticType("https://saref.etsi.org/core/ToggleCommand")
+            .addRequiredSemanticType("https://saref.etsi.org/core/SetLevelCommand").build();
     ActionSpecification setLevelCommandSpec1 = new ActionSpecification.Builder(BASIC_FORM)
-            .addSemanticType("https://saref.etsi.org/core/SetLevelCommand").build();
+            .addRequiredSemanticType("https://saref.etsi.org/core/SetLevelCommand").build();
     ActionSpecification toggleCommandSpec2 = new ActionSpecification.Builder(BASIC_FORM)
-            .addSemanticType("https://saref.etsi.org/core/ToggleCommand").build();
+            .addRequiredSemanticType("https://saref.etsi.org/core/ToggleCommand").build();
 
     Signifier sig1 = new Signifier.Builder(toggleCommandSpec1).build();
     Signifier sig2 = new Signifier.Builder(setLevelCommandSpec1).build();
