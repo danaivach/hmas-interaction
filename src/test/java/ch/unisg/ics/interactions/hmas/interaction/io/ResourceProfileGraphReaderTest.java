@@ -19,8 +19,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.ARTIFACT;
-import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.WORKSPACE;
+import static ch.unisg.ics.interactions.hmas.core.vocabularies.CORE.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ResourceProfileGraphReaderTest {
@@ -28,6 +27,7 @@ public class ResourceProfileGraphReaderTest {
   private static final String PREFIXES =
           "@prefix hmas: <" + CORE.NAMESPACE + "> .\n" +
                   "@prefix hctl: <" + HCTL.NAMESPACE + "> .\n" +
+                  "@prefix ex: <http://example.org/> .\n" +
                   "@prefix prs: <http://example.org/prs#> .\n" +
                   "@prefix sh: <" + SHACL.NAMESPACE + ">";
 
@@ -1608,6 +1608,44 @@ public class ResourceProfileGraphReaderTest {
     Set<String> actionTypes = actionSpec.getRequiredSemanticTypes();
     assertEquals(1, actionTypes.size());
     actionTypes.contains("https://saref.etsi.org/core/ToggleCommand");
+  }
+
+  @Test
+  public void testReadAgentProfileWithAbilities() {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Agent ;" +
+            "  hmas:hasAbility [ a hmas:Ability, prs:PRSAbility ] ;\n" +
+            "  hmas:hasAbility <urn:ability> \n" +
+            " ].\n" +
+            "<urn:ability> a ex:ExampleAbility.";
+
+    ResourceProfile profile =
+            ResourceProfileGraphReader.readFromString(expectedProfile);
+
+    CapableAgent agent = (CapableAgent) profile.getResource();
+    assertEquals(AGENT, agent.getTypeAsIRI());
+    assertFalse(agent.getIRI().isPresent());
+
+    Set<Ability> abilities = agent.getAbilities();
+    assertEquals(2, abilities.size());
+
+    assertTrue(abilities.stream()
+            .anyMatch(ability -> {
+              Set<String> semanticTypes = ability.getSemanticTypes();
+              return semanticTypes.contains("http://example.org/prs#PRSAbility");
+            }));
+
+    assertTrue(abilities.stream()
+            .anyMatch(ability -> {
+              Set<String> semanticTypes = ability.getSemanticTypes();
+              return semanticTypes.contains("http://example.org/ExampleAbility");
+            }));
+
+    assertTrue(abilities.stream()
+            .anyMatch(ability -> ability.getIRIAsString().isPresent() &&
+                    "urn:ability".equals(ability.getIRIAsString().get())));
   }
 
 }

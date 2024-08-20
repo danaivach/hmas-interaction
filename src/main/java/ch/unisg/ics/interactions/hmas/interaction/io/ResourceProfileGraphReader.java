@@ -61,6 +61,25 @@ public class ResourceProfileGraphReader extends BaseResourceProfileGraphReader {
     return reader.getModel();
   }
 
+  @Override
+  protected CapableAgent readAgent(Resource node) {
+    CapableAgent.Builder builder = new CapableAgent.Builder()
+            .addAbilities(readAgentAbilities(node));
+    return (CapableAgent) readHostable(builder, node);
+  }
+
+  protected Set<Ability> readAgentAbilities(Resource agentNode) {
+    Set<Ability> abilities = new HashSet<>();
+    Set<Resource> abilityNodes = Models.objectResources(model.filter(agentNode, HAS_ABILITY,
+            null));
+
+    for (Resource abilityNode : abilityNodes) {
+      Ability.Builder builder = new Ability.Builder();
+      abilities.add((Ability) readResource(builder, abilityNode));
+    }
+    return abilities;
+  }
+
   protected Set<Signifier> readSignifiers() {
     Set<Signifier> signifiers = new HashSet<>();
     Set<Resource> signifierNodes = Models.objectResources(model.filter(profileIRI, EXPOSES_SIGNIFIER,

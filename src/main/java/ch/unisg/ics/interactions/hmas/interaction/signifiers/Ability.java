@@ -1,23 +1,17 @@
 package ch.unisg.ics.interactions.hmas.interaction.signifiers;
 
-import com.google.common.collect.ImmutableSet;
+import ch.unisg.ics.interactions.hmas.core.hostables.AbstractResource;
+import ch.unisg.ics.interactions.hmas.core.vocabularies.HMAS;
+import ch.unisg.ics.interactions.hmas.interaction.vocabularies.INTERACTION;
 
-import java.util.HashSet;
-import java.util.Set;
-
-public class Ability {
-
-  private final Set<String> semanticTypes;
+public class Ability extends AbstractResource {
 
   protected Ability(AbstractBuilder builder) {
-    this.semanticTypes = ImmutableSet.copyOf(builder.semanticTypes);
-  }
-
-  public Set<String> getSemanticTypes() {
-    return this.semanticTypes;
+    super(INTERACTION.TERM.ABILITY, builder);
   }
 
   public static class Builder extends AbstractBuilder<Builder, Ability> {
+    public static final HMAS TYPE = INTERACTION.TERM.ABILITY;
 
     @Override
     protected Builder getBuilder() {
@@ -29,26 +23,17 @@ public class Ability {
     }
   }
 
-  public abstract static class AbstractBuilder<S extends AbstractBuilder, T extends Ability> {
-
-    protected final Set<String> semanticTypes;
+  public abstract static class AbstractBuilder<S extends AbstractBuilder, T extends Ability>
+          extends AbstractResource.AbstractBuilder<S, T> {
 
     public AbstractBuilder() {
-      this.semanticTypes = new HashSet<>();
+      super(INTERACTION.TERM.ABILITY);
     }
 
-    abstract protected S getBuilder();
-
-    public S addSemanticType(final String type) {
-      this.semanticTypes.add(type);
-      return getBuilder();
+    protected AbstractBuilder(HMAS type) {
+      super(type);
     }
 
-    public S addSemanticTypes(final Set<String> types) {
-      this.semanticTypes.addAll(types);
-      return getBuilder();
-    }
-
-    protected abstract T build();
+    public abstract T build();
   }
 }

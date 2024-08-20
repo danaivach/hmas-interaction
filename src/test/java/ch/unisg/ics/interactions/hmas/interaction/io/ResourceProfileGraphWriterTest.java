@@ -252,24 +252,6 @@ public class ResourceProfileGraphWriterTest {
   }
 
   @Test
-  public void testWriteAgentBodyProfile() throws IOException {
-    String expectedProfile = PREFIXES +
-            ".\n" +
-            "<http://example.org/profile> a hmas:ResourceProfile ;\n" +
-            " hmas:isProfileOf <http://example.org/profile#agent-body>.\n" +
-            "<http://example.org/profile#agent-body> a hmas:Artifact.";
-
-    AgentBody body = new AgentBody.Builder().setIRIAsString("http://example.org/profile#agent-body").build();
-
-    ResourceProfile profile =
-            new ResourceProfile.Builder(body)
-                    .setIRIAsString("http://example.org/profile")
-                    .build();
-
-    assertIsomorphicGraphs(expectedProfile, profile);
-  }
-
-  @Test
   public void testWriteArtifactProfileMultipleForms() throws IOException {
     String expectedProfile = PREFIXES +
             ".\n" +
@@ -1640,6 +1622,40 @@ public class ResourceProfileGraphWriterTest {
                     .exposeSignifier(new Signifier.Builder(actionSpec)
                             .addRecommendedContext(context)
                             .build())
+                    .build();
+
+    assertIsomorphicGraphs(expectedProfile, profile);
+  }
+
+  @Test
+  public void testWriteAgentProfileWithAbilities() throws IOException {
+    String expectedProfile = PREFIXES +
+            ".\n" +
+            "<urn:profile> a hmas:ResourceProfile ;\n" +
+            " hmas:isProfileOf [ a hmas:Agent ; \n" +
+            "  hmas:hasAbility [ a hmas:Ability, prs:PRSAbility, prs:CognitiveAbility, prs:ReasoningAbility ] ;\n" +
+            "  hmas:hasAbility <urn:ability> ].\n\n" +
+            "<urn:ability> a hmas:Ability, <https://purl.org/hmas/abilities/HMASAbility>, prs:CognitiveAbility, " +
+            "<http://example.org/VocabularyAbility> .";
+
+    Ability ability1 = new Ability.Builder()
+            .addSemanticType("http://example.org/prs#PRSAbility")
+            .addSemanticTypes(Set.of("http://example.org/prs#CognitiveAbility", "http://example.org/prs#ReasoningAbility"))
+            .build();
+
+    Ability ability2 = new Ability.Builder()
+            .setIRIAsString("urn:ability")
+            .addSemanticTypes(Set.of("http://example.org/VocabularyAbility", "http://example.org/prs#CognitiveAbility"))
+            .addSemanticType("https://purl.org/hmas/abilities/HMASAbility")
+            .build();
+
+    CapableAgent agent = new CapableAgent.Builder()
+            .addAbilities(Set.of(ability1, ability2))
+            .build();
+
+    ResourceProfile profile =
+            new ResourceProfile.Builder(agent)
+                    .setIRIAsString("urn:profile")
                     .build();
 
     assertIsomorphicGraphs(expectedProfile, profile);

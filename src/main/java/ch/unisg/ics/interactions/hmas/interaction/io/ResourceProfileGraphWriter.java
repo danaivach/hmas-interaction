@@ -1,5 +1,6 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
+import ch.unisg.ics.interactions.hmas.core.hostables.Agent;
 import ch.unisg.ics.interactions.hmas.core.io.BaseResourceProfileGraphWriter;
 import ch.unisg.ics.interactions.hmas.core.io.InvalidResourceProfileException;
 import ch.unisg.ics.interactions.hmas.interaction.shapes.*;
@@ -36,7 +37,6 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
             .setNamespace(SHACL.PREFIX, SHACL.NAMESPACE)
             .setNamespace(PROV.PREFIX, PROV.NAMESPACE)
             .setNamespace(RDFS.PREFIX, RDFS.NAMESPACE)
-            .setNamespace("ex", "http://example.org/")
             .setNamespace("xs", "http://www.w3.org/2001/XMLSchema#")
             .addSignifiers();
 
@@ -46,6 +46,24 @@ public class ResourceProfileGraphWriter extends BaseResourceProfileGraphWriter<R
   @Override
   public ResourceProfileGraphWriter setNamespace(String prefix, String namespace) {
     this.graphBuilder.setNamespace(prefix, namespace);
+    return this;
+  }
+
+  @Override
+  protected BaseResourceProfileGraphWriter addAgent(Agent agent, Resource node) {
+    addCapableAgent((CapableAgent) agent, node);
+    return this;
+  }
+
+  protected BaseResourceProfileGraphWriter addCapableAgent(CapableAgent agent, Resource node) {
+    Set<Ability> abilities = agent.getAbilities();
+
+    for (Ability ability : abilities) {
+      Resource abilityNode = resolveHostableLocation(ability);
+      graphBuilder.add(node, HAS_ABILITY, abilityNode);
+      addResource(ability, abilityNode);
+    }
+    addHostable(agent, node);
     return this;
   }
 
