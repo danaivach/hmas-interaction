@@ -1,0 +1,36 @@
+@base <http://172.27.52.55:8080/> .
+@prefix jacamo: <https://purl.org/hmas/jacamo/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix websub: <http://www.example.org/websub#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xs: <http://www.w3.org/2001/XMLSchema#> .
+@prefix hmas: <https://purl.org/hmas/> .
+
+<workspaces/61/artifacts/test/> a hmas:ResourceProfile;
+  hmas:isProfileOf <workspaces/61/artifacts/test/#artifact>;
+  hmas:exposesSignifier <workspaces/61/artifacts/test/#getArtifactRepresentation> .
+
+<workspaces/61/artifacts/test/#artifact> a hmas:Artifact, <https://example.org/SpellBook>;
+  hmas:isContainedIn <workspaces/61/#workspace> .
+
+<workspaces/61/artifacts/test/#getArtifactRepresentation> a hmas:Signifier;
+  hmas:signifies [ a sh:NodeShape;
+      sh:class hmas:ActionExecution, jacamo:PerceiveArtifact;
+      sh:property [
+          sh:path prov:used;
+          sh:minCount "1"^^xs:int;
+          sh:maxCount "1"^^xs:int;
+          sh:hasValue <workspaces/61/artifacts/test/#getArtifactRepresentationForm>
+        ]
+    ] .
+
+<workspaces/61/artifacts/test/#getArtifactRepresentationForm> a hctl:Form;
+  hctl:hasTarget <workspaces/61/artifacts/test/>;
+  htv:methodName "GET";
+  hctl:forContentType "text/turtle" .
+
+<workspaces/61/#workspace> a hmas:Workspace .

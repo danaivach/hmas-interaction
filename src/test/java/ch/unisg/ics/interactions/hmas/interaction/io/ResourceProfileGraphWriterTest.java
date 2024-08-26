@@ -1675,6 +1675,36 @@ public class ResourceProfileGraphWriterTest {
   }
    */
 
+  @Test
+  public void testReadAndWriteFromFile() throws IOException {
+    ResourceProfile initialProfile = ResourceProfileGraphReader.readFromFile("src/test/resources/artifact-profile-bnode.ttl");
+    Set<Signifier> signifiers = initialProfile.getExposedSignifiers();
+
+    IRI workspaceIRI = SimpleValueFactory.getInstance()
+            .createIRI("http://172.27.52.55:8080/workspaces/61/#workspace");
+
+    ResourceProfile writtenProfile = new ResourceProfile.Builder(new Artifact.Builder()
+            .setIRIAsString("http://172.27.52.55:8080/workspaces/61/artifacts/test/#artifact")
+            .addSemanticType("https://example.org/SpellBook")
+            .addTriple(CORE.IS_CONTAINED_IN, workspaceIRI)
+            .addTriple(workspaceIRI, RDF.TYPE, CORE.WORKSPACE)
+            .build())
+            .exposeSignifiers(signifiers)
+            .setIRIAsString("http://172.27.52.55:8080/workspaces/61/artifacts/test/")
+            .build();
+
+    String rereadProfile = new ResourceProfileGraphWriter(writtenProfile).write();
+    ResourceProfile finalProfile = ResourceProfileGraphReader.readFromString(rereadProfile);
+
+    assertTrue(initialProfile.getGraph().isPresent());
+    assertTrue(finalProfile.getGraph().isPresent());
+
+    Model expectedModel = initialProfile.getGraph().get();
+    Model actualModel = finalProfile.getGraph().get();
+
+    assertTrue(Models.isomorphic(expectedModel, actualModel));
+  }
+
   private void assertIsomorphicGraphs(String expectedProfile, ResourceProfile profile) throws RDFParseException,
           RDFHandlerException, IOException {
 
