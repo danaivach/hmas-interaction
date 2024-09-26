@@ -149,5 +149,4 @@ public class ShaclValidationTest {
     RDFDataMgr.write(System.out, report.getModel(), Lang.TTL);
 
   }
-
 }
