@@ -1,9 +1,6 @@
 package ch.unisg.ics.interactions.hmas.interaction.io;
 
-import ch.unisg.ics.interactions.hmas.interaction.signifiers.ActionSpecification;
-import ch.unisg.ics.interactions.hmas.interaction.signifiers.Context;
-import ch.unisg.ics.interactions.hmas.interaction.signifiers.Form;
-import ch.unisg.ics.interactions.hmas.interaction.signifiers.Signifier;
+import ch.unisg.ics.interactions.hmas.interaction.signifiers.*;
 import ch.unisg.ics.interactions.hmas.interaction.vocabularies.SHACL;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -52,5 +49,18 @@ public class SignifierGraphReaderTest {
 
     assertEquals(1, actualBeliefContents.size());
     assertEquals("room(empty)", actualBeliefContents.get(0).stringValue());
+  }
+
+  @Test
+  public void testReadFromUrl() throws IOException {
+    Signifier signifier = SignifierGraphReader.readFromURL("http://172.27.52.55:8080/workspaces/61/artifacts/component5/#5C");
+    Set<Ability> abilities = signifier.getRecommendedAbilities();
+    assertEquals(1, abilities.size());
+    Set<Context> contexts = signifier.getRecommendedContexts();
+    assertEquals(1, contexts.size());
+    for (Context context : contexts) {
+      Model model = context.getModel();
+      System.out.println(model);
+    }
   }
 }

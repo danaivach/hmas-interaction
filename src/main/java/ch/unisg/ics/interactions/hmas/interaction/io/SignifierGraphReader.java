@@ -33,49 +33,52 @@ public class SignifierGraphReader extends AbstractGraphReader {
   protected final Resource signifierIRI;
   private final ValueFactory rdf = SimpleValueFactory.getInstance();
 
-  protected SignifierGraphReader(RDFFormat format, String representation) {
-
+  protected SignifierGraphReader(RDFFormat format, String representation, String url) {
     loadModel(format, representation);
-
-    Optional<Resource> locatedSignifier = Models.subject(model.filter(null, RDF.TYPE, SIGNIFIER));
-    if (locatedSignifier.isPresent()) {
-      this.signifierIRI = locatedSignifier.get();
-    } else {
-      throw new InvalidResourceProfileException("Signifier was not found. " +
-              "Ensure that an " + INTERACTION.NAMESPACE + "Signifier is represented.");
-    }
+    this.signifierIRI = resolveSignifier(url);
   }
 
   protected SignifierGraphReader(Model model, Resource signifierNode) {
-
     this.model = model;
-    if (this.model.contains(signifierNode, RDF.TYPE, SIGNIFIER)) {
-      this.signifierIRI = signifierNode;
-    } else {
-      throw new InvalidResourceProfileException("Signifier was not found. " +
-              "Ensure that an " + INTERACTION.NAMESPACE + "Signifier is represented.");
-    }
+    this.signifierIRI = validateSignifier(signifierNode);
   }
 
   public static Signifier readFromURL(String url) throws IOException {
     String representation = Request.get(url).execute().returnContent().asString();
-    return readFromString(representation);
+    return readFromString(representation, url);
   }
 
   public static Signifier readFromFile(String path) throws IOException {
     String content = new String(Files.readAllBytes(Paths.get(path)));
-    return readFromString(content);
+    return readFromString(content, null);
   }
 
   /* Currently, the only supported format is Turtle */
-  public static Signifier readFromString(String representation) {
-    SignifierGraphReader reader = new SignifierGraphReader(RDFFormat.TURTLE, representation);
+  public static Signifier readFromString(String representation, String url) {
+    SignifierGraphReader reader = new SignifierGraphReader(RDFFormat.TURTLE, representation, url);
     return reader.readSignifier();
   }
 
   protected static Signifier readFromModel(Model model, Resource signifierNode) throws IOException {
     SignifierGraphReader reader = new SignifierGraphReader(model, signifierNode);
     return reader.readSignifier();
+  }
+
+  private Resource resolveSignifier(String url) {
+    if (url != null) {
+      Resource signifierNode = rdf.createIRI(url);
+      return validateSignifier(signifierNode);
+    }
+    return Models.subject(this.model.filter(null, RDF.TYPE, SIGNIFIER))
+            .orElseThrow(() -> new InvalidResourceProfileException("Resource profile not found. Ensure a valid https://purl.org/hmas/ResourceProfile."));
+  }
+
+  private Resource validateSignifier(Resource signifierNode) {
+    if (this.model.contains(signifierNode, RDF.TYPE, SIGNIFIER)) {
+      return signifierNode;
+    } else {
+      throw new InvalidResourceProfileException("Signifier not found. Ensure a valid " + INTERACTION.NAMESPACE + "Signifier.");
+    }
   }
 
   private Signifier readSignifier() {
