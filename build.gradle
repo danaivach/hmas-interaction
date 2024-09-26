@@ -17,21 +17,25 @@ repositories {
 dependencies {
     implementation 'com.github.danaivach:hmas-core:main-SNAPSHOT'
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-model
-    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-model', version: '5.0.1'
+    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-model', version: '5.0.2'
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-rio-api
-    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-rio-api', version: '5.0.1'
+    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-rio-api', version: '5.0.2'
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-rio-turtle
-    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-rio-turtle', version: '5.0.1'
+    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-rio-turtle', version: '5.0.2'
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-repository-sail
-    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-repository-sail', version: '5.0.1'
+    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-repository-sail', version: '5.0.2'
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-sail-memory
-    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-sail-memory', version: '5.0.1'
+    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-sail-memory', version: '5.0.2'
     // https://mvnrepository.com/artifact/org.eclipse.rdf4j/rdf4j-shacl
-    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-shacl', version: '5.0.1'
+    implementation group: 'org.eclipse.rdf4j', name: 'rdf4j-shacl', version: '5.0.2'
     // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
     implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.3.1'
     // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5-fluent
     implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5-fluent', version: '5.3.1'
+    // https://mvnrepository.com/artifact/org.apache.jena/jena-shacl
+    implementation group: 'org.apache.jena', name: 'jena-shacl', version: '5.1.0'
+    // https://mvnrepository.com/artifact/org.apache.jena/jena-core
+    implementation group: 'org.apache.jena', name: 'jena-core', version: '5.1.0'
 
 
     // https://mvnrepository.com/artifact/com.google.guava/guava

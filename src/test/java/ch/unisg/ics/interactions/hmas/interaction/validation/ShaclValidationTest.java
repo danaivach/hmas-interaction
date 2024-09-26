@@ -1,5 +1,13 @@
 package ch.unisg.ics.interactions.hmas.interaction.validation;
 
+import org.apache.jena.graph.Graph;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.shacl.ShaclValidator;
+import org.apache.jena.shacl.Shapes;
+import org.apache.jena.shacl.ValidationReport;
+import org.apache.jena.shacl.lib.ShLib;
+import org.apache.jena.sparql.graph.GraphFactory;
 import org.eclipse.rdf4j.common.exception.ValidationException;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.vocabulary.RDF4J;
@@ -7,6 +15,7 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
+import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.WriterConfig;
@@ -110,4 +119,35 @@ public class ShaclValidationTest {
       throw new RuntimeException(e);
     }
   }
+
+  @Test
+  public void testContextValidation() throws IOException {
+    String shaclRules = "@prefix sh: <http://www.w3.org/ns/shacl#> .\n" +
+            "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n\n" +
+            "<http://172.27.52.55:8080/workspaces/61/artifacts/component10/#component-state-context>\n" +
+            "                       a sh:NodeShape;\n" +
+            "                       sh:targetNode <http://172.27.52.55:8080/workspaces/61/artifacts/component10/#artifact>;\n" +
+            "                       sh:path <https://saref.etsi.org/core/hasState>;\n" +
+            "                       sh:minCount \"1\"^^xsd:int;\n" +
+            "                       sh:maxCount \"1\"^^xsd:int;\n" +
+            "                       sh:hasValue \"ready\"." ;
+
+    String data = "<http://172.27.52.55:8080/workspaces/61/artifacts/component10/#artifact> " +
+            "<https://saref.etsi.org/core/hasState> " +
+            "\"ready\" .";
+
+    Graph shapesGraph = GraphFactory.createDefaultGraph();
+    Graph dataGraph = GraphFactory.createDefaultGraph();
+    RDFDataMgr.read(shapesGraph, new StringReader(shaclRules), null, Lang.TURTLE);
+    RDFDataMgr.read(dataGraph, new StringReader(data), null, Lang.TURTLE);
+
+    Shapes shapes = Shapes.parse(shapesGraph);
+
+    ValidationReport report = ShaclValidator.get().validate(shapes, dataGraph);
+    ShLib.printReport(report);
+    System.out.println();
+    RDFDataMgr.write(System.out, report.getModel(), Lang.TTL);
+
+  }
+
 }

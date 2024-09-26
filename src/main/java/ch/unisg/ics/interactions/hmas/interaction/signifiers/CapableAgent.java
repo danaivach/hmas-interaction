@@ -7,14 +7,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class CapableAgent extends Agent {
-  private final Set<Ability> abilities;
+  private final ImmutableSet abilities;
 
   protected CapableAgent(AbstractBuilder builder) {
     super(builder);
     this.abilities = ImmutableSet.copyOf(builder.abilities);
   }
 
-  public Set<Ability> getAbilities() {
+  public ImmutableSet getAbilities() {
     return this.abilities;
   }
 
@@ -33,7 +33,7 @@ public class CapableAgent extends Agent {
   public abstract static class AbstractBuilder<S extends AbstractBuilder, T extends CapableAgent>
           extends Agent.AbstractBuilder<S, T> {
 
-    private final Set<Ability> abilities;
+    private Set<Ability> abilities;
 
     public AbstractBuilder() {
       this.abilities = new HashSet<>();
@@ -46,6 +46,11 @@ public class CapableAgent extends Agent {
 
     public S addAbilities(Set<Ability> abilities) {
       this.abilities.addAll(abilities);
+      return getBuilder();
+    }
+
+    public S setAbilities(Set<Ability> abilities) {
+      this.abilities = new HashSet<>(abilities);
       return getBuilder();
     }
 

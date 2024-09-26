@@ -1,0 +1,27 @@
+@prefix ex: <http://example.org/> .
+@prefix xs: <https://www.w3.org/2001/XMLSchema#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix hmas: <https://purl.org/hmas/> .
+
+ex:signifier a hmas:Signifier ;
+  hmas:recommendsContext ex:situationShape ;
+  hmas:signifies ex:moveGripperSpecification .
+
+ex:moveGripperSpecification a sh:NodeShape ;
+  sh:class hmas:ActionExecution ;
+  sh:property [    sh:path prov:used ;    sh:minCount 1 ;    sh:maxCount 1 ;    sh:hasValue ex:httpForm ;  ] .
+
+ex:situationShape a sh:NodeShape ;
+  sh:class hmas:ResourceProfile ;
+  sh:property [    sh:path hmas:isProfileOf ;    sh:qualifiedValueShape ex:agentShape ;    sh:qualifiedMinCount 1 ;    sh:qualifiedMaxCount 1  ] .
+
+ex:agentShape a sh:NodeShape ;
+  sh:class hmas:Agent ;
+  sh:property [    sh:path ex:hasBelief ;    sh:minCount 1 ;    sh:maxCount 1 ;    sh:hasValue "room(empty)"  ] .
+
+ex:httpForm a hctl:Form ;
+  hctl:hasTarget <https://api.interactions.ics.unisg.ch/leubot1/v1.3.4/gripper> ;
+  hctl:forContentType "application/json" ;
+  htv:methodName "PUT" .
