@@ -20,6 +20,8 @@ import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -44,7 +46,8 @@ public class SignifierGraphReader extends AbstractGraphReader {
   }
 
   public static Signifier readFromURL(String url) throws IOException {
-    String representation = Request.get(url).execute().returnContent().asString();
+    String cleanUrl = stripFragment(url);
+    String representation = Request.get(cleanUrl).execute().returnContent().asString();
     return readFromString(representation, url);
   }
 
@@ -62,6 +65,17 @@ public class SignifierGraphReader extends AbstractGraphReader {
   protected static Signifier readFromModel(Model model, Resource signifierNode) throws IOException {
     SignifierGraphReader reader = new SignifierGraphReader(model, signifierNode);
     return reader.readSignifier();
+  }
+
+  private static String stripFragment(String url) throws IOException {
+    try {
+      URI uri = new URI(url);
+
+      return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null).toString();
+
+    } catch (URISyntaxException e) {
+      throw new IOException("Invalid URI: " + url, e);
+    }
   }
 
   private Resource resolveSignifier(String url) {
@@ -142,7 +156,6 @@ public class SignifierGraphReader extends AbstractGraphReader {
   public Model getModel() {
     return this.model;
   }
-
 
   protected Context readRecommendedContext(Resource contextNode) {
     Context.Builder contextBuilder = new Context.Builder();
@@ -398,7 +411,6 @@ public class SignifierGraphReader extends AbstractGraphReader {
     return (AbstractIOSpecification) readResource(builder, baseNode);
   }
 
-
   private AbstractValueSpecification readValueSpecification(ValueSpecification.AbstractBuilder<?, ?> builder, Resource node) {
 
     Set<IRI> datatypes = Models.objectIRIs(model.filter(node, CLASS, null));
@@ -528,9 +540,5 @@ public class SignifierGraphReader extends AbstractGraphReader {
     }
 
     return forms;
-  }
-
-  protected final Optional<IRI> readSignifierIRI() {
-    return this.signifierIRI.isIRI() ? Optional.of((IRI) this.signifierIRI) : Optional.empty();
   }
 }
